@@ -18,12 +18,12 @@ package ec2
 
 import (
 	"encoding/json"
-	"fmt"
 	"errors"
+	"fmt"
 	"math/big"
 
-	s256 "github.com/anyswap/FastMulThreshold-DSA/crypto/secp256k1"
-	"github.com/anyswap/FastMulThreshold-DSA/internal/common/math/random"
+	s256 "github.com/deltaswapio/gsmpc/crypto/secp256k1"
+	"github.com/deltaswapio/gsmpc/internal/common/math/random"
 )
 
 //-------------------------------------------------------------------------------
@@ -35,8 +35,8 @@ type ZkUProof struct {
 }
 
 // ZkUProve create ZkUProof
-func ZkUProve(keytype string,u *big.Int) *ZkUProof {
-    	// R = r*G
+func ZkUProve(keytype string, u *big.Int) *ZkUProof {
+	// R = r*G
 	r := random.GetRandomIntFromZn(s256.S256(keytype).N1())
 	rGx, rGy := s256.S256(keytype).ScalarBaseMult(r.Bytes())
 
@@ -44,7 +44,7 @@ func ZkUProve(keytype string,u *big.Int) *ZkUProof {
 	uGx, uGy := s256.S256(keytype).ScalarBaseMult(u.Bytes())
 
 	// e = HASH(R||U)
-	e := Sha512_256(rGx,rGy,uGx,uGy)
+	e := Sha512_256(rGx, rGy, uGx, uGy)
 
 	// s = r + e*u mod q
 	s := new(big.Int).Mul(e, u)
@@ -57,13 +57,13 @@ func ZkUProve(keytype string,u *big.Int) *ZkUProof {
 }
 
 // ZkUVerify verify ZkUProof
-func ZkUVerify(keytype string,uG []*big.Int, zkUProof *ZkUProof) bool {
-    	if uG == nil || len(uG) == 0 || zkUProof == nil || zkUProof.E == nil || zkUProof.S == nil {
-	    return false
+func ZkUVerify(keytype string, uG []*big.Int, zkUProof *ZkUProof) bool {
+	if uG == nil || len(uG) == 0 || zkUProof == nil || zkUProof.E == nil || zkUProof.S == nil {
+		return false
 	}
 
 	// Check whether the point is on the curve
-	if !checkPointOnCurve(keytype,uG) {
+	if !checkPointOnCurve(keytype, uG) {
 		return false
 	}
 
@@ -79,13 +79,13 @@ func ZkUVerify(keytype string,uG []*big.Int, zkUProof *ZkUProof) bool {
 	rGx, rGy := s256.S256(keytype).Add(sGx, sGy, eUx, eUy)
 
 	// HASH(R||U)
-	e := Sha512_256(rGx,rGy,uG[0],uG[1])
+	e := Sha512_256(rGx, rGy, uG[0], uG[1])
 
 	// check HASH(R||U) == e ??
 	if e.Cmp(zkUProof.E) == 0 {
 		return true
 	}
-	
+
 	return false
 }
 
@@ -114,7 +114,7 @@ func (zku *ZkUProof) UnmarshalJSON(raw []byte) error {
 	zku.S, _ = new(big.Int).SetString(zk.S, 10)
 
 	if zku.E == nil || zku.S == nil {
-	    return errors.New("unmarshal json error")
+		return errors.New("unmarshal json error")
 	}
 
 	return nil
@@ -129,8 +129,8 @@ type ZkXiProof struct {
 }
 
 // ZkXiProve create ZkXiProof
-func ZkXiProve(keytype string,sku1 *big.Int) *ZkXiProof {
-    	// R = r*G
+func ZkXiProve(keytype string, sku1 *big.Int) *ZkXiProof {
+	// R = r*G
 	r := random.GetRandomIntFromZn(s256.S256(keytype).N1())
 	rGx, rGy := s256.S256(keytype).ScalarBaseMult(r.Bytes())
 
@@ -138,7 +138,7 @@ func ZkXiProve(keytype string,sku1 *big.Int) *ZkXiProof {
 	xGx, xGy := s256.S256(keytype).ScalarBaseMult(sku1.Bytes())
 
 	// e = HASH(R||X)
-	e := Sha512_256(rGx,rGy,xGx,xGy)
+	e := Sha512_256(rGx, rGy, xGx, xGy)
 
 	// s = r + e*x
 	s := new(big.Int).Mul(e, sku1)
@@ -151,13 +151,13 @@ func ZkXiProve(keytype string,sku1 *big.Int) *ZkXiProof {
 }
 
 // ZkXiVerify verify ZkXiProof
-func ZkXiVerify(keytype string,xiG []*big.Int, zkXiProof *ZkXiProof) bool {
+func ZkXiVerify(keytype string, xiG []*big.Int, zkXiProof *ZkXiProof) bool {
 	if xiG == nil || len(xiG) == 0 || zkXiProof == nil || zkXiProof.E == nil || zkXiProof.S == nil {
-	    return false
+		return false
 	}
 
 	// Check whether the point is on the curve
-	if !checkPointOnCurve(keytype,xiG) {
+	if !checkPointOnCurve(keytype, xiG) {
 		return false
 	}
 
@@ -167,13 +167,13 @@ func ZkXiVerify(keytype string,xiG []*big.Int, zkXiProof *ZkXiProof) bool {
 	// -e*X
 	minusE := new(big.Int).Mul(big.NewInt(-1), zkXiProof.E)
 	minusE = new(big.Int).Mod(minusE, s256.S256(keytype).N1())
-	eUx, eUy := s256.S256(keytype).ScalarMult(xiG[0],xiG[1], minusE.Bytes())
+	eUx, eUy := s256.S256(keytype).ScalarMult(xiG[0], xiG[1], minusE.Bytes())
 
 	// R = s*G - e*X
 	rGx, rGy := s256.S256(keytype).Add(sGx, sGy, eUx, eUy)
 
 	// HASH(R||X)
-	e := Sha512_256(rGx,rGy,xiG[0],xiG[1])
+	e := Sha512_256(rGx, rGy, xiG[0], xiG[1])
 
 	// check HASH(R||X) == e ??
 	if e.Cmp(zkXiProof.E) == 0 {
@@ -208,10 +208,8 @@ func (zkx *ZkXiProof) UnmarshalJSON(raw []byte) error {
 	zkx.S, _ = new(big.Int).SetString(zk.S, 10)
 
 	if zkx.E == nil || zkx.S == nil {
-	    return errors.New("unmarshal json error")
+		return errors.New("unmarshal json error")
 	}
 
 	return nil
 }
-
-

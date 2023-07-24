@@ -24,7 +24,6 @@ devp2p subprotocols by abstracting away code standardly shared by protocols.
 * standardise error handling related to communication
 * standardised	handshake negotiation
 * TODO: automatic generation of wire protocol specification for peers
-
 */
 package protocols
 
@@ -37,11 +36,11 @@ import (
 	"sync"
 	"time"
 
-	"github.com/anyswap/FastMulThreshold-DSA/p2p"
-	"github.com/anyswap/FastMulThreshold-DSA/p2p/metrics"
+	"github.com/deltaswapio/gsmpc/p2p"
+	"github.com/deltaswapio/gsmpc/p2p/metrics"
 	"github.com/fsn-dev/cryptoCoins/tools/rlp"
-	//"github.com/anyswap/FastMulThreshold-DSA/swarm/spancontext"
-	//"github.com/anyswap/FastMulThreshold-DSA/swarm/tracing"
+	//"github.com/deltaswapio/gsmpc/swarm/spancontext"
+	//"github.com/deltaswapio/gsmpc/swarm/tracing"
 )
 
 // error codes used by this  protocol scheme
@@ -72,11 +71,11 @@ var errorToString = map[int]string{
 Error implements the standard go error interface.
 Use:
 
-  errorf(code, format, params ...interface{})
+	errorf(code, format, params ...interface{})
 
 Prints as:
 
- <description>: <details>
+	<description>: <details>
 
 where description is given by code in errorToString
 and details is fmt.Sprintf(format, params...)
@@ -215,11 +214,11 @@ func (p *Peer) Run(handler func(ctx context.Context, msg interface{}) error) err
 	for {
 		if err := p.handleIncoming(handler); err != nil {
 			if err != io.EOF {
-			    reg := metrics.GetOrRegisterCounter("peer.handleincoming.error", nil)
-			    if reg != nil {
-				reg.Inc(1)
-			    }
-			    fmt.Errorf("peer.handleIncoming", "err", err)
+				reg := metrics.GetOrRegisterCounter("peer.handleincoming.error", nil)
+				if reg != nil {
+					reg.Inc(1)
+				}
+				fmt.Errorf("peer.handleIncoming", "err", err)
 			}
 
 			return err
@@ -239,17 +238,17 @@ func (p *Peer) Drop(err error) {
 // this low level call will be wrapped by libraries providing routed or broadcast sends
 // but often just used to forward and push messages to directly connected peers
 func (p *Peer) Send(ctx context.Context, msg interface{}) error {
-    defer func() {
-	reg := metrics.GetOrRegisterResettingTimer("peer.send_t", nil)
-	if reg != nil {
-	    reg.UpdateSince(time.Now())
-	}
-    }()
+	defer func() {
+		reg := metrics.GetOrRegisterResettingTimer("peer.send_t", nil)
+		if reg != nil {
+			reg.UpdateSince(time.Now())
+		}
+	}()
 
-    reg := metrics.GetOrRegisterCounter("peer.send", nil)
-    if reg != nil {
-	reg.Inc(1)
-    }
+	reg := metrics.GetOrRegisterCounter("peer.send", nil)
+	if reg != nil {
+		reg.Inc(1)
+	}
 
 	var b bytes.Buffer
 	/*	if tracing.Enabled {
@@ -358,9 +357,10 @@ func (p *Peer) handleIncoming(handle func(ctx context.Context, msg interface{}) 
 
 // Handshake negotiates a handshake on the peer connection
 // * arguments
-//   * context
-//   * the local handshake to be sent to the remote peer
-//   * funcion to be called on the remote handshake (can be nil)
+//   - context
+//   - the local handshake to be sent to the remote peer
+//   - funcion to be called on the remote handshake (can be nil)
+//
 // * expects a remote handshake back of the same type
 // * the dialing peer needs to send the handshake first and then waits for remote
 // * the listening peer waits for the remote handshake and then sends it

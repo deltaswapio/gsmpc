@@ -18,12 +18,12 @@ package signing
 
 import (
 	"bytes"
+	"encoding/hex"
 	"errors"
 	"fmt"
-	"github.com/anyswap/FastMulThreshold-DSA/smpc-lib/smpc"
+	"github.com/deltaswapio/gsmpc/smpc-lib/crypto/ed"
+	"github.com/deltaswapio/gsmpc/smpc-lib/smpc"
 	r255 "github.com/gtank/ristretto255"
-	"encoding/hex"
-	"github.com/anyswap/FastMulThreshold-DSA/smpc-lib/crypto/ed"
 )
 
 // Start verify CSB DSB commitment data,broacast current node s to other nodes
@@ -75,7 +75,7 @@ func (round *round6) Start() error {
 			}
 		}
 		sB2.Encode(sBBytes2[:0])
-	}else {
+	} else {
 		var sB2, temSB ed.ExtendedGroupElement
 		for k := range round.idsign {
 			msg4, ok := round.temp.signRound4Messages[k].(*SignRound4Message)
@@ -118,7 +118,7 @@ func (round *round6) Start() error {
 
 	if round.temp.keyType == smpc.SR25519 {
 		var FinalR2 = new(r255.Element)
-		var sBCal = new(r255.Element) 
+		var sBCal = new(r255.Element)
 		var FinalPkB = new(r255.Element)
 		var k2Scalar = new(r255.Scalar)
 		k2Scalar.Decode(k2[:])
@@ -129,7 +129,7 @@ func (round *round6) Start() error {
 		sBCal = new(r255.Element).Add(sBCal, FinalR2)
 
 		sBCal.Encode(sBCalBytes[:0])
-	}else {
+	} else {
 		var FinalR2, sBCal, FinalPkB ed.ExtendedGroupElement
 		FinalR2.FromBytes(&round.temp.FinalRBytes)
 		FinalPkB.FromBytes(&round.temp.pkfinal)
@@ -160,7 +160,7 @@ func (round *round6) Start() error {
 	return nil
 }
 
-// CanAccept is it legal to receive this message 
+// CanAccept is it legal to receive this message
 func (round *round6) CanAccept(msg smpc.Message) bool {
 	if _, ok := msg.(*SignRound6Message); ok {
 		return msg.IsBroadcast()
@@ -168,7 +168,7 @@ func (round *round6) CanAccept(msg smpc.Message) bool {
 	return false
 }
 
-// Update  is the message received and ready for the next round? 
+// Update  is the message received and ready for the next round?
 func (round *round6) Update() (bool, error) {
 	for j, msg := range round.temp.signRound6Messages {
 		if round.ok[j] {

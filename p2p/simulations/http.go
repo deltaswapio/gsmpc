@@ -29,11 +29,11 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/anyswap/FastMulThreshold-DSA/p2p"
-	"github.com/anyswap/FastMulThreshold-DSA/p2p/discover"
-	"github.com/anyswap/FastMulThreshold-DSA/p2p/event"
-	"github.com/anyswap/FastMulThreshold-DSA/p2p/simulations/adapters"
-	"github.com/anyswap/FastMulThreshold-DSA/rpc"
+	"github.com/deltaswapio/gsmpc/p2p"
+	"github.com/deltaswapio/gsmpc/p2p/discover"
+	"github.com/deltaswapio/gsmpc/p2p/event"
+	"github.com/deltaswapio/gsmpc/p2p/simulations/adapters"
+	"github.com/deltaswapio/gsmpc/rpc"
 	"github.com/julienschmidt/httprouter"
 	"golang.org/x/net/websocket"
 )

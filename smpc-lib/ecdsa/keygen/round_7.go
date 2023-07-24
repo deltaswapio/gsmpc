@@ -19,11 +19,11 @@ package keygen
 import (
 	"errors"
 	"fmt"
-	"github.com/anyswap/FastMulThreshold-DSA/smpc-lib/smpc"
-	"github.com/anyswap/FastMulThreshold-DSA/smpc-lib/crypto/ec2"
+	"github.com/deltaswapio/gsmpc/smpc-lib/crypto/ec2"
+	"github.com/deltaswapio/gsmpc/smpc-lib/smpc"
 )
 
-// Start return save data 
+// Start return save data
 func (round *round7) Start() error {
 	if round.started {
 		return errors.New("round already started")
@@ -31,7 +31,7 @@ func (round *round7) Start() error {
 	round.number = 7
 	round.started = true
 	round.ResetOK()
-	
+
 	ids, err := round.GetIDs()
 	if err != nil {
 		return err
@@ -56,7 +56,7 @@ func (round *round7) Start() error {
 			return errors.New("round.Start get round6 msg fail")
 		}
 
-		if !ec2.ZkXiVerify(round.keytype,xiG, msg6.U1zkXiProof) {
+		if !ec2.ZkXiVerify(round.keytype, xiG, msg6.U1zkXiProof) {
 			fmt.Printf("========= round7 verify zkx fail, k = %v ==========\n", k)
 			return errors.New("verify zkx fail")
 		}

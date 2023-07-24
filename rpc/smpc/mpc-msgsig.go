@@ -18,21 +18,21 @@
 package smpc
 
 import (
-	"github.com/anyswap/FastMulThreshold-DSA/internal/common"
-	"github.com/anyswap/FastMulThreshold-DSA/smpc"
 	"encoding/json"
+	"github.com/deltaswapio/gsmpc/internal/common"
+	"github.com/deltaswapio/gsmpc/smpc"
 )
 
 // ReqKeyGen this will be called by smpc_reqKeyGen
 // msg: a json string,such as :
-//{
-//"Account":xxx,
-//"Nonce":xxx,
-//}
-//return pubkey and coins addr
-func (service *Service) ReqKeyGen(rsv string,msg string) map[string]interface{} {
-	common.Debug("===============ReqKeyGen================","rsv",rsv,"msg",msg)
-	
+// {
+// "Account":xxx,
+// "Nonce":xxx,
+// }
+// return pubkey and coins addr
+func (service *Service) ReqKeyGen(rsv string, msg string) map[string]interface{} {
+	common.Debug("===============ReqKeyGen================", "rsv", rsv, "msg", msg)
+
 	data := make(map[string]interface{})
 	if msg == "" || rsv == "" {
 		data["result"] = ""
@@ -45,20 +45,20 @@ func (service *Service) ReqKeyGen(rsv string,msg string) map[string]interface{} 
 	}
 
 	m := &smpc.MsgSig{Rsv: rsv, MsgType: "REQSMPCADDR", Msg: msg}
-       raw,err := json.Marshal(m)
-       if err != nil {
-	    common.Error("===============ReqKeyGen,marshal msg sig error================","err",err)
-               data["result"] = ""
-               return map[string]interface{}{
-                       "Status": "Error",
-                       "Tip":    "",
-                       "Error":  err.Error(),
-                       "Data":   data,
-               }
-       }
+	raw, err := json.Marshal(m)
+	if err != nil {
+		common.Error("===============ReqKeyGen,marshal msg sig error================", "err", err)
+		data["result"] = ""
+		return map[string]interface{}{
+			"Status": "Error",
+			"Tip":    "",
+			"Error":  err.Error(),
+			"Data":   data,
+		}
+	}
 
 	ret, tip, err := smpc.ReqKeyGen(string(raw))
-	common.Debug("=================ReqKeyGen,get result.==================", "ret", ret,"err", err)
+	common.Debug("=================ReqKeyGen,get result.==================", "ret", ret, "err", err)
 	if err != nil {
 		data["result"] = ""
 		return map[string]interface{}{
@@ -78,7 +78,7 @@ func (service *Service) ReqKeyGen(rsv string,msg string) map[string]interface{} 
 	}
 }
 
-// AcceptKeyGen  Agree to generate pubkey 
+// AcceptKeyGen  Agree to generate pubkey
 // Raw is a special signed transaction that agrees to reqaddr. The data format is:
 // {
 // "TxType":"ACCEPTREQADDR",
@@ -88,25 +88,25 @@ func (service *Service) ReqKeyGen(rsv string,msg string) map[string]interface{} 
 // "Accept":"XXX",
 // "TimeStamp":"XXX"
 // }
-func (service *Service) AcceptKeyGen(rsv string,msg string) map[string]interface{} {
+func (service *Service) AcceptKeyGen(rsv string, msg string) map[string]interface{} {
 
-	common.Debug("=================AcceptKeyGen==================", "rsv", rsv,"msg", msg)
+	common.Debug("=================AcceptKeyGen==================", "rsv", rsv, "msg", msg)
 	data := make(map[string]interface{})
 	m := &smpc.MsgSig{Rsv: rsv, MsgType: "ACCEPTREQADDR", Msg: msg}
-       raw,err := json.Marshal(m)
-       if err != nil {
-	    common.Error("=================AcceptKeyGen,marshal msg sig error==================", "err",err,"rsv", rsv,"msg", msg)
-               data["result"] = ""
-               return map[string]interface{}{
-                       "Status": "Error",
-                       "Tip":    "",
-                       "Error":  err.Error(),
-                       "Data":   data,
-               }
-       }
+	raw, err := json.Marshal(m)
+	if err != nil {
+		common.Error("=================AcceptKeyGen,marshal msg sig error==================", "err", err, "rsv", rsv, "msg", msg)
+		data["result"] = ""
+		return map[string]interface{}{
+			"Status": "Error",
+			"Tip":    "",
+			"Error":  err.Error(),
+			"Data":   data,
+		}
+	}
 
 	ret, tip, err := smpc.RPCAcceptReqAddr(string(raw))
-	common.Debug("=================AcceptKeyGen,get result==================", "ret", ret,"err", err)
+	common.Debug("=================AcceptKeyGen,get result==================", "ret", ret, "err", err)
 	if err != nil {
 		data["result"] = "Failure"
 		return map[string]interface{}{
@@ -136,25 +136,25 @@ func (service *Service) AcceptKeyGen(rsv string,msg string) map[string]interface
 // "Accept":"XXX",
 // "TimeStamp":"XXX"
 // }
-func (service *Service) AcceptSigning(rsv string,msg string) map[string]interface{} {
+func (service *Service) AcceptSigning(rsv string, msg string) map[string]interface{} {
 
-	common.Debug("=================AcceptSigning==================", "rsv", rsv,"msg", msg)
+	common.Debug("=================AcceptSigning==================", "rsv", rsv, "msg", msg)
 	data := make(map[string]interface{})
 	m := &smpc.MsgSig{Rsv: rsv, MsgType: "ACCEPTSIGN", Msg: msg}
-       raw,err := json.Marshal(m)
-       if err != nil {
-	    common.Error("=================AcceptSigning,marshal msg sig error==================", "err", err)
-               data["result"] = ""
-               return map[string]interface{}{
-                       "Status": "Error",
-                       "Tip":    "",
-                       "Error":  err.Error(),
-                       "Data":   data,
-               }
-       }
+	raw, err := json.Marshal(m)
+	if err != nil {
+		common.Error("=================AcceptSigning,marshal msg sig error==================", "err", err)
+		data["result"] = ""
+		return map[string]interface{}{
+			"Status": "Error",
+			"Tip":    "",
+			"Error":  err.Error(),
+			"Data":   data,
+		}
+	}
 
 	ret, tip, err := smpc.RPCAcceptSign(string(raw))
-	common.Debug("=================AcceptSigning,get result==================", "err", err,"ret",ret)
+	common.Debug("=================AcceptSigning,get result==================", "err", err, "ret", ret)
 	if err != nil {
 		data["result"] = "Failure"
 		return map[string]interface{}{
@@ -174,7 +174,7 @@ func (service *Service) AcceptSigning(rsv string,msg string) map[string]interfac
 	}
 }
 
-// Signing  Execute the sign command 
+// Signing  Execute the sign command
 // Raw is a special signed transaction. The nonce of the transaction is through SMPC_ Getsignnonce function. The data format is:
 // {
 // "TxType":"SIGN",
@@ -189,25 +189,25 @@ func (service *Service) AcceptSigning(rsv string,msg string) map[string]interfac
 // "Mode":"XXX",
 // "TimeStamp":"XXX"
 // }
-func (service *Service) Signing(rsv string,msg string) map[string]interface{} {
-	common.Debug("===================Signing=====================", "rsv", rsv,"msg",msg)
+func (service *Service) Signing(rsv string, msg string) map[string]interface{} {
+	common.Debug("===================Signing=====================", "rsv", rsv, "msg", msg)
 
 	data := make(map[string]interface{})
 	m := &smpc.MsgSig{Rsv: rsv, MsgType: "SIGN", Msg: msg}
-       raw,err := json.Marshal(m)
-       if err != nil {
-	    common.Error("===================Signing,marshal msg sig error=====================", "err",err)
-               data["result"] = ""
-               return map[string]interface{}{
-                       "Status": "Error",
-                       "Tip":    "",
-                       "Error":  err.Error(),
-                       "Data":   data,
-               }
-       }
+	raw, err := json.Marshal(m)
+	if err != nil {
+		common.Error("===================Signing,marshal msg sig error=====================", "err", err)
+		data["result"] = ""
+		return map[string]interface{}{
+			"Status": "Error",
+			"Tip":    "",
+			"Error":  err.Error(),
+			"Data":   data,
+		}
+	}
 
 	key, tip, err := smpc.Sign(string(raw))
-	common.Debug("===================Signing=====================", "err", err,"ret",key)
+	common.Debug("===================Signing=====================", "err", err, "ret", key)
 	if err != nil {
 		data["result"] = ""
 		return map[string]interface{}{
@@ -228,21 +228,21 @@ func (service *Service) Signing(rsv string,msg string) map[string]interface{} {
 }
 
 // ReSharing do reshare
-func (service *Service) ReSharing(rsv string,msg string) map[string]interface{} {
-	common.Debug("===================ReSharing=====================", "rsv", rsv,"msg",msg)
+func (service *Service) ReSharing(rsv string, msg string) map[string]interface{} {
+	common.Debug("===================ReSharing=====================", "rsv", rsv, "msg", msg)
 
 	data := make(map[string]interface{})
 	m := &smpc.MsgSig{Rsv: rsv, MsgType: "RESHARE", Msg: msg}
-       raw,err := json.Marshal(m)
-       if err != nil {
-               data["result"] = ""
-               return map[string]interface{}{
-                       "Status": "Error",
-                       "Tip":    "",
-                       "Error":  err.Error(),
-                       "Data":   data,
-               }
-       }
+	raw, err := json.Marshal(m)
+	if err != nil {
+		data["result"] = ""
+		return map[string]interface{}{
+			"Status": "Error",
+			"Tip":    "",
+			"Error":  err.Error(),
+			"Data":   data,
+		}
+	}
 
 	key, tip, err := smpc.ReShare(string(raw))
 	common.Debug("===================reshare=====================", "key", key, "err", err, "raw", raw)
@@ -266,20 +266,20 @@ func (service *Service) ReSharing(rsv string,msg string) map[string]interface{} 
 }
 
 // AcceptReSharing Agree to reshare
-func (service *Service) AcceptReSharing(rsv string,msg string) map[string]interface{} {
+func (service *Service) AcceptReSharing(rsv string, msg string) map[string]interface{} {
 
 	data := make(map[string]interface{})
 	m := &smpc.MsgSig{Rsv: rsv, MsgType: "ACCEPTRESHARE", Msg: msg}
-       raw,err := json.Marshal(m)
-       if err != nil {
-               data["result"] = ""
-               return map[string]interface{}{
-                       "Status": "Error",
-                       "Tip":    "",
-                       "Error":  err.Error(),
-                       "Data":   data,
-               }
-       }
+	raw, err := json.Marshal(m)
+	if err != nil {
+		data["result"] = ""
+		return map[string]interface{}{
+			"Status": "Error",
+			"Tip":    "",
+			"Error":  err.Error(),
+			"Data":   data,
+		}
+	}
 
 	ret, tip, err := smpc.RPCAcceptReShare(string(raw))
 	if err != nil {
@@ -301,23 +301,23 @@ func (service *Service) AcceptReSharing(rsv string,msg string) map[string]interf
 	}
 }
 
-// PreSigning  Generate the relevant data required by the sign command in advance 
+// PreSigning  Generate the relevant data required by the sign command in advance
 // data = pubkey + subgids
-func (service *Service) PreSigning(rsv string,msg string) map[string]interface{} {
-	common.Debug("===================PreSigning=====================", "rsv", rsv,"msg",msg)
+func (service *Service) PreSigning(rsv string, msg string) map[string]interface{} {
+	common.Debug("===================PreSigning=====================", "rsv", rsv, "msg", msg)
 
 	data := make(map[string]interface{})
 	m := &smpc.MsgSig{Rsv: rsv, MsgType: "PRESIGNDATA", Msg: msg}
-       raw,err := json.Marshal(m)
-       if err != nil {
-               data["result"] = ""
-               return map[string]interface{}{
-                       "Status": "Error",
-                       "Tip":    "",
-                       "Error":  err.Error(),
-                       "Data":   data,
-               }
-       }
+	raw, err := json.Marshal(m)
+	if err != nil {
+		data["result"] = ""
+		return map[string]interface{}{
+			"Status": "Error",
+			"Tip":    "",
+			"Error":  err.Error(),
+			"Data":   data,
+		}
+	}
 
 	tip, err := smpc.PreGenSignData(string(raw))
 	if err != nil {
@@ -338,4 +338,3 @@ func (service *Service) PreSigning(rsv string,msg string) map[string]interface{}
 		"Data":   data,
 	}
 }
-

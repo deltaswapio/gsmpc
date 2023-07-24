@@ -26,8 +26,8 @@ import (
 	"reflect"
 	"strings"
 
-	"github.com/anyswap/FastMulThreshold-DSA/crypto/sha3"
-	"github.com/anyswap/FastMulThreshold-DSA/internal/common/hexutil"
+	"github.com/deltaswapio/gsmpc/crypto/sha3"
+	"github.com/deltaswapio/gsmpc/internal/common/hexutil"
 )
 
 // Lengths of hashes and addresses in bytes.
@@ -197,9 +197,9 @@ func (a Address) Hash() Hash { return BytesToHash(a[:]) }
 func (a Address) Hex() string {
 	unchecksummed := hex.EncodeToString(a[:])
 	sha := sha3.NewKeccak256()
-	_,err := sha.Write([]byte(unchecksummed))
+	_, err := sha.Write([]byte(unchecksummed))
 	if err != nil {
-	    return ""
+		return ""
 	}
 
 	hash := sha.Sum(nil)

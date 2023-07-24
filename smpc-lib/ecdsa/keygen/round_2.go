@@ -17,12 +17,12 @@
 package keygen
 
 import (
+	"encoding/hex"
 	"errors"
 	"fmt"
-	"github.com/anyswap/FastMulThreshold-DSA/smpc-lib/crypto/ec2"
-	"github.com/anyswap/FastMulThreshold-DSA/smpc-lib/smpc"
+	"github.com/deltaswapio/gsmpc/smpc-lib/crypto/ec2"
+	"github.com/deltaswapio/gsmpc/smpc-lib/smpc"
 	"math/big"
-	"encoding/hex"
 )
 
 const (
@@ -51,8 +51,8 @@ func (round *round2) Start() error {
 	round.Save.CurDNodeID, _ = new(big.Int).SetString(round.dnodeid, 10)
 
 	//check paillier.N bitlen
-	for _,msg := range round.temp.kgRound1Messages {
-		m,ok := msg.(*KGRound1Message)
+	for _, msg := range round.temp.kgRound1Messages {
+		m, ok := msg.(*KGRound1Message)
 		if !ok {
 			return errors.New("error kg round1 message")
 		}
@@ -72,18 +72,18 @@ func (round *round2) Start() error {
 	// An Efficient Non-Interactive Statistical Zero-Knowledge Proof System for Quasi-Safe Prime Products, section 3.1
 	num := ec2.MustGetRandomInt(round.Save.U1PaillierSk.N.BitLen())
 	if num == nil {
-	    return errors.New("get random int fail")
+		return errors.New("get random int fail")
 	}
 
-	sfProof := ec2.SquareFreeProve(round.Save.U1PaillierSk.N,num,round.Save.U1PaillierSk.L)
+	sfProof := ec2.SquareFreeProve(round.Save.U1PaillierSk.N, num, round.Save.U1PaillierSk.L)
 	if sfProof == nil {
-	    return errors.New("get square free proof fail")
+		return errors.New("get square free proof fail")
 	}
 
 	srm := &KGRound2Message2{
 		KGRoundMessage: new(KGRoundMessage),
-		Num:		num,
-		SfPf:		sfProof,
+		Num:            num,
+		SfPf:           sfProof,
 	}
 	srm.SetFromID(round.dnodeid)
 	srm.SetFromIndex(curIndex)
@@ -91,12 +91,12 @@ func (round *round2) Start() error {
 	round.temp.kgRound2Messages2[curIndex] = srm
 	round.out <- srm
 
-	dul,err := ec2.ContainsDuplicate(ids)
+	dul, err := ec2.ContainsDuplicate(ids)
 	if err != nil || dul || len(ids) > round.dnodecount {
-	    return errors.New("node id error")
+		return errors.New("node id error")
 	}
 
-	u1Shares, err := round.temp.u1Poly.Vss2(round.keytype,ids)
+	u1Shares, err := round.temp.u1Poly.Vss2(round.keytype, ids)
 	if err != nil {
 		return err
 	}
@@ -118,7 +118,7 @@ func (round *round2) Start() error {
 				round.temp.kgRound2Messages[k] = kg
 				break
 			} else if vv != nil && vv.Cmp(id) == 0 {
-				tmp := fmt.Sprintf("%v",id)
+				tmp := fmt.Sprintf("%v", id)
 				idtmp := hex.EncodeToString([]byte(tmp))
 				kg.AppendToID(idtmp) //id-->dnodeid
 				round.out <- kg
@@ -140,7 +140,7 @@ func (round *round2) Start() error {
 	return nil
 }
 
-// CanAccept is it legal to receive this message 
+// CanAccept is it legal to receive this message
 func (round *round2) CanAccept(msg smpc.Message) bool {
 	if _, ok := msg.(*KGRound2Message); ok {
 		return !msg.IsBroadcast()
@@ -154,7 +154,7 @@ func (round *round2) CanAccept(msg smpc.Message) bool {
 	return false
 }
 
-// Update  is the message received and ready for the next round? 
+// Update  is the message received and ready for the next round?
 func (round *round2) Update() (bool, error) {
 	for j, msg := range round.temp.kgRound2Messages {
 		if round.ok[j] {

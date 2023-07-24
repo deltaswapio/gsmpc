@@ -19,10 +19,10 @@ package keygen
 import (
 	"errors"
 	"fmt"
-	"github.com/anyswap/FastMulThreshold-DSA/crypto/secp256k1"
-	"github.com/anyswap/FastMulThreshold-DSA/internal/common/math/random"
-	"github.com/anyswap/FastMulThreshold-DSA/smpc-lib/crypto/ec2"
-	"github.com/anyswap/FastMulThreshold-DSA/smpc-lib/smpc"
+	"github.com/deltaswapio/gsmpc/crypto/secp256k1"
+	"github.com/deltaswapio/gsmpc/internal/common/math/random"
+	"github.com/deltaswapio/gsmpc/smpc-lib/crypto/ec2"
+	"github.com/deltaswapio/gsmpc/smpc-lib/smpc"
 	"math/big"
 )
 
@@ -40,11 +40,11 @@ func (round *round1) Start() error {
 	c1 := random.GetRandomIntFromZn(secp256k1.S256(round.keytype).N1())
 
 	if u1 == nil || c1 == nil || round.threshold <= 1 || round.threshold > round.dnodecount {
-	    return errors.New("round one fail")
+		return errors.New("round one fail")
 	}
 
-	u1Poly, u1PolyG, _ := ec2.Vss2Init(round.keytype,u1, round.threshold)
-	_, c1PolyG, _ := ec2.Vss2Init(round.keytype,c1, round.threshold)
+	u1Poly, u1PolyG, _ := ec2.Vss2Init(round.keytype, u1, round.threshold)
+	_, c1PolyG, _ := ec2.Vss2Init(round.keytype, c1, round.threshold)
 
 	u1Gx, u1Gy := secp256k1.S256(round.keytype).ScalarBaseMult(u1.Bytes())
 	u1Secrets := make([]*big.Int, 0)
@@ -68,7 +68,7 @@ func (round *round1) Start() error {
 	commitC1G := new(ec2.Commitment).Commit(c1Secrets...)
 
 	// 3. generate their own paillier public key and private key
-	u1PaillierPk, u1PaillierSk,p,q := ec2.GenerateKeyPair(round.paillierkeylength)
+	u1PaillierPk, u1PaillierSk, p, q := ec2.GenerateKeyPair(round.paillierkeylength)
 
 	if u1PaillierPk == nil || u1PaillierSk == nil {
 		return errors.New(" Error generating Paillier pubkey/private data ")
@@ -91,14 +91,14 @@ func (round *round1) Start() error {
 
 	index, err := round.GetDNodeIDIndex(round.dnodeid)
 	if err != nil {
-		fmt.Printf("============round1 start,get dnode id index fail,uid = %v,err = %v ===========\n", round.dnodeid,err)
+		fmt.Printf("============round1 start,get dnode id index fail,uid = %v,err = %v ===========\n", round.dnodeid, err)
 		return err
 	}
 
 	kg := &KGRound1Message{
 		KGRoundMessage: new(KGRoundMessage),
 		ComC:           commitU1G.C,
-		ComCBip32:     commitC1G.C,
+		ComCBip32:      commitC1G.C,
 		U1PaillierPk:   u1PaillierPk,
 	}
 	kg.SetFromID(round.dnodeid)
@@ -113,7 +113,7 @@ func (round *round1) Start() error {
 	return nil
 }
 
-// CanAccept is it legal to receive this message 
+// CanAccept is it legal to receive this message
 func (round *round1) CanAccept(msg smpc.Message) bool {
 	if _, ok := msg.(*KGRound1Message); ok {
 		return msg.IsBroadcast()
@@ -121,7 +121,7 @@ func (round *round1) CanAccept(msg smpc.Message) bool {
 	return false
 }
 
-// Update  is the message received and ready for the next round? 
+// Update  is the message received and ready for the next round?
 func (round *round1) Update() (bool, error) {
 	for j, msg := range round.temp.kgRound1Messages {
 		if round.ok[j] {

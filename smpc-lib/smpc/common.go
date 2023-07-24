@@ -17,11 +17,11 @@
 package smpc
 
 import (
-	"encoding/hex"
-	"math/big"
 	"crypto/rand"
+	"encoding/hex"
 	"fmt"
-	"github.com/anyswap/FastMulThreshold-DSA/crypto/secp256k1"
+	"github.com/deltaswapio/gsmpc/crypto/secp256k1"
+	"math/big"
 	"strings"
 )
 
@@ -42,8 +42,8 @@ func (s SortableIDSSlice) Swap(i, j int) {
 
 // GetRandomInt get random int
 func GetRandomInt(length int) *big.Int {
-    	if length <= 0 {
-	    return nil
+	if length <= 0 {
+		return nil
 	}
 
 	// NewInt allocates and returns a new Int set to x.
@@ -69,9 +69,9 @@ func GetRandomInt(length int) *big.Int {
 }
 
 // DECDSASignCalcv calc v of (r,s,v)
-func DECDSASignCalcv(keytype string,r, deltaGammaGy, pkx, pky, R, S *big.Int, hashBytes []byte, invert bool) int {
-    	if r == nil || deltaGammaGy == nil || pkx == nil || pky == nil || R == nil || S == nil || hashBytes == nil {
-	    return -1
+func DECDSASignCalcv(keytype string, r, deltaGammaGy, pkx, pky, R, S *big.Int, hashBytes []byte, invert bool) int {
+	if r == nil || deltaGammaGy == nil || pkx == nil || pky == nil || R == nil || S == nil || hashBytes == nil {
+		return -1
 	}
 
 	//v
@@ -126,82 +126,81 @@ func ReadBits(bigint *big.Int, buf []byte) {
 
 //---------------------------------------------------------------
 
-func IsInfinityPoint(x *big.Int,y *big.Int) bool {
-    if x == nil || y == nil {
+func IsInfinityPoint(x *big.Int, y *big.Int) bool {
+	if x == nil || y == nil {
+		return false
+	}
+
+	zero, _ := new(big.Int).SetString("0", 10)
+	if x.Cmp(zero) == 0 && y.Cmp(zero) != 0 {
+		return true
+	}
+
 	return false
-    }
-
-    zero,_ := new(big.Int).SetString("0",10)
-    if x.Cmp(zero) == 0 && y.Cmp(zero) != 0 {
-	return true
-    }
-
-    return false
 }
 
-// Verify2 Verify whether RSV is legal 
-func Verify2(keytype string,r *big.Int, s *big.Int, v int32, message string, pkx *big.Int, pky *big.Int) bool {
-    // If the modular inverse of s does not exist, the variable ss becomes nil and a panic() occurs when we try to multiply it with z.
-    // This is caused by missing checks in the implementation, specifically not guaranteeing that r, s are in the interval [1, q-1], where q is the curve order. Other sanity checks that should be included are checking that the provided public key is on the correct elliptic curve,as well as checking that it is not the point at infinity.
-    if r == nil || s == nil || pkx == nil || pky == nil || message == "" {
+// Verify2 Verify whether RSV is legal
+func Verify2(keytype string, r *big.Int, s *big.Int, v int32, message string, pkx *big.Int, pky *big.Int) bool {
+	// If the modular inverse of s does not exist, the variable ss becomes nil and a panic() occurs when we try to multiply it with z.
+	// This is caused by missing checks in the implementation, specifically not guaranteeing that r, s are in the interval [1, q-1], where q is the curve order. Other sanity checks that should be included are checking that the provided public key is on the correct elliptic curve,as well as checking that it is not the point at infinity.
+	if r == nil || s == nil || pkx == nil || pky == nil || message == "" {
+		return false
+	}
+
+	if !secp256k1.S256(keytype).IsOnCurve(pkx, pky) {
+		return false
+	}
+
+	if IsInfinityPoint(pkx, pky) {
+		return false
+	}
+
+	one, _ := new(big.Int).SetString("1", 10)
+	nSubOne := new(big.Int).Sub(secp256k1.S256(keytype).N1(), one)
+	if r.Cmp(one) < 0 || r.Cmp(nSubOne) > 0 {
+		return false
+	}
+	if s.Cmp(one) < 0 || s.Cmp(nSubOne) > 0 {
+		return false
+	}
+
+	z, _ := new(big.Int).SetString(message, 16)
+	ss := new(big.Int).ModInverse(s, secp256k1.S256(keytype).N1())
+
+	if ss == nil {
+		return false
+	}
+
+	zz := new(big.Int).Mul(z, ss)
+	u1 := new(big.Int).Mod(zz, secp256k1.S256(keytype).N1())
+
+	zz2 := new(big.Int).Mul(r, ss)
+	u2 := new(big.Int).Mod(zz2, secp256k1.S256(keytype).N1())
+
+	if u1.Sign() == -1 {
+		u1.Add(u1, secp256k1.S256(keytype).N1())
+	}
+	ug := make([]byte, 32)
+	ReadBits(u1, ug[:])
+	ugx, ugy := secp256k1.S256(keytype).KMulG(ug[:])
+
+	if u2.Sign() == -1 {
+		u2.Add(u2, secp256k1.S256(keytype).N1())
+	}
+	upk := make([]byte, 32)
+	ReadBits(u2, upk[:])
+	upkx, upky := secp256k1.S256(keytype).ScalarMult(pkx, pky, upk[:])
+
+	xxx, _ := secp256k1.S256(keytype).Add(ugx, ugy, upkx, upky)
+	xR := new(big.Int).Mod(xxx, secp256k1.S256(keytype).N1())
+
+	if xR.Cmp(r) == 0 {
+		errstring := "============= ECDSA Signature Verify Passed! (r,s) is a Valid Signature ================"
+		fmt.Println(errstring)
+		return true
+	}
+
+	errstring := "================ @@ERROR@@@@@@@@@@@@@@@@@@@@@@@@@@@@: ECDSA Signature Verify NOT Passed! (r,s) is a InValid Siganture! ================"
+	fmt.Println(errstring)
 	return false
-    }
-
-    if !secp256k1.S256(keytype).IsOnCurve(pkx,pky) {
-	return false
-    }
-
-    if IsInfinityPoint(pkx,pky) {
-	return false
-    }
-
-    one,_ := new(big.Int).SetString("1",10)
-    nSubOne := new(big.Int).Sub(secp256k1.S256(keytype).N1(),one)
-    if r.Cmp(one) < 0 || r.Cmp(nSubOne) > 0 {
-	return false
-    }
-    if s.Cmp(one) < 0 || s.Cmp(nSubOne) > 0 {
-	return false
-    }
-
-    z, _ := new(big.Int).SetString(message, 16)
-    ss := new(big.Int).ModInverse(s, secp256k1.S256(keytype).N1())
-
-    if ss == nil {
-	return false
-    }
-
-    zz := new(big.Int).Mul(z, ss)
-    u1 := new(big.Int).Mod(zz, secp256k1.S256(keytype).N1())
-
-    zz2 := new(big.Int).Mul(r, ss)
-    u2 := new(big.Int).Mod(zz2, secp256k1.S256(keytype).N1())
-
-    if u1.Sign() == -1 {
-	    u1.Add(u1, secp256k1.S256(keytype).N1())
-    }
-    ug := make([]byte, 32)
-    ReadBits(u1, ug[:])
-    ugx, ugy := secp256k1.S256(keytype).KMulG(ug[:])
-
-    if u2.Sign() == -1 {
-	    u2.Add(u2, secp256k1.S256(keytype).N1())
-    }
-    upk := make([]byte, 32)
-    ReadBits(u2, upk[:])
-    upkx, upky := secp256k1.S256(keytype).ScalarMult(pkx, pky, upk[:])
-
-    xxx, _ := secp256k1.S256(keytype).Add(ugx, ugy, upkx, upky)
-    xR := new(big.Int).Mod(xxx, secp256k1.S256(keytype).N1())
-
-    if xR.Cmp(r) == 0 {
-	    errstring := "============= ECDSA Signature Verify Passed! (r,s) is a Valid Signature ================"
-	    fmt.Println(errstring)
-	    return true
-    }
-
-    errstring := "================ @@ERROR@@@@@@@@@@@@@@@@@@@@@@@@@@@@: ECDSA Signature Verify NOT Passed! (r,s) is a InValid Siganture! ================"
-    fmt.Println(errstring)
-    return false
 }
-

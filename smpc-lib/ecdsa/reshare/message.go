@@ -18,7 +18,7 @@ package reshare
 
 import (
 	"fmt"
-	"github.com/anyswap/FastMulThreshold-DSA/smpc-lib/crypto/ec2"
+	"github.com/deltaswapio/gsmpc/smpc-lib/crypto/ec2"
 	"math/big"
 	"strconv"
 	"strings"
@@ -46,7 +46,7 @@ func (re *ReRoundMessage) AppendToID(toid string) {
 	re.ToID = append(re.ToID, toid)
 }
 
-// ReRound0Message  Round 0 sending message 
+// ReRound0Message  Round 0 sending message
 type ReRound0Message struct {
 	*ReRoundMessage
 }
@@ -56,7 +56,7 @@ func (re *ReRound0Message) GetFromID() string {
 	return re.FromID
 }
 
-// GetFromIndex get the Serial number of sending nodes in the group 
+// GetFromIndex get the Serial number of sending nodes in the group
 func (re *ReRound0Message) GetFromIndex() int {
 	return re.FromIndex
 }
@@ -86,7 +86,7 @@ func (re *ReRound0Message) GetMsgType() string {
 	return "ReRound0Message"
 }
 
-// ReRound1Message  Round 1 sending message 
+// ReRound1Message  Round 1 sending message
 type ReRound1Message struct {
 	*ReRoundMessage
 	ComC *big.Int
@@ -97,7 +97,7 @@ func (re *ReRound1Message) GetFromID() string {
 	return re.FromID
 }
 
-// GetFromIndex get the Serial number of sending nodes in the group 
+// GetFromIndex get the Serial number of sending nodes in the group
 func (re *ReRound1Message) GetFromIndex() int {
 	return re.FromIndex
 }
@@ -128,7 +128,7 @@ func (re *ReRound1Message) GetMsgType() string {
 	return "ReRound1Message"
 }
 
-// ReRound2Message  Round 2 sending message 
+// ReRound2Message  Round 2 sending message
 type ReRound2Message struct {
 	*ReRoundMessage
 
@@ -141,7 +141,7 @@ func (re *ReRound2Message) GetFromID() string {
 	return re.FromID
 }
 
-// GetFromIndex get the Serial number of sending nodes in the group 
+// GetFromIndex get the Serial number of sending nodes in the group
 func (re *ReRound2Message) GetFromIndex() int {
 	return re.FromIndex
 }
@@ -174,7 +174,7 @@ func (re *ReRound2Message) GetMsgType() string {
 	return "ReRound2Message"
 }
 
-// ReRound2Message1  Round 2 sending message 
+// ReRound2Message1  Round 2 sending message
 type ReRound2Message1 struct {
 	*ReRoundMessage
 
@@ -187,7 +187,7 @@ func (re *ReRound2Message1) GetFromID() string {
 	return re.FromID
 }
 
-// GetFromIndex get the Serial number of sending nodes in the group 
+// GetFromIndex get the Serial number of sending nodes in the group
 func (re *ReRound2Message1) GetFromIndex() int {
 	return re.FromIndex
 }
@@ -240,7 +240,7 @@ func (re *ReRound2Message1) GetMsgType() string {
 	return "ReRound2Message1"
 }
 
-// ReRound3Message  Round 3 sending message 
+// ReRound3Message  Round 3 sending message
 type ReRound3Message struct {
 	*ReRoundMessage
 	U1PaillierPk *ec2.PublicKey
@@ -251,7 +251,7 @@ func (re *ReRound3Message) GetFromID() string {
 	return re.FromID
 }
 
-// GetFromIndex get the Serial number of sending nodes in the group 
+// GetFromIndex get the Serial number of sending nodes in the group
 func (re *ReRound3Message) GetFromIndex() int {
 	return re.FromIndex
 }
@@ -275,9 +275,9 @@ func (re *ReRound3Message) OutMap() map[string]string {
 
 	pk, err := re.U1PaillierPk.MarshalJSON()
 	if err != nil {
-	    return nil
+		return nil
 	}
-	
+
 	m["U1PaillierPk"] = string(pk)
 	m["Type"] = "ReRound3Message"
 	return m
@@ -288,7 +288,7 @@ func (re *ReRound3Message) GetMsgType() string {
 	return "ReRound3Message"
 }
 
-// ReRound4Message  Round 4 sending message 
+// ReRound4Message  Round 4 sending message
 type ReRound4Message struct {
 	*ReRoundMessage
 	U1NtildeH1H2 *ec2.NtildeH1H2
@@ -303,7 +303,7 @@ func (re *ReRound4Message) GetFromID() string {
 	return re.FromID
 }
 
-// GetFromIndex get the Serial number of sending nodes in the group 
+// GetFromIndex get the Serial number of sending nodes in the group
 func (re *ReRound4Message) GetFromIndex() int {
 	return re.FromIndex
 }
@@ -327,19 +327,19 @@ func (re *ReRound4Message) OutMap() map[string]string {
 
 	nt, err := re.U1NtildeH1H2.MarshalJSON()
 	if err != nil {
-	    return nil
+		return nil
 	}
 	m["U1NtildeH1H2"] = string(nt)
 
 	pf1, err := re.NtildeProof1.MarshalJSON()
 	if err != nil {
-	    return nil
+		return nil
 	}
 	m["NtildeProof1"] = string(pf1)
 
 	pf2, err := re.NtildeProof2.MarshalJSON()
 	if err != nil {
-	    return nil
+		return nil
 	}
 	m["NtildeProof2"] = string(pf2)
 
@@ -352,7 +352,7 @@ func (re *ReRound4Message) GetMsgType() string {
 	return "ReRound4Message"
 }
 
-// ReRound5Message  Round 5 sending message 
+// ReRound5Message  Round 5 sending message
 type ReRound5Message struct {
 	*ReRoundMessage
 	NewSkOk string
@@ -363,7 +363,7 @@ func (re *ReRound5Message) GetFromID() string {
 	return re.FromID
 }
 
-// GetFromIndex get the Serial number of sending nodes in the group 
+// GetFromIndex get the Serial number of sending nodes in the group
 func (re *ReRound5Message) GetFromIndex() int {
 	return re.FromIndex
 }
@@ -393,4 +393,3 @@ func (re *ReRound5Message) OutMap() map[string]string {
 func (re *ReRound5Message) GetMsgType() string {
 	return "ReRound5Message"
 }
-

@@ -17,15 +17,15 @@
 package signing
 
 import (
+	"encoding/hex"
 	"errors"
 	"fmt"
-	"github.com/anyswap/FastMulThreshold-DSA/crypto/secp256k1"
-	"github.com/anyswap/FastMulThreshold-DSA/internal/common/math/random"
-	"github.com/anyswap/FastMulThreshold-DSA/smpc-lib/crypto/ec2"
-	"github.com/anyswap/FastMulThreshold-DSA/smpc-lib/smpc"
+	"github.com/deltaswapio/gsmpc/crypto/secp256k1"
+	"github.com/deltaswapio/gsmpc/internal/common/math/random"
+	"github.com/deltaswapio/gsmpc/log"
+	"github.com/deltaswapio/gsmpc/smpc-lib/crypto/ec2"
+	"github.com/deltaswapio/gsmpc/smpc-lib/smpc"
 	"math/big"
-	"encoding/hex"
-	"github.com/anyswap/FastMulThreshold-DSA/log"
 )
 
 // Start verify MtAZK1Proof,paillier homo add ,paillier homo mul
@@ -66,17 +66,17 @@ func (round *round4) Start() error {
 		if k == curIndex {
 			u1PaillierPk := round.save.U1PaillierPk[index]
 			u1nt := round.save.U1NtildeH1H2[index]
-			u1rlt1 := msg2.U1u1MtAZK1Proof.MtARangeProofVerify(round.keytype,msg3.Kc, u1PaillierPk, u1nt)
+			u1rlt1 := msg2.U1u1MtAZK1Proof.MtARangeProofVerify(round.keytype, msg3.Kc, u1PaillierPk, u1nt)
 			if !u1rlt1 {
-				log.Error("=====================round4.start,verify mtazk1 proof fail===================","msg2",*msg2,"msg3",*msg3,"index",index,"oldindex",oldindex,"idsign",round.idsign,"save.IDs",round.save.IDs,"curIndex",curIndex)
+				log.Error("=====================round4.start,verify mtazk1 proof fail===================", "msg2", *msg2, "msg3", *msg3, "index", index, "oldindex", oldindex, "idsign", round.idsign, "save.IDs", round.save.IDs, "curIndex", curIndex)
 				return errors.New("verify mtazk1 proof fail")
 			}
 		} else {
 			u1PaillierPk := round.save.U1PaillierPk[index]
 			u1nt := round.save.U1NtildeH1H2[oldindex]
-			u1rlt1 := msg2.U1u1MtAZK1Proof.MtARangeProofVerify(round.keytype,msg3.Kc, u1PaillierPk, u1nt)
+			u1rlt1 := msg2.U1u1MtAZK1Proof.MtARangeProofVerify(round.keytype, msg3.Kc, u1PaillierPk, u1nt)
 			if !u1rlt1 {
-				log.Error("=====================round4.start,verify mtazk1 proof fail===================","msg2",*msg2,"msg3",*msg3,"index",index,"oldindex",oldindex,"idsign",round.idsign,"save.IDs",round.save.IDs,"curIndex",curIndex,"k",k)
+				log.Error("=====================round4.start,verify mtazk1 proof fail===================", "msg2", *msg2, "msg3", *msg3, "index", index, "oldindex", oldindex, "idsign", round.idsign, "save.IDs", round.save.IDs, "curIndex", curIndex, "k", k)
 				return errors.New("verify mtazk1 proof fail")
 			}
 		}
@@ -86,8 +86,8 @@ func (round *round4) Start() error {
 		msg1, _ := round.temp.signRound1Messages[k].(*SignRound1Message)
 		deCommit := &ec2.Commitment{C: msg1.ComWiC, D: msg3.ComWiD}
 		if !deCommit.Verify(round.keytype) {
-			log.Error("=====================round4.start,verify commit for wi fail================","msg1",*msg1,"msg3",*msg3,"index",index,"oldindex",oldindex,"idsign",round.idsign,"save.IDs",round.save.IDs,"curIndex",curIndex,"k",k)
-		    return errors.New("verify commit for wi fail")
+			log.Error("=====================round4.start,verify commit for wi fail================", "msg1", *msg1, "msg3", *msg3, "index", index, "oldindex", oldindex, "idsign", round.idsign, "save.IDs", round.save.IDs, "curIndex", curIndex, "k", k)
+			return errors.New("verify commit for wi fail")
 		}
 	}
 
@@ -135,7 +135,7 @@ func (round *round4) Start() error {
 			u1KGamma1Cipher := u1PaillierPk.HomoMul(msg3.Kc, round.temp.u1Gamma)
 			beta1U1StarCipher, u1BetaR1, _ := u1PaillierPk.Encrypt(betaU1Star[k])
 			u1KGamma1Cipher = u1PaillierPk.HomoAdd(u1KGamma1Cipher, beta1U1StarCipher)
-			u1u1MtAZK2Proof := ec2.MtARespZKProofProve(round.keytype,round.temp.u1Gamma, betaU1Star[k], u1BetaR1, round.temp.ukc, u1KGamma1Cipher,round.save.U1PaillierPk[oldindex], round.save.U1NtildeH1H2[oldindex])
+			u1u1MtAZK2Proof := ec2.MtARespZKProofProve(round.keytype, round.temp.u1Gamma, betaU1Star[k], u1BetaR1, round.temp.ukc, u1KGamma1Cipher, round.save.U1PaillierPk[oldindex], round.save.U1NtildeH1H2[oldindex])
 
 			srm := &SignRound4Message{
 				SignRoundMessage: new(SignRoundMessage),
@@ -152,7 +152,7 @@ func (round *round4) Start() error {
 			u1KGamma1Cipher := u1PaillierPk.HomoMul(msg3.Kc, round.temp.u1Gamma)
 			beta1U1StarCipher, u1BetaR1, _ := u1PaillierPk.Encrypt(betaU1Star[k])
 			u1KGamma1Cipher = u1PaillierPk.HomoAdd(u1KGamma1Cipher, beta1U1StarCipher)
-			u1u1MtAZK2Proof := ec2.MtARespZKProofProve(round.keytype,round.temp.u1Gamma, betaU1Star[k], u1BetaR1, msg3.Kc, u1KGamma1Cipher,u1PaillierPk, round.save.U1NtildeH1H2[oldindex])
+			u1u1MtAZK2Proof := ec2.MtARespZKProofProve(round.keytype, round.temp.u1Gamma, betaU1Star[k], u1BetaR1, msg3.Kc, u1KGamma1Cipher, u1PaillierPk, round.save.U1NtildeH1H2[oldindex])
 
 			srm := &SignRound4Message{
 				SignRoundMessage: new(SignRoundMessage),
@@ -161,7 +161,7 @@ func (round *round4) Start() error {
 			}
 			srm.SetFromID(round.kgid)
 			srm.SetFromIndex(curIndex)
-			tmp := fmt.Sprintf("%v",v)
+			tmp := fmt.Sprintf("%v", v)
 			idtmp := hex.EncodeToString([]byte(tmp))
 			srm.AppendToID(idtmp) //id-->dnodeid
 			round.out <- srm
@@ -185,7 +185,7 @@ func (round *round4) Start() error {
 			u1Kw1Cipher := u1PaillierPk.HomoMul(msg3.Kc, round.temp.w1)
 			v1U1StarCipher, u1VR1, _ := u1PaillierPk.Encrypt(vU1Star[k])
 			u1Kw1Cipher = u1PaillierPk.HomoAdd(u1Kw1Cipher, v1U1StarCipher) // send to u1
-			u1u1MtAZK3Proof := ec2.MtAwcRespZKProofProve(round.keytype,round.temp.w1, vU1Star[k], u1VR1, round.temp.ukc,u1Kw1Cipher,round.save.U1PaillierPk[oldindex], round.save.U1NtildeH1H2[oldindex])
+			u1u1MtAZK3Proof := ec2.MtAwcRespZKProofProve(round.keytype, round.temp.w1, vU1Star[k], u1VR1, round.temp.ukc, u1Kw1Cipher, round.save.U1PaillierPk[oldindex], round.save.U1NtildeH1H2[oldindex])
 
 			srm := &SignRound4Message1{
 				SignRoundMessage: new(SignRoundMessage),
@@ -202,7 +202,7 @@ func (round *round4) Start() error {
 			u1Kw1Cipher := u1PaillierPk.HomoMul(msg3.Kc, round.temp.w1)
 			v1U1StarCipher, u1VR1, _ := u1PaillierPk.Encrypt(vU1Star[k])
 			u1Kw1Cipher = u1PaillierPk.HomoAdd(u1Kw1Cipher, v1U1StarCipher) // send to u1
-			u1u1MtAZK3Proof := ec2.MtAwcRespZKProofProve(round.keytype,round.temp.w1, vU1Star[k], u1VR1, msg3.Kc, u1Kw1Cipher,u1PaillierPk, round.save.U1NtildeH1H2[oldindex])
+			u1u1MtAZK3Proof := ec2.MtAwcRespZKProofProve(round.keytype, round.temp.w1, vU1Star[k], u1VR1, msg3.Kc, u1Kw1Cipher, u1PaillierPk, round.save.U1NtildeH1H2[oldindex])
 
 			srm := &SignRound4Message1{
 				SignRoundMessage: new(SignRoundMessage),
@@ -211,7 +211,7 @@ func (round *round4) Start() error {
 			}
 			srm.SetFromID(round.kgid)
 			srm.SetFromIndex(curIndex)
-			tmp := fmt.Sprintf("%v",v)
+			tmp := fmt.Sprintf("%v", v)
 			idtmp := hex.EncodeToString([]byte(tmp))
 			srm.AppendToID(idtmp) //id-->dnodeid
 			round.out <- srm
@@ -223,7 +223,7 @@ func (round *round4) Start() error {
 	return nil
 }
 
-// CanAccept is it legal to receive this message 
+// CanAccept is it legal to receive this message
 func (round *round4) CanAccept(msg smpc.Message) bool {
 	if _, ok := msg.(*SignRound4Message); ok {
 		return !msg.IsBroadcast()
@@ -234,7 +234,7 @@ func (round *round4) CanAccept(msg smpc.Message) bool {
 	return false
 }
 
-// Update  is the message received and ready for the next round? 
+// Update  is the message received and ready for the next round?
 func (round *round4) Update() (bool, error) {
 	for j, msg := range round.temp.signRound4Messages {
 		if round.ok[j] {

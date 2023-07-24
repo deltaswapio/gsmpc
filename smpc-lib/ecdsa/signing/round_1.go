@@ -19,11 +19,11 @@ package signing
 import (
 	"errors"
 	"fmt"
-	"github.com/anyswap/FastMulThreshold-DSA/crypto/secp256k1"
-	"github.com/anyswap/FastMulThreshold-DSA/internal/common/math/random"
-	"github.com/anyswap/FastMulThreshold-DSA/smpc-lib/crypto/ec2"
-	"github.com/anyswap/FastMulThreshold-DSA/smpc-lib/ecdsa/keygen"
-	"github.com/anyswap/FastMulThreshold-DSA/smpc-lib/smpc"
+	"github.com/deltaswapio/gsmpc/crypto/secp256k1"
+	"github.com/deltaswapio/gsmpc/internal/common/math/random"
+	"github.com/deltaswapio/gsmpc/smpc-lib/crypto/ec2"
+	"github.com/deltaswapio/gsmpc/smpc-lib/ecdsa/keygen"
+	"github.com/deltaswapio/gsmpc/smpc-lib/smpc"
 	"math/big"
 )
 
@@ -31,10 +31,10 @@ var (
 	zero = big.NewInt(0)
 )
 
-func newRound1(temp *localTempData, save *keygen.LocalDNodeSaveData, idsign smpc.SortableIDSSlice, out chan<- smpc.Message, end chan<- PrePubData, kgid string, threshold int, paillierkeylength int,keytype string) smpc.Round {
+func newRound1(temp *localTempData, save *keygen.LocalDNodeSaveData, idsign smpc.SortableIDSSlice, out chan<- smpc.Message, end chan<- PrePubData, kgid string, threshold int, paillierkeylength int, keytype string) smpc.Round {
 	finalizeendCh := make(chan *big.Int, threshold)
 	return &round1{
-		&base{temp, save, idsign, out, end, make([]bool, threshold), false, 0, kgid, threshold, paillierkeylength, nil, nil, finalizeendCh,keytype}}
+		&base{temp, save, idsign, out, end, make([]bool, threshold), false, 0, kgid, threshold, paillierkeylength, nil, nil, finalizeendCh, keytype}}
 }
 
 // Start calc w1 and u1Gamma k1
@@ -73,7 +73,7 @@ func (round *round1) Start() error {
 		sub := new(big.Int).Sub(v, self)
 		subInverse := new(big.Int).ModInverse(sub, secp256k1.S256(round.keytype).N1())
 		if subInverse == nil {
-		    return errors.New("calc times fail")
+			return errors.New("calc times fail")
 		}
 
 		times := new(big.Int).Mul(subInverse, v)
@@ -98,7 +98,7 @@ func (round *round1) Start() error {
 	wiGx, wiGy := secp256k1.S256(round.keytype).ScalarBaseMult(round.temp.w1.Bytes())
 	commitwiG := new(ec2.Commitment).Commit(wiGx, wiGy)
 	if commitwiG == nil {
-	    return errors.New(" Error generating commitment data for wi")
+		return errors.New(" Error generating commitment data for wi")
 	}
 	round.temp.commitwiG = commitwiG
 
@@ -109,7 +109,7 @@ func (round *round1) Start() error {
 	srm := &SignRound1Message{
 		SignRoundMessage: new(SignRoundMessage),
 		C11:              commitU1GammaG.C,
-		ComWiC:		commitwiG.C, // add for GG18 A.2 Respondent ZK Proof for MtAwc
+		ComWiC:           commitwiG.C, // add for GG18 A.2 Respondent ZK Proof for MtAwc
 	}
 	srm.SetFromID(round.kgid)
 	srm.SetFromIndex(curIndex)
@@ -121,7 +121,7 @@ func (round *round1) Start() error {
 	return nil
 }
 
-// CanAccept is it legal to receive this message 
+// CanAccept is it legal to receive this message
 func (round *round1) CanAccept(msg smpc.Message) bool {
 	if _, ok := msg.(*SignRound1Message); ok {
 		return msg.IsBroadcast()
@@ -130,7 +130,7 @@ func (round *round1) CanAccept(msg smpc.Message) bool {
 	return false
 }
 
-// Update  is the message received and ready for the next round? 
+// Update  is the message received and ready for the next round?
 func (round *round1) Update() (bool, error) {
 	for j, msg := range round.temp.signRound1Messages {
 		if round.ok[j] {

@@ -17,11 +17,11 @@
 package keygen
 
 import (
+	"encoding/hex"
 	"fmt"
+	"github.com/deltaswapio/gsmpc/smpc-lib/smpc"
 	"math/big"
 	"strings"
-	"encoding/hex"
-	"github.com/anyswap/FastMulThreshold-DSA/smpc-lib/smpc"
 )
 
 // LocalDNodeSaveData the ed data need to save in local db
@@ -77,7 +77,7 @@ func GetLocalDNodeSaveData(data map[string]string) *LocalDNodeSaveData {
 	var Sk [32]byte
 	sk, err := hex.DecodeString(data["Sk"])
 	if err != nil {
-	    return nil
+		return nil
 	}
 
 	copy(Sk[:], sk[:])
@@ -85,7 +85,7 @@ func GetLocalDNodeSaveData(data map[string]string) *LocalDNodeSaveData {
 	var TSk [32]byte
 	tsk, err := hex.DecodeString(data["TSk"])
 	if err != nil {
-	    return nil
+		return nil
 	}
 
 	copy(TSk[:], tsk[:])
@@ -93,7 +93,7 @@ func GetLocalDNodeSaveData(data map[string]string) *LocalDNodeSaveData {
 	var Pk [32]byte
 	pk, err := hex.DecodeString(data["Pk"])
 	if err != nil {
-	    return nil
+		return nil
 	}
 
 	copy(Pk[:], pk[:])
@@ -101,7 +101,7 @@ func GetLocalDNodeSaveData(data map[string]string) *LocalDNodeSaveData {
 	var FinalPkBytes [32]byte
 	finalpk, err := hex.DecodeString(data["FinalPkBytes"])
 	if err != nil {
-	    return nil
+		return nil
 	}
 
 	copy(FinalPkBytes[:], finalpk[:])

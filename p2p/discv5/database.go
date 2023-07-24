@@ -27,7 +27,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/anyswap/FastMulThreshold-DSA/crypto"
+	"github.com/deltaswapio/gsmpc/crypto"
 	"github.com/fsn-dev/cryptoCoins/tools/rlp"
 	"github.com/syndtr/goleveldb/leveldb"
 	"github.com/syndtr/goleveldb/leveldb/errors"
@@ -274,7 +274,7 @@ func (db *nodeDB) expireNodes() error {
 		// Otherwise delete all associated information
 		err := db.deleteNode(id)
 		if err != nil {
-		    return err
+			return err
 		}
 	}
 	return nil
@@ -342,9 +342,9 @@ seek:
 		// random amount each time in order to increase the likelihood
 		// of hitting all existing nodes in very small databases.
 		ctr := id[0]
-		_,err := rand.Read(id[:])
+		_, err := rand.Read(id[:])
 		if err != nil {
-		    return nil
+			return nil
 		}
 
 		id[0] = ctr + id[0]%16

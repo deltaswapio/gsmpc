@@ -17,45 +17,45 @@
 package smpc
 
 import (
+	"crypto/ecdsa"
 	"encoding/hex"
 	"encoding/json"
+	"errors"
 	"fmt"
-	"github.com/anyswap/FastMulThreshold-DSA/crypto/secp256k1"
-	"github.com/anyswap/FastMulThreshold-DSA/internal/common"
-	keygen "github.com/anyswap/FastMulThreshold-DSA/smpc-lib/ecdsa/keygen"
-	edkeygen "github.com/anyswap/FastMulThreshold-DSA/smpc-lib/eddsa/keygen"
-	smpclib "github.com/anyswap/FastMulThreshold-DSA/smpc-lib/smpc"
+	"github.com/deltaswapio/gsmpc/crypto"
+	"github.com/deltaswapio/gsmpc/crypto/secp256k1"
+	"github.com/deltaswapio/gsmpc/internal/common"
+	"github.com/deltaswapio/gsmpc/log"
+	keygen "github.com/deltaswapio/gsmpc/smpc-lib/ecdsa/keygen"
+	edkeygen "github.com/deltaswapio/gsmpc/smpc-lib/eddsa/keygen"
+	smpclib "github.com/deltaswapio/gsmpc/smpc-lib/smpc"
 	"github.com/fsn-dev/cryptoCoins/coins"
+	ethcrypto "github.com/fsn-dev/cryptoCoins/tools/crypto"
 	"math/big"
 	"sort"
-	"strings"
 	"strconv"
+	"strings"
 	"sync"
 	"time"
-	"errors"
-	"github.com/anyswap/FastMulThreshold-DSA/log"
-	ethcrypto "github.com/fsn-dev/cryptoCoins/tools/crypto"
-	"crypto/ecdsa"
-	"github.com/anyswap/FastMulThreshold-DSA/crypto"
 )
 
 var (
 	// PaillierKeyLength paillier key len
 	PaillierKeyLength = 2048
 
-	// reqdataTrytimes try times of requesting data by p2p 
-	reqdataTrytimes  = 5
+	// reqdataTrytimes try times of requesting data by p2p
+	reqdataTrytimes = 5
 
 	// reqdataTimeout request data timeout
-	reqdataTimeout   = 60
+	reqdataTimeout = 60
 )
 
 //------------------------------------------------------------------------
 
 // GetReqAddrNonce get keygen special tx nonce
 func GetReqAddrNonce(account string) (string, string, error) {
-    	if account == "" {
-	    return "","",errors.New("param error")
+	if account == "" {
+		return "", "", errors.New("param error")
 	}
 
 	key2 := Keccak256Hash([]byte(strings.ToLower(account))).Hex()
@@ -77,8 +77,8 @@ func GetReqAddrNonce(account string) (string, string, error) {
 
 // SetReqAddrNonce set keygen special tx nonce
 func SetReqAddrNonce(account string, nonce string) (string, error) {
-    	if account == "" || nonce == "" {
-	    return "",errors.New("param error")
+	if account == "" || nonce == "" {
+		return "", errors.New("param error")
 	}
 
 	key := Keccak256Hash([]byte(strings.ToLower(account))).Hex()
@@ -94,24 +94,24 @@ func SetReqAddrNonce(account string, nonce string) (string, error) {
 
 // TxDataReqAddr the data of the special tx of keygen
 type TxDataReqAddr struct {
-	TxType    string
-	Account    string
-	Nonce    string
-	Keytype   string
-	GroupID   string
-	ThresHold string
-	Mode      string
+	TxType        string
+	Account       string
+	Nonce         string
+	Keytype       string
+	GroupID       string
+	ThresHold     string
+	Mode          string
 	FixedApprover []string
-	AcceptTimeOut      string
-	TimeStamp string
-	Sigs      string
-	Comment string
+	AcceptTimeOut string
+	TimeStamp     string
+	Sigs          string
+	Comment       string
 }
 
 // GetSmpcAddr Obtain SMPC addresses in different currencies in pubkey
 func GetSmpcAddr(pubkey string) (string, string, error) {
-    	if pubkey == "" {
-	    return "","",errors.New("pubkey is nil")
+	if pubkey == "" {
+		return "", "", errors.New("pubkey is nil")
 	}
 
 	var m interface{}
@@ -140,11 +140,11 @@ func GetSmpcAddr(pubkey string) (string, string, error) {
 
 //-----------------------------------------------------------------------------
 
-// ReqKeyGen Request to generate pubkey 
+// ReqKeyGen Request to generate pubkey
 // raw : keygen command data
 func ReqKeyGen(raw string) (string, string, error) {
 	if raw == "" {
-	    return "","",errors.New("param error")
+		return "", "", errors.New("param error")
 	}
 
 	key, _, _, txdata, err := CheckRaw(raw)
@@ -166,11 +166,11 @@ func ReqKeyGen(raw string) (string, string, error) {
 
 //----------------------------------------------------------------------------------
 
-// RPCAcceptReqAddr Agree to the keygen request 
+// RPCAcceptReqAddr Agree to the keygen request
 // raw : accept data, including the key of the keygen request
 func RPCAcceptReqAddr(raw string) (string, string, error) {
 	if raw == "" {
-	    return "","",errors.New("param error")
+		return "", "", errors.New("param error")
 	}
 
 	_, from, _, txdata, err := CheckRaw(raw)
@@ -191,7 +191,7 @@ func RPCAcceptReqAddr(raw string) (string, string, error) {
 			common.Debug("=====================RPCAcceptReqAddr, SendMsgToSmpcGroup ================", "raw", raw, "gid", ac.GroupID, "key", acceptreq.Key)
 			SendMsgToSmpcGroup(raw, ac.GroupID)
 			//SetUpMsgList(raw, curEnode)
-			go ExecApproveKeyGen(raw,from,acceptreq,ac,true)
+			go ExecApproveKeyGen(raw, from, acceptreq, ac, true)
 			return "Success", "", nil
 		}
 	}
@@ -199,326 +199,326 @@ func RPCAcceptReqAddr(raw string) (string, string, error) {
 	return "Failure", "accept fail", fmt.Errorf("accept fail")
 }
 
-func IsValidAccept(gid string,from string,ac *AcceptReqAddrData) bool {
-    if gid == "" || from == "" || ac == nil || ac.Sigs == "" {
-	return false
-    }
-    
-    mms := strings.Split(ac.Sigs, common.Sep)
-    if len(mms) < 3 {
-	return false
-    }
+func IsValidAccept(gid string, from string, ac *AcceptReqAddrData) bool {
+	if gid == "" || from == "" || ac == nil || ac.Sigs == "" {
+		return false
+	}
 
-    nums := strings.Split(ac.LimitNum, "/")
-    if len(nums) != 2 {
-	    return false
-    }
+	mms := strings.Split(ac.Sigs, common.Sep)
+	if len(mms) < 3 {
+		return false
+	}
 
-    nodecnt, err := strconv.Atoi(nums[1])
-    if err != nil {
-	    return false
-    }
+	nums := strings.Split(ac.LimitNum, "/")
+	if len(nums) != 2 {
+		return false
+	}
 
-    if len(mms) != (2*nodecnt + 1) {
-	return false
-    }
+	nodecnt, err := strconv.Atoi(nums[1])
+	if err != nil {
+		return false
+	}
 
-    _, nodes := GetGroup(gid)
-    others := strings.Split(nodes, common.Sep2)
-    for _, v := range others {
-	node2 := ParseNode(v)
-	for k,vv := range mms {
-	    if strings.EqualFold(vv,node2) {
-		if (k+1) < len(mms) && strings.EqualFold(mms[k+1],from) {
-		    return true
+	if len(mms) != (2*nodecnt + 1) {
+		return false
+	}
+
+	_, nodes := GetGroup(gid)
+	others := strings.Split(nodes, common.Sep2)
+	for _, v := range others {
+		node2 := ParseNode(v)
+		for k, vv := range mms {
+			if strings.EqualFold(vv, node2) {
+				if (k+1) < len(mms) && strings.EqualFold(mms[k+1], from) {
+					return true
+				}
+			}
 		}
-	    }
 	}
-    }
 
-    return false
+	return false
 }
 
-func GetENodeByFrom(from string,ac *AcceptReqAddrData) string {
-    if from == "" || ac == nil {
-	return ""
-    }
-   
-	log.Debug("================GetENodeByFrom=================","sigs",ac.Sigs) 
-    mms := strings.Split(ac.Sigs, common.Sep)
-    if len(mms) < 3 {
-	log.Error("================GetENodeByFrom,sigs data error=================","sigs",ac.Sigs) 
-	return ""
-    }
-
-    nums := strings.Split(ac.LimitNum, "/")
-    if len(nums) != 2 {
-	log.Error("================GetENodeByFrom,threshold error=================","threshold",ac.LimitNum) 
-	    return ""
-    }
-
-    nodecnt, err := strconv.Atoi(nums[1])
-    if err != nil {
-	log.Error("================GetENodeByFrom,get node count by threshold fail=================","threshold",ac.LimitNum,"err",err) 
-	    return ""
-    }
-
-    if len(mms) != (2*nodecnt + 1) {
-	log.Error("================GetENodeByFrom,check node count fail=================","threshold",ac.LimitNum,"nodecnt",nodecnt,"mms",mms,"mms len",len(mms)) 
-	return ""
-    }
-
-    for k,_ := range mms {
-	log.Debug("================GetENodeByFrom,get approver=================","k",k,"value",mms[k],"from",from,"mms len",len(mms)) 
-	if k < len(mms) && strings.EqualFold(mms[k],from) {
-	    return mms[k-1]
+func GetENodeByFrom(from string, ac *AcceptReqAddrData) string {
+	if from == "" || ac == nil {
+		return ""
 	}
-    }
 
-    return ""
+	log.Debug("================GetENodeByFrom=================", "sigs", ac.Sigs)
+	mms := strings.Split(ac.Sigs, common.Sep)
+	if len(mms) < 3 {
+		log.Error("================GetENodeByFrom,sigs data error=================", "sigs", ac.Sigs)
+		return ""
+	}
+
+	nums := strings.Split(ac.LimitNum, "/")
+	if len(nums) != 2 {
+		log.Error("================GetENodeByFrom,threshold error=================", "threshold", ac.LimitNum)
+		return ""
+	}
+
+	nodecnt, err := strconv.Atoi(nums[1])
+	if err != nil {
+		log.Error("================GetENodeByFrom,get node count by threshold fail=================", "threshold", ac.LimitNum, "err", err)
+		return ""
+	}
+
+	if len(mms) != (2*nodecnt + 1) {
+		log.Error("================GetENodeByFrom,check node count fail=================", "threshold", ac.LimitNum, "nodecnt", nodecnt, "mms", mms, "mms len", len(mms))
+		return ""
+	}
+
+	for k, _ := range mms {
+		log.Debug("================GetENodeByFrom,get approver=================", "k", k, "value", mms[k], "from", from, "mms len", len(mms))
+		if k < len(mms) && strings.EqualFold(mms[k], from) {
+			return mms[k-1]
+		}
+	}
+
+	return ""
 }
 
-func ExecApproveKeyGen(raw string,from string,req *TxDataAcceptReqAddr,ac *AcceptReqAddrData,check bool) {
-    common.Debug("===============ExecApproveKeyGen, check accept reqaddr raw success======================", "raw ", raw, "key ", req.Key, "from ", from, "txdata ",req)
+func ExecApproveKeyGen(raw string, from string, req *TxDataAcceptReqAddr, ac *AcceptReqAddrData, check bool) {
+	common.Debug("===============ExecApproveKeyGen, check accept reqaddr raw success======================", "raw ", raw, "key ", req.Key, "from ", from, "txdata ", req)
 
-    w, err := FindWorker(req.Key)
-    if err != nil || w == nil {
-	    c1data := strings.ToLower(req.Key + "-" + from)
-	    C1Data.WriteMap(c1data, raw) // save the lastest accept msg??
-	    return
-    }
-
-    if w.approved {
-	return
-    }
-
-    /////fix bug: miss accept msg for 7-11 test
-    if Find(w.msgacceptreqaddrres, raw) {
-	    return
-    }
-    ////
-
-    if !IsValidAccept(ac.GroupID,from,ac) {
-	return
-    }
-
-    if !CheckReqAddrDulpRawReply(raw, w.msgacceptreqaddrres) {
-	    return
-    }
-
-    w.msgacceptreqaddrres.PushBack(raw)
-    
-    if check {
-	HandleC1Data(ac, req.Key)
-    }
-    
-    //status := "Pending"
-    accept := req.Accept
-    if accept == "" {
-	accept = "DISAGREE"
-    }
-
-    //if req.Accept != "AGREE" {
-	//    status = "Failure"
-    //}
-
-    //AcceptReqAddr(ac.Initiator, ac.Account, ac.Cointype, ac.GroupID, ac.Nonce, ac.LimitNum, ac.Mode, "false", accept, status, "", "", "", nil, ac.WorkID, "")
-     
-    /////fix bug: miss accept msg for 7-11 test
-    if RelayInPeers {
-	SendMsgToSmpcGroup(raw, ac.GroupID)
-    }
-    /////
-
-    index := -1
-    for k,vv := range w.ApprovReplys {
-	if vv == nil {
-	    continue
-	}
-
-	if strings.EqualFold(vv.From,from) {
-	    index = k
-	    break
-	}
-    }
-
-    enode := curEnode
-    if ac.Mode == "0" || ac.Mode == "2" { 
-	    enode = GetENodeByFrom(from,ac)
-	    if enode == "" {
+	w, err := FindWorker(req.Key)
+	if err != nil || w == nil {
+		c1data := strings.ToLower(req.Key + "-" + from)
+		C1Data.WriteMap(c1data, raw) // save the lastest accept msg??
 		return
-	    }
-    }
+	}
 
-    reply := &ApprovReply{ENode:enode,From: from, Accept: accept, TimeStamp: req.TimeStamp}
-    if index != -1 {
-	w.ApprovReplys[index] = reply
-    } else {
-	w.ApprovReplys = append(w.ApprovReplys,reply)
-    }
+	if w.approved {
+		return
+	}
 
-    if w.msgacceptreqaddrres.Len() >= w.NodeCnt && len(w.ApprovReplys) >= w.NodeCnt {
-	//if !CheckReply(w.msgacceptreqaddrres, RPCREQADDR, req.Key) {
-	//	return
+	/////fix bug: miss accept msg for 7-11 test
+	if Find(w.msgacceptreqaddrres, raw) {
+		return
+	}
+	////
+
+	if !IsValidAccept(ac.GroupID, from, ac) {
+		return
+	}
+
+	if !CheckReqAddrDulpRawReply(raw, w.msgacceptreqaddrres) {
+		return
+	}
+
+	w.msgacceptreqaddrres.PushBack(raw)
+
+	if check {
+		HandleC1Data(ac, req.Key)
+	}
+
+	//status := "Pending"
+	accept := req.Accept
+	if accept == "" {
+		accept = "DISAGREE"
+	}
+
+	//if req.Accept != "AGREE" {
+	//    status = "Failure"
 	//}
 
-	w.approved = true
-	w.bacceptreqaddrres <- true
-	workers[ac.WorkID].acceptReqAddrChan <- "go on"
-    }
+	//AcceptReqAddr(ac.Initiator, ac.Account, ac.Cointype, ac.GroupID, ac.Nonce, ac.LimitNum, ac.Mode, "false", accept, status, "", "", "", nil, ac.WorkID, "")
+
+	/////fix bug: miss accept msg for 7-11 test
+	if RelayInPeers {
+		SendMsgToSmpcGroup(raw, ac.GroupID)
+	}
+	/////
+
+	index := -1
+	for k, vv := range w.ApprovReplys {
+		if vv == nil {
+			continue
+		}
+
+		if strings.EqualFold(vv.From, from) {
+			index = k
+			break
+		}
+	}
+
+	enode := curEnode
+	if ac.Mode == "0" || ac.Mode == "2" {
+		enode = GetENodeByFrom(from, ac)
+		if enode == "" {
+			return
+		}
+	}
+
+	reply := &ApprovReply{ENode: enode, From: from, Accept: accept, TimeStamp: req.TimeStamp}
+	if index != -1 {
+		w.ApprovReplys[index] = reply
+	} else {
+		w.ApprovReplys = append(w.ApprovReplys, reply)
+	}
+
+	if w.msgacceptreqaddrres.Len() >= w.NodeCnt && len(w.ApprovReplys) >= w.NodeCnt {
+		//if !CheckReply(w.msgacceptreqaddrres, RPCREQADDR, req.Key) {
+		//	return
+		//}
+
+		w.approved = true
+		w.bacceptreqaddrres <- true
+		workers[ac.WorkID].acceptReqAddrChan <- "go on"
+	}
 }
 
 //--------------------------------------------------------------------------------
 
 // ReqAddrStatus keygen result
 type ReqAddrStatus struct {
-	KeyID    string
-	From string
-	GroupID string
+	KeyID     string
+	From      string
+	GroupID   string
 	Status    string
 	PubKey    string
-	ThresHold    string
+	ThresHold string
 	Tip       string
 	Error     string
 	AllReply  []NodeReply
 	TimeStamp string
 
-	Initiator string //enode id
-	Keytype  string
-	Mode      string
-	FixedApprover  []string
-	PubKeySig  []string
-	Sigs string //5:enodeid1:account1:enodeid2:account2:enodeid3:account3:enodeid4:account4:enodeid5:account5
-	Comment string
+	Initiator     string //enode id
+	Keytype       string
+	Mode          string
+	FixedApprover []string
+	PubKeySig     []string
+	Sigs          string //5:enodeid1:account1:enodeid2:account2:enodeid3:account3:enodeid4:account4:enodeid5:account5
+	Comment       string
 }
 
-func GetApproverByReqAddrKey(key string,enodeID string) string {
-    if key == "" || enodeID == "" {
-	return ""
-    }
-
-    var ac *AcceptReqAddrData
-    exsit, da := GetReqAddrInfoData([]byte(key))
-    if exsit {
-	ac, _ = da.(*AcceptReqAddrData)
-    }
-
-    if ac == nil {
-	exsit, da = GetPubKeyData([]byte(key))
-	if !exsit || da == nil {
+func GetApproverByReqAddrKey(key string, enodeID string) string {
+	if key == "" || enodeID == "" {
 		return ""
 	}
 
-	ac, _ = da.(*AcceptReqAddrData)
+	var ac *AcceptReqAddrData
+	exsit, da := GetReqAddrInfoData([]byte(key))
+	if exsit {
+		ac, _ = da.(*AcceptReqAddrData)
+	}
+
 	if ac == nil {
-	    return ""
+		exsit, da = GetPubKeyData([]byte(key))
+		if !exsit || da == nil {
+			return ""
+		}
+
+		ac, _ = da.(*AcceptReqAddrData)
+		if ac == nil {
+			return ""
+		}
 	}
-    }
 
-    mms := strings.Split(ac.Sigs, common.Sep)
-    if len(mms) < 3 {
-	return "" 
-    }
+	mms := strings.Split(ac.Sigs, common.Sep)
+	if len(mms) < 3 {
+		return ""
+	}
 
-    nums := strings.Split(ac.LimitNum, "/")
-    if len(nums) != 2 {
-	    return ""
-    }
+	nums := strings.Split(ac.LimitNum, "/")
+	if len(nums) != 2 {
+		return ""
+	}
 
-    nodecnt, err := strconv.Atoi(nums[1])
-    if err != nil {
-	    return ""
-    }
+	nodecnt, err := strconv.Atoi(nums[1])
+	if err != nil {
+		return ""
+	}
 
-    if len(mms) != (2*nodecnt + 1) {
+	if len(mms) != (2*nodecnt + 1) {
+		return ""
+	}
+
+	for k, v := range mms {
+		if strings.EqualFold(v, enodeID) {
+			if (k + 1) < len(mms) {
+				return mms[k+1]
+			}
+		}
+	}
+
 	return ""
-    }
-
-    for k,v := range mms {
-	if strings.EqualFold(v,enodeID) {
-	    if (k+1) < len(mms) {
-		return mms[k+1]
-	    }
-	}
-    }
-
-    return ""
 }
 
-func checkPubKey(pubkey string,keytype string,gid string,pubsig []string) bool {
-    pub, err := hex.DecodeString(pubkey)
-    if err != nil {
-	return false 
-    }
-
-    hash := crypto.Keccak256(pub)
-
-    for _,sig := range pubsig {
-	sig2, err := hex.DecodeString(sig)
+func checkPubKey(pubkey string, keytype string, gid string, pubsig []string) bool {
+	pub, err := hex.DecodeString(pubkey)
 	if err != nil {
-	    return false
+		return false
 	}
 
-	public,err := crypto.SigToPub(hash,sig2)
-	if err != nil {
-	   return false 
-	}
-	
-	pub := secp256k1.S256(keytype).Marshal(public.X,public.Y) 
-	pub2 := hex.EncodeToString(pub) // 04.....
-	s := []rune(pub2) // 04.....
-	ss := string(s[2:])
-	
-	ns, nodes := GetGroup(gid)
-	if ns != len(pubsig) {
-	    return false
+	hash := crypto.Keccak256(pub)
+
+	for _, sig := range pubsig {
+		sig2, err := hex.DecodeString(sig)
+		if err != nil {
+			return false
+		}
+
+		public, err := crypto.SigToPub(hash, sig2)
+		if err != nil {
+			return false
+		}
+
+		pub := secp256k1.S256(keytype).Marshal(public.X, public.Y)
+		pub2 := hex.EncodeToString(pub) // 04.....
+		s := []rune(pub2)               // 04.....
+		ss := string(s[2:])
+
+		ns, nodes := GetGroup(gid)
+		if ns != len(pubsig) {
+			return false
+		}
+
+		others := strings.Split(nodes, common.Sep2)
+		for _, v := range others {
+			node2 := ParseNode(v)
+			if strings.EqualFold(ss, node2) {
+				log.Debug("==============checkPubKey,verify pubkey sig success==================", "pubkey", pubkey)
+				return true
+			}
+		}
 	}
 
-	others := strings.Split(nodes, common.Sep2)
-	for _, v := range others {
-	    node2 := ParseNode(v)
-	    if strings.EqualFold(ss,node2) {
-		log.Debug("==============checkPubKey,verify pubkey sig success==================","pubkey",pubkey)
-		return true
-	    }
-	}
-    }
-
-    return false
+	return false
 }
 
 // GetReqAddrStatus get the result of the keygen request by key
 func GetReqAddrStatus(key string) (string, string, error) {
 	if key == "" {
-	    return "","",errors.New("Input data error")
+		return "", "", errors.New("Input data error")
 	}
 
 	exsit, da := GetReqAddrInfoData([]byte(key))
 	if exsit {
-	    ac, ok := da.(*AcceptReqAddrData)
-	    if !ok {
-		    return "", "", fmt.Errorf("Create public key fail,data error,please try again")
-	    }
+		ac, ok := da.(*AcceptReqAddrData)
+		if !ok {
+			return "", "", fmt.Errorf("Create public key fail,data error,please try again")
+		}
 
-	    var rep []NodeReply
-	    for _,v := range ac.AllReply {
-		acc := GetApproverByReqAddrKey(key,v.Enode)
-		nr := NodeReply{Enode: v.Enode, Approver:acc,Status: v.Status, TimeStamp: v.TimeStamp, Initiator: v.Initiator}
-		rep = append(rep,nr)
-	    }
+		var rep []NodeReply
+		for _, v := range ac.AllReply {
+			acc := GetApproverByReqAddrKey(key, v.Enode)
+			nr := NodeReply{Enode: v.Enode, Approver: acc, Status: v.Status, TimeStamp: v.TimeStamp, Initiator: v.Initiator}
+			rep = append(rep, nr)
+		}
 
-	    status := ac.Status
-	    pubkey := ac.PubKey
-	    errorinfo := ac.Error
-	    if pubkey != "" && !checkPubKey(pubkey,ac.Cointype,ac.GroupID,ac.PubKeySig) {
-		status = "Failure"
-		pubkey = ""
-		errorinfo = "verify pubkey sig fail"
-	    }
-	    
-	    los := &ReqAddrStatus{KeyID:key,From:ac.Account,GroupID:ac.GroupID,Status: status, PubKey: pubkey, ThresHold:ac.LimitNum,Tip: ac.Tip, Error: errorinfo, AllReply: rep, TimeStamp: ac.TimeStamp, Initiator: ac.Initiator, Keytype: ac.Cointype, Mode: ac.Mode, FixedApprover: ac.FixedApprover, Sigs: ac.Sigs, Comment: ac.Comment, PubKeySig: ac.PubKeySig}
-	    ret, _ := json.Marshal(los)
-	    return string(ret), "", nil
+		status := ac.Status
+		pubkey := ac.PubKey
+		errorinfo := ac.Error
+		if pubkey != "" && !checkPubKey(pubkey, ac.Cointype, ac.GroupID, ac.PubKeySig) {
+			status = "Failure"
+			pubkey = ""
+			errorinfo = "verify pubkey sig fail"
+		}
+
+		los := &ReqAddrStatus{KeyID: key, From: ac.Account, GroupID: ac.GroupID, Status: status, PubKey: pubkey, ThresHold: ac.LimitNum, Tip: ac.Tip, Error: errorinfo, AllReply: rep, TimeStamp: ac.TimeStamp, Initiator: ac.Initiator, Keytype: ac.Cointype, Mode: ac.Mode, FixedApprover: ac.FixedApprover, Sigs: ac.Sigs, Comment: ac.Comment, PubKeySig: ac.PubKeySig}
+		ret, _ := json.Marshal(los)
+		return string(ret), "", nil
 	}
 
 	exsit, da = GetPubKeyData([]byte(key))
@@ -532,10 +532,10 @@ func GetReqAddrStatus(key string) (string, string, error) {
 	}
 
 	var rep []NodeReply
-	for _,v := range ac.AllReply {
-	    acc := GetApproverByReqAddrKey(key,v.Enode)
-	    nr := NodeReply{Enode: v.Enode, Approver:acc,Status: v.Status, TimeStamp: v.TimeStamp, Initiator: v.Initiator}
-	    rep = append(rep,nr)
+	for _, v := range ac.AllReply {
+		acc := GetApproverByReqAddrKey(key, v.Enode)
+		nr := NodeReply{Enode: v.Enode, Approver: acc, Status: v.Status, TimeStamp: v.TimeStamp, Initiator: v.Initiator}
+		rep = append(rep, nr)
 	}
 
 	status := ac.Status
@@ -543,14 +543,14 @@ func GetReqAddrStatus(key string) (string, string, error) {
 	errorinfo := ac.Error
 
 	// TODO: this commit will make ed key generation panic, temporarily, disable it for ed
-	// https://github.com/anyswap/FastMulThreshold-DSA/commit/21949d0fc79d9b5f29bfb11ae715994bb8c355dc
-	if pubkey != "" && ac.Cointype != smpclib.ED25519 && ac.Cointype != smpclib.SR25519 && !checkPubKey(pubkey,ac.Cointype,ac.GroupID,ac.PubKeySig) {
-	    status = "Failure"
-	    pubkey = ""
-	    errorinfo = "verify pubkey sig fail"
+	// https://github.com/deltaswapio/gsmpc/commit/21949d0fc79d9b5f29bfb11ae715994bb8c355dc
+	if pubkey != "" && ac.Cointype != smpclib.ED25519 && ac.Cointype != smpclib.SR25519 && !checkPubKey(pubkey, ac.Cointype, ac.GroupID, ac.PubKeySig) {
+		status = "Failure"
+		pubkey = ""
+		errorinfo = "verify pubkey sig fail"
 	}
-	
-	los := &ReqAddrStatus{KeyID:key,From:ac.Account,GroupID:ac.GroupID,Status: status, PubKey: pubkey, ThresHold:ac.LimitNum,Tip: ac.Tip, Error: errorinfo, AllReply: rep, TimeStamp: ac.TimeStamp, Initiator: ac.Initiator, Keytype: ac.Cointype, Mode: ac.Mode, FixedApprover: ac.FixedApprover, Sigs: ac.Sigs, Comment: ac.Comment, PubKeySig: ac.PubKeySig}
+
+	los := &ReqAddrStatus{KeyID: key, From: ac.Account, GroupID: ac.GroupID, Status: status, PubKey: pubkey, ThresHold: ac.LimitNum, Tip: ac.Tip, Error: errorinfo, AllReply: rep, TimeStamp: ac.TimeStamp, Initiator: ac.Initiator, Keytype: ac.Cointype, Mode: ac.Mode, FixedApprover: ac.FixedApprover, Sigs: ac.Sigs, Comment: ac.Comment, PubKeySig: ac.PubKeySig}
 	ret, _ := json.Marshal(los)
 	return string(ret), "", nil
 }
@@ -583,7 +583,7 @@ func CheckAcc(eid string, geteracc string, sigs string) bool {
 
 //----------------------------------------------------------------------------------
 
-// ReqAddrReply the accept data of keygen  
+// ReqAddrReply the accept data of keygen
 type ReqAddrReply struct {
 	Key       string
 	Account   string
@@ -617,10 +617,10 @@ func (r *ReqAddrCurNodeInfoSort) Swap(i, j int) {
 	r.Info[i], r.Info[j] = r.Info[j], r.Info[i]
 }
 
-// GetCurNodeReqAddrInfo  Get current node's keygen command approval list 
+// GetCurNodeReqAddrInfo  Get current node's keygen command approval list
 func GetCurNodeReqAddrInfo(geteracc string) ([]*ReqAddrReply, string, error) {
 	if geteracc == "" {
-	    return nil,"",errors.New("param error")
+		return nil, "", errors.New("param error")
 	}
 
 	var ret []*ReqAddrReply
@@ -697,18 +697,18 @@ type PubKeyData struct {
 	Mode           string
 	KeyGenTime     string
 	RefReShareKeys string //key1:key2...
-	Comment string
+	Comment        string
 }
 
-// smpcGenPubKey generate the pubkey 
+// smpcGenPubKey generate the pubkey
 // ec2
 // msgprex = hash
 // cointype = keytype    // EC256K1||ed25519
-func smpcGenPubKey(raw string,msgprex string, account string, cointype string, ch chan interface{}, mode string, nonce string) {
+func smpcGenPubKey(raw string, msgprex string, account string, cointype string, ch chan interface{}, mode string, nonce string) {
 	if msgprex == "" || account == "" || cointype == "" || mode == "" || nonce == "" {
-	    res := RPCSmpcRes{Ret: "", Tip: "", Err: errors.New("param error")}
-	    ch <- res
-	    return
+		res := RPCSmpcRes{Ret: "", Tip: "", Err: errors.New("param error")}
+		ch <- res
+		return
 	}
 
 	wk, err := FindWorker(msgprex)
@@ -859,7 +859,7 @@ func smpcGenPubKey(raw string,msgprex string, account string, cointype string, c
 
 	ok := false
 	for j := 0; j < recalcTimes; j++ {
-	    log.Debug("==========================smpcGenPubKey,recalc=============================","j",j,"recalc times",recalcTimes,"msgprex",msgprex,"cointype",cointype)
+		log.Debug("==========================smpcGenPubKey,recalc=============================", "j", j, "recalc times", recalcTimes, "msgprex", msgprex, "cointype", cointype)
 		if len(ch) != 0 {
 			<-ch
 		}
@@ -935,7 +935,7 @@ func smpcGenPubKey(raw string,msgprex string, account string, cointype string, c
 	rk := Keccak256Hash([]byte(strings.ToLower(account + ":" + cointype + ":" + wk.groupid + ":" + nonce + ":" + wk.limitnum + ":" + mode))).Hex()
 
 	pubkeyhex := hex.EncodeToString(ys)
-	common.Info("================ smpc_genpubkey,pubkey generated successfully ===================","pkx",pkx,"pky",pky,"pubkey hex",pubkeyhex,"key",msgprex)
+	common.Info("================ smpc_genpubkey,pubkey generated successfully ===================", "pkx", pkx, "pky", pky, "pubkey hex", pubkeyhex, "key", msgprex)
 
 	pubs := &PubKeyData{Key: msgprex, Account: account, Pub: string(ys), Save: save, Nonce: nonce, GroupID: wk.groupid, LimitNum: wk.limitnum, Mode: mode, KeyGenTime: tt}
 	epubs, err := Encode2(pubs)
@@ -954,7 +954,7 @@ func smpcGenPubKey(raw string,msgprex string, account string, cointype string, c
 		return
 	}
 
-	tip, reply := AcceptReqAddr(raw,"", account, cointype, wk.groupid, nonce, wk.limitnum, mode, "true", "true", "Success", pubkeyhex, "", "", nil, id, "")
+	tip, reply := AcceptReqAddr(raw, "", account, cointype, wk.groupid, nonce, wk.limitnum, mode, "true", "true", "Success", pubkeyhex, "", "", nil, id, "")
 	if reply != nil {
 		common.Error("===============smpcGenPubKey,update reqaddr status===================", "err", reply, "account", account, "pubkey", pubkeyhex, "nonce", nonce, "key", rk)
 		res := RPCSmpcRes{Ret: "", Tip: tip, Err: fmt.Errorf("update req addr status error")}
@@ -988,26 +988,26 @@ func smpcGenPubKey(raw string,msgprex string, account string, cointype string, c
 			continue
 		}
 
-		common.Debug("================================smpc_genPubKey,pubkey to address=========================","pubkeyhex",pubkeyhex,"coin type",ct,"key", msgprex)
+		common.Debug("================================smpc_genPubKey,pubkey to address=========================", "pubkeyhex", pubkeyhex, "coin type", ct, "key", msgprex)
 
 		/////
 		var ctaddr string
 		if ct == "ERC20GUSD" || ct == "ERC20MKR" || ct == "ERC20HT" || ct == "ERC20BNB" || ct == "ERC20BNT" || ct == "ERC20RMBT" || ct == "ERC20USDT" {
-		    pubKeyHex := strings.TrimPrefix(pubkeyhex, "0x")
-		    erc20data := hexEncPubkey(pubKeyHex[2:])
-		    pub, err := decodePubkey(erc20data,cointype)
-		    if err != nil {
-			continue
-		    }
-		    ctaddr = ethcrypto.PubkeyToAddress(*pub).Hex()
-		    if ctaddr == "" {
-			continue
-		    }
+			pubKeyHex := strings.TrimPrefix(pubkeyhex, "0x")
+			erc20data := hexEncPubkey(pubKeyHex[2:])
+			pub, err := decodePubkey(erc20data, cointype)
+			if err != nil {
+				continue
+			}
+			ctaddr = ethcrypto.PubkeyToAddress(*pub).Hex()
+			if ctaddr == "" {
+				continue
+			}
 		} else {
-		    ctaddr, err = h.PublicKeyToAddress(pubkeyhex)
-		    if err != nil {
-			    continue
-		    }
+			ctaddr, err = h.PublicKeyToAddress(pubkeyhex)
+			if err != nil {
+				continue
+			}
 		}
 		/////
 
@@ -1051,33 +1051,33 @@ func smpcGenPubKey(raw string,msgprex string, account string, cointype string, c
 }
 
 func hexEncPubkey(h string) (ret [64]byte) {
-         b, err := hex.DecodeString(h)
-         if err != nil {
-                 panic(err)
-         }
-         if len(b) != len(ret) {
-                 panic("invalid length")
-         }
-         copy(ret[:], b)
-         return ret
- }
+	b, err := hex.DecodeString(h)
+	if err != nil {
+		panic(err)
+	}
+	if len(b) != len(ret) {
+		panic("invalid length")
+	}
+	copy(ret[:], b)
+	return ret
+}
 
- func decodePubkey(e [64]byte,keytype string) (*ecdsa.PublicKey, error) {
-         p := &ecdsa.PublicKey{Curve: secp256k1.S256(keytype), X: new(big.Int), Y: new(big.Int)}
-         half := len(e) / 2
-         p.X.SetBytes(e[:half])
-         p.Y.SetBytes(e[half:])
-         if !p.Curve.IsOnCurve(p.X, p.Y) {
-                 return nil, errors.New("invalid secp256k1 curve point")
-         }
-         return p, nil
+func decodePubkey(e [64]byte, keytype string) (*ecdsa.PublicKey, error) {
+	p := &ecdsa.PublicKey{Curve: secp256k1.S256(keytype), X: new(big.Int), Y: new(big.Int)}
+	half := len(e) / 2
+	p.X.SetBytes(e[:half])
+	p.Y.SetBytes(e[half:])
+	if !p.Curve.IsOnCurve(p.X, p.Y) {
+		return nil, errors.New("invalid secp256k1 curve point")
+	}
+	return p, nil
 }
 
 //-----------------------------------------------------------------------------------------------------------------------
 
 // KeyGenerateDECDSA generate the pubkey
-//ec2
-//msgprex = hash
+// ec2
+// msgprex = hash
 func KeyGenerateDECDSA(msgprex string, ch chan interface{}, id int, cointype string) bool {
 	if id < 0 || id >= RPCMaxWorker || id >= len(workers) {
 		res := RPCSmpcRes{Ret: "", Err: GetRetErr(ErrGetWorkerIDError)}
@@ -1106,7 +1106,7 @@ func KeyGenerateDECDSA(msgprex string, ch chan interface{}, id int, cointype str
 	outCh := make(chan smpclib.Message, ns)
 	endCh := make(chan keygen.LocalDNodeSaveData, ns)
 	errChan := make(chan struct{})
-	keyGenDNode := keygen.NewLocalDNode(outCh, endCh, ns, w.ThresHold, 2048,cointype)
+	keyGenDNode := keygen.NewLocalDNode(outCh, endCh, ns, w.ThresHold, 2048, cointype)
 	w.DNode = keyGenDNode
 	if w.DNode == nil {
 		res := RPCSmpcRes{Ret: "", Err: errors.New("new local dnode fail")}
@@ -1114,7 +1114,7 @@ func KeyGenerateDECDSA(msgprex string, ch chan interface{}, id int, cointype str
 		return false
 	}
 
-	_,UID := GetNodeUID(curEnode, cointype,w.groupid)
+	_, UID := GetNodeUID(curEnode, cointype, w.groupid)
 	if UID == nil {
 		res := RPCSmpcRes{Ret: "", Err: errors.New("get node uid fail")}
 		ch <- res
@@ -1134,7 +1134,7 @@ func KeyGenerateDECDSA(msgprex string, ch chan interface{}, id int, cointype str
 	go func() {
 		defer keyGenWg.Done()
 		if err := keyGenDNode.Start(); nil != err {
-			log.Error("==========KeyGenerateDECDSA, node start error============","key",msgprex,"err",err)
+			log.Error("==========KeyGenerateDECDSA, node start error============", "key", msgprex, "err", err)
 			close(errChan)
 		}
 
@@ -1142,20 +1142,20 @@ func KeyGenerateDECDSA(msgprex string, ch chan interface{}, id int, cointype str
 		if exsit {
 			ac, ok := da.(*AcceptReqAddrData)
 			if ok && ac != nil {
-				common.Debug("==========KeyGenerateDECDSA, get reqaddr info from db==================","key",msgprex,"ac",ac)
+				common.Debug("==========KeyGenerateDECDSA, get reqaddr info from db==================", "key", msgprex, "ac", ac)
 				HandleC1Data(ac, w.sid)
 			}
 		}
 	}()
-	go ProcessInboundMessages(msgprex, cointype,commStopChan, errChan,&keyGenWg, ch)
-	err := processKeyGen(msgprex, errChan, outCh, endCh,cointype)
+	go ProcessInboundMessages(msgprex, cointype, commStopChan, errChan, &keyGenWg, ch)
+	err := processKeyGen(msgprex, errChan, outCh, endCh, cointype)
 	if err != nil {
 		if len(ch) == 0 {
-		    res := RPCSmpcRes{Ret: "", Err: err}
-		    ch <- res
+			res := RPCSmpcRes{Ret: "", Err: err}
+			ch <- res
 		}
 		close(commStopChan)
-		log.Error("==========KeyGenerateDECDSA,process keygen error,close commStopChan============","key",msgprex,"err",err)
+		log.Error("==========KeyGenerateDECDSA,process keygen error,close commStopChan============", "key", msgprex, "err", err)
 		return false
 	}
 
@@ -1199,7 +1199,7 @@ func KeyGenerateDEDDSA(msgprex string, ch chan interface{}, id int, cointype str
 	errChan := make(chan struct{})
 	keyGenDNode := edkeygen.NewLocalDNode(outCh, endCh, ns, w.ThresHold, cointype)
 	w.DNode = keyGenDNode
-	_,UID := GetNodeUID(curEnode, cointype,w.groupid)
+	_, UID := GetNodeUID(curEnode, cointype, w.groupid)
 	keyGenDNode.SetDNodeID(fmt.Sprintf("%v", UID))
 	w.MsgToEnode[w.DNode.DNodeID()] = curEnode
 
@@ -1208,7 +1208,7 @@ func KeyGenerateDEDDSA(msgprex string, ch chan interface{}, id int, cointype str
 	go func() {
 		defer keyGenWg.Done()
 		if err := keyGenDNode.Start(); nil != err {
-			log.Error("==========KeyGenerateDEDDSA,node start error==========","key",msgprex,"err",err)
+			log.Error("==========KeyGenerateDEDDSA,node start error==========", "key", msgprex, "err", err)
 			close(errChan)
 		}
 
@@ -1216,22 +1216,22 @@ func KeyGenerateDEDDSA(msgprex string, ch chan interface{}, id int, cointype str
 		if exsit {
 			ac, ok := da.(*AcceptReqAddrData)
 			if ok && ac != nil {
-				common.Debug("=========================KeyGenerateDEDDSA,get reqaddr info from db===========================","key",msgprex,"ac",ac)
+				common.Debug("=========================KeyGenerateDEDDSA,get reqaddr info from db===========================", "key", msgprex, "ac", ac)
 				HandleC1Data(ac, w.sid)
 			}
 		}
 	}()
-	go ProcessInboundMessagesEDDSA(msgprex, cointype,commStopChan, errChan,&keyGenWg, ch)
-	err := processKeyGenEDDSA(msgprex, errChan, outCh, endCh,cointype)
+	go ProcessInboundMessagesEDDSA(msgprex, cointype, commStopChan, errChan, &keyGenWg, ch)
+	err := processKeyGenEDDSA(msgprex, errChan, outCh, endCh, cointype)
 	if err != nil {
-		log.Error("==========KeyGenerateDEDDSA,process ed keygen error==========","key",msgprex,"err",err)
+		log.Error("==========KeyGenerateDEDDSA,process ed keygen error==========", "key", msgprex, "err", err)
 		close(commStopChan)
 
 		if len(ch) == 0 {
-		    res := RPCSmpcRes{Ret: "", Err: err}
-		    ch <- res
+			res := RPCSmpcRes{Ret: "", Err: err}
+			ch <- res
 		}
-		
+
 		return false
 	}
 
@@ -1240,5 +1240,3 @@ func KeyGenerateDEDDSA(msgprex string, ch chan interface{}, id int, cointype str
 
 	return true
 }
-
-

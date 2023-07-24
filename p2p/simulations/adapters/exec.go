@@ -34,10 +34,10 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/anyswap/FastMulThreshold-DSA/node"
-	"github.com/anyswap/FastMulThreshold-DSA/p2p"
-	"github.com/anyswap/FastMulThreshold-DSA/p2p/discover"
-	"github.com/anyswap/FastMulThreshold-DSA/rpc"
+	"github.com/deltaswapio/gsmpc/node"
+	"github.com/deltaswapio/gsmpc/p2p"
+	"github.com/deltaswapio/gsmpc/p2p/discover"
+	"github.com/deltaswapio/gsmpc/rpc"
 	"github.com/docker/docker/pkg/reexec"
 	"golang.org/x/net/websocket"
 )

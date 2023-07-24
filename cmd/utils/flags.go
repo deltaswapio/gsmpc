@@ -14,38 +14,38 @@ import (
 	//"text/template"
 	//"time"
 
-	//"github.com/anyswap/FastMulThreshold-DSA/accounts"
-	//"github.com/anyswap/FastMulThreshold-DSA/accounts/keystore"
-	//"github.com/anyswap/FastMulThreshold-DSA/common"
-	//"github.com/anyswap/FastMulThreshold-DSA/common/fdlimit"
-	//"github.com/anyswap/FastMulThreshold-DSA/consensus"
-	//"github.com/anyswap/FastMulThreshold-DSA/consensus/clique"
-	//"github.com/anyswap/FastMulThreshold-DSA/consensus/ethash"
-	//"github.com/anyswap/FastMulThreshold-DSA/core"
-	//"github.com/anyswap/FastMulThreshold-DSA/core/rawdb"
-	//"github.com/anyswap/FastMulThreshold-DSA/core/vm"
-	//"github.com/anyswap/FastMulThreshold-DSA/crypto"
-	//"github.com/anyswap/FastMulThreshold-DSA/eth"
-	//"github.com/anyswap/FastMulThreshold-DSA/eth/downloader"
-	//"github.com/anyswap/FastMulThreshold-DSA/eth/gasprice"
-	//"github.com/anyswap/FastMulThreshold-DSA/ethdb"
-	//"github.com/anyswap/FastMulThreshold-DSA/ethstats"
-	//"github.com/anyswap/FastMulThreshold-DSA/graphql"
-	//"github.com/anyswap/FastMulThreshold-DSA/internal/ethapi"
-	//"github.com/anyswap/FastMulThreshold-DSA/internal/flags"
-	//"github.com/anyswap/FastMulThreshold-DSA/les"
-	//"github.com/anyswap/FastMulThreshold-DSA/log"
-	//"github.com/anyswap/FastMulThreshold-DSA/metrics"
-	//"github.com/anyswap/FastMulThreshold-DSA/metrics/exp"
-	//"github.com/anyswap/FastMulThreshold-DSA/metrics/influxdb"
-	//"github.com/anyswap/FastMulThreshold-DSA/miner"
-	//"github.com/anyswap/FastMulThreshold-DSA/node"
-	//"github.com/anyswap/FastMulThreshold-DSA/p2p"
-	//"github.com/anyswap/FastMulThreshold-DSA/p2p/discv5"
-	//"github.com/anyswap/FastMulThreshold-DSA/p2p/enode"
-	//"github.com/anyswap/FastMulThreshold-DSA/p2p/nat"
-	//"github.com/anyswap/FastMulThreshold-DSA/p2p/netutil"
-	//"github.com/anyswap/FastMulThreshold-DSA/params"
+	//"github.com/deltaswapio/gsmpc/accounts"
+	//"github.com/deltaswapio/gsmpc/accounts/keystore"
+	//"github.com/deltaswapio/gsmpc/common"
+	//"github.com/deltaswapio/gsmpc/common/fdlimit"
+	//"github.com/deltaswapio/gsmpc/consensus"
+	//"github.com/deltaswapio/gsmpc/consensus/clique"
+	//"github.com/deltaswapio/gsmpc/consensus/ethash"
+	//"github.com/deltaswapio/gsmpc/core"
+	//"github.com/deltaswapio/gsmpc/core/rawdb"
+	//"github.com/deltaswapio/gsmpc/core/vm"
+	//"github.com/deltaswapio/gsmpc/crypto"
+	//"github.com/deltaswapio/gsmpc/eth"
+	//"github.com/deltaswapio/gsmpc/eth/downloader"
+	//"github.com/deltaswapio/gsmpc/eth/gasprice"
+	//"github.com/deltaswapio/gsmpc/ethdb"
+	//"github.com/deltaswapio/gsmpc/ethstats"
+	//"github.com/deltaswapio/gsmpc/graphql"
+	//"github.com/deltaswapio/gsmpc/internal/ethapi"
+	//"github.com/deltaswapio/gsmpc/internal/flags"
+	//"github.com/deltaswapio/gsmpc/les"
+	//"github.com/deltaswapio/gsmpc/log"
+	//"github.com/deltaswapio/gsmpc/metrics"
+	//"github.com/deltaswapio/gsmpc/metrics/exp"
+	//"github.com/deltaswapio/gsmpc/metrics/influxdb"
+	//"github.com/deltaswapio/gsmpc/miner"
+	//"github.com/deltaswapio/gsmpc/node"
+	//"github.com/deltaswapio/gsmpc/p2p"
+	//"github.com/deltaswapio/gsmpc/p2p/discv5"
+	//"github.com/deltaswapio/gsmpc/p2p/enode"
+	//"github.com/deltaswapio/gsmpc/p2p/nat"
+	//"github.com/deltaswapio/gsmpc/p2p/netutil"
+	//"github.com/deltaswapio/gsmpc/params"
 	//pcsclite "github.com/gballet/go-libpcsclite"
 	cli "gopkg.in/urfave/cli.v1"
 )
@@ -67,10 +67,10 @@ func MigrateFlags(action func(ctx *cli.Context) error) func(*cli.Context) error 
 	return func(ctx *cli.Context) error {
 		for _, name := range ctx.FlagNames() {
 			if ctx.IsSet(name) {
-			    err := ctx.GlobalSet(name, ctx.String(name))
-			    if err != nil {
-				return err
-			    }
+				err := ctx.GlobalSet(name, ctx.String(name))
+				if err != nil {
+					return err
+				}
 			}
 		}
 		return action(ctx)

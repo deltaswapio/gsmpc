@@ -17,16 +17,16 @@
 package keygen
 
 import (
-	"errors"
-	"encoding/hex"
-	"fmt"
-	"github.com/anyswap/FastMulThreshold-DSA/smpc-lib/crypto/ed"
-	"github.com/anyswap/FastMulThreshold-DSA/smpc-lib/crypto/ed_ristretto"
-	"github.com/anyswap/FastMulThreshold-DSA/smpc-lib/smpc"
 	"crypto/sha512"
+	"encoding/hex"
+	"errors"
+	"fmt"
+	"github.com/deltaswapio/gsmpc/smpc-lib/crypto/ed"
+	"github.com/deltaswapio/gsmpc/smpc-lib/crypto/ed_ristretto"
+	"github.com/deltaswapio/gsmpc/smpc-lib/smpc"
 )
 
-// Start verify cPk dPk zkPk,calc vss 
+// Start verify cPk dPk zkPk,calc vss
 func (round *round4) Start() error {
 	if round.started {
 		return errors.New("ed,round already started")
@@ -75,7 +75,7 @@ func (round *round4) Start() error {
 		var zkPkFlag = false
 		if round.temp.sigtype == smpc.SR25519 {
 			zkPkFlag = ed_ristretto.VerifyZk2(msg2.ZkPk, t)
-		}else{
+		} else {
 			zkPkFlag = ed.VerifyZk2(msg2.ZkPk, t)
 		}
 		if !zkPkFlag {
@@ -109,7 +109,7 @@ func (round *round4) Start() error {
 	h.Sum(aDigest[:0])
 	if round.temp.sigtype == smpc.SR25519 {
 		ed_ristretto.ScReduce(&a, &aDigest)
-	}else{
+	} else {
 		ed.ScReduce(&a, &aDigest)
 	}
 
@@ -120,7 +120,7 @@ func (round *round4) Start() error {
 
 	if round.temp.sigtype == smpc.SR25519 {
 		ed_ristretto.ScMul(&ask, &a, &temSk2)
-	}else{
+	} else {
 		ed.ScMul(&ask, &a, &temSk2)
 	}
 
@@ -140,24 +140,24 @@ func (round *round4) Start() error {
 		uids = append(uids, tem)
 	}
 	round.temp.uids = uids
-	
-	var(
+
+	var (
 		cfsBBytes [][32]byte
-		shares [][32]byte
+		shares    [][32]byte
 	)
 
 	if round.temp.sigtype == smpc.SR25519 {
-		_, cfsBBytes, shares,err = ed_ristretto.Vss(ask, uids, round.threshold, round.dnodecount)
-	}else{
-		_, cfsBBytes, shares,err = ed.Vss(ask, uids, round.threshold, round.dnodecount)
+		_, cfsBBytes, shares, err = ed_ristretto.Vss(ask, uids, round.threshold, round.dnodecount)
+	} else {
+		_, cfsBBytes, shares, err = ed.Vss(ask, uids, round.threshold, round.dnodecount)
 	}
 
 	if cfsBBytes == nil || shares == nil || err != nil {
-	    if err != nil {
-		return err
-	    }
+		if err != nil {
+			return err
+		}
 
-	    return errors.New("calc shares error")
+		return errors.New("calc shares error")
 	}
 
 	round.temp.cfsBBytes = cfsBBytes
@@ -173,7 +173,7 @@ func (round *round4) Start() error {
 		if k == curIndex {
 			round.temp.kgRound4Messages[k] = kg
 		} else {
-			tmp := fmt.Sprintf("%v",id)
+			tmp := fmt.Sprintf("%v", id)
 			idtmp := hex.EncodeToString([]byte(tmp))
 			kg.AppendToID(idtmp) //id-->dnodeid
 			round.out <- kg
@@ -183,7 +183,7 @@ func (round *round4) Start() error {
 	return nil
 }
 
-// CanAccept is it legal to receive this message 
+// CanAccept is it legal to receive this message
 func (round *round4) CanAccept(msg smpc.Message) bool {
 	if _, ok := msg.(*KGRound4Message); ok {
 		return !msg.IsBroadcast()
@@ -191,7 +191,7 @@ func (round *round4) CanAccept(msg smpc.Message) bool {
 	return false
 }
 
-// Update  is the message received and ready for the next round? 
+// Update  is the message received and ready for the next round?
 func (round *round4) Update() (bool, error) {
 	for j, msg := range round.temp.kgRound4Messages {
 		if round.ok[j] {

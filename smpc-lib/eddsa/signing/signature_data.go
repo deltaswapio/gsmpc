@@ -17,15 +17,15 @@
 package signing
 
 import (
-	"math/big"
 	"bytes"
 	"fmt"
-	"github.com/anyswap/FastMulThreshold-DSA/smpc-lib/crypto/ed"
-	"github.com/anyswap/FastMulThreshold-DSA/smpc-lib/smpc"
+	"github.com/deltaswapio/gsmpc/smpc-lib/crypto/ed"
+	"github.com/deltaswapio/gsmpc/smpc-lib/smpc"
 	r255 "github.com/gtank/ristretto255"
+	"math/big"
 )
 
-// InputVerify  Ed algorithm validation data 
+// InputVerify  Ed algorithm validation data
 type InputVerify struct {
 	KeyType string
 	FinalR  [32]byte
@@ -47,12 +47,12 @@ func EdVerify(input InputVerify, sigtype string) bool {
 
 	var sBBytes, sBCalBytes [32]byte
 	if sigtype == smpc.SR25519 {
-		var(
-			R = new(r255.Element)
-			pkB = new(r255.Element)
-			sB = new(r255.Element)
-			sBCal = new(r255.Element)
-			kScalar = new(r255.Scalar)
+		var (
+			R            = new(r255.Element)
+			pkB          = new(r255.Element)
+			sB           = new(r255.Element)
+			sBCal        = new(r255.Element)
+			kScalar      = new(r255.Scalar)
 			finalSScalar = new(r255.Scalar)
 		)
 		pkB.Decode(input.FinalPk[:])
@@ -64,23 +64,23 @@ func EdVerify(input InputVerify, sigtype string) bool {
 		sBCal = new(r255.Element).Add(R, sBCal)
 
 		sB = new(r255.Element).ScalarBaseMult(finalSScalar)
-		
+
 		sB.Encode(sBBytes[:0])
 		sBCal.Encode(sBCalBytes[:0])
-	}else {
+	} else {
 		var R, pkB, sB, sBCal ed.ExtendedGroupElement
 		pkB.FromBytes(&(input.FinalPk))
 		R.FromBytes(&(input.FinalR))
-	
+
 		ed.GeScalarMult(&sBCal, &k, &pkB)
 		ed.GeAdd(&sBCal, &R, &sBCal)
-	
+
 		ed.GeScalarMultBase(&sB, &(input.FinalS))
-		
+
 		sB.ToBytes(&sBBytes)
 		sBCal.ToBytes(&sBCalBytes)
 	}
-	
+
 	pass := bytes.Equal(sBBytes[:], sBCalBytes[:])
 
 	return pass
@@ -92,7 +92,7 @@ type EdSignData struct {
 	Sx [32]byte
 }
 
-// PrePubData pre-sign data 
+// PrePubData pre-sign data
 type PrePubData struct {
 	K1     *big.Int
 	R      *big.Int

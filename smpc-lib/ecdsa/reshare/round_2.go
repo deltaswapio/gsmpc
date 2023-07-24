@@ -17,12 +17,12 @@
 package reshare
 
 import (
+	"encoding/hex"
 	"errors"
 	"fmt"
-	"github.com/anyswap/FastMulThreshold-DSA/smpc-lib/crypto/ec2"
-	"github.com/anyswap/FastMulThreshold-DSA/smpc-lib/smpc"
+	"github.com/deltaswapio/gsmpc/smpc-lib/crypto/ec2"
+	"github.com/deltaswapio/gsmpc/smpc-lib/smpc"
 	"math/big"
-	"encoding/hex"
 )
 
 // Start get vss data and send to corresponding peer
@@ -52,12 +52,12 @@ func (round *round2) Start() error {
 	round.Save.IDs = ids
 	round.Save.CurDNodeID, _ = new(big.Int).SetString(round.dnodeid, 10)
 
-	dul,err := ec2.ContainsDuplicate(ids)
+	dul, err := ec2.ContainsDuplicate(ids)
 	if err != nil || dul || len(ids) > round.dnodecount {
-	    return errors.New("node id error")
+		return errors.New("node id error")
 	}
 
-	skP1Shares, err := round.temp.skP1Poly.Vss2(round.keytype,ids)
+	skP1Shares, err := round.temp.skP1Poly.Vss2(round.keytype, ids)
 	if err != nil {
 		return err
 	}
@@ -85,8 +85,8 @@ func (round *round2) Start() error {
 		for _, v := range skP1Shares {
 			re := &ReRound2Message{
 				ReRoundMessage: new(ReRoundMessage),
-				ID:                  v.ID,
-				Share:               v.Share,
+				ID:             v.ID,
+				Share:          v.Share,
 			}
 			re.SetFromID(round.dnodeid)
 			re.SetFromIndex(curIndexReshare)
@@ -98,7 +98,7 @@ func (round *round2) Start() error {
 				break
 			} else if vv != nil && vv.Cmp(id) == 0 {
 				fmt.Printf("=========== round2, share struct id = %v, share = %v, k = %v ===========\n", v.ID, v.Share, k)
-				tmp := fmt.Sprintf("%v",id)
+				tmp := fmt.Sprintf("%v", id)
 				idtmp := hex.EncodeToString([]byte(tmp))
 				re.AppendToID(idtmp)
 				round.out <- re
@@ -109,8 +109,8 @@ func (round *round2) Start() error {
 
 	re := &ReRound2Message1{
 		ReRoundMessage: new(ReRoundMessage),
-		ComD:                round.temp.comd,
-		SkP1PolyG:           round.temp.skP1PolyG,
+		ComD:           round.temp.comd,
+		SkP1PolyG:      round.temp.skP1PolyG,
 	}
 	re.SetFromID(round.dnodeid)
 	re.SetFromIndex(curIndexReshare)
@@ -121,7 +121,7 @@ func (round *round2) Start() error {
 	return nil
 }
 
-// CanAccept is it legal to receive this message 
+// CanAccept is it legal to receive this message
 func (round *round2) CanAccept(msg smpc.Message) bool {
 	if _, ok := msg.(*ReRound2Message); ok {
 		return !msg.IsBroadcast()
@@ -132,7 +132,7 @@ func (round *round2) CanAccept(msg smpc.Message) bool {
 	return false
 }
 
-// Update  is the message received and ready for the next round? 
+// Update  is the message received and ready for the next round?
 func (round *round2) Update() (bool, error) {
 	for j, msg := range round.temp.reshareRound2Messages {
 		if round.ok[j] {

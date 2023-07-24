@@ -24,10 +24,10 @@ import (
 	"net"
 	"time"
 
-	"github.com/anyswap/FastMulThreshold-DSA/crypto"
-	"github.com/anyswap/FastMulThreshold-DSA/internal/common"
-	"github.com/anyswap/FastMulThreshold-DSA/p2p/nat"
-	"github.com/anyswap/FastMulThreshold-DSA/p2p/netutil"
+	"github.com/deltaswapio/gsmpc/crypto"
+	"github.com/deltaswapio/gsmpc/internal/common"
+	"github.com/deltaswapio/gsmpc/p2p/nat"
+	"github.com/deltaswapio/gsmpc/p2p/netutil"
 	"github.com/fsn-dev/cryptoCoins/tools/rlp"
 )
 
@@ -272,13 +272,13 @@ func (t *udp) sendPing(remote *Node, toaddr *net.UDPAddr, topics []Topic) (hash 
 }
 
 func (t *udp) sendFindnode(remote *Node, target NodeID) {
-    _,err := t.sendPacket(remote.ID, remote.addr(), byte(findnodePacket), findnode{
+	_, err := t.sendPacket(remote.ID, remote.addr(), byte(findnodePacket), findnode{
 		Target:     target,
 		Expiration: uint64(time.Now().Add(expiration).Unix()),
 	})
 	if err != nil {
-	    fmt.Printf("===================sendFindnode,send packet fail,err = %v=========================\n",err)
-	    return
+		fmt.Printf("===================sendFindnode,send packet fail,err = %v=========================\n", err)
+		return
 	}
 }
 
@@ -289,36 +289,36 @@ func (t *udp) sendNeighbours(remote *Node, results []*Node) {
 	for i, result := range results {
 		p.Nodes = append(p.Nodes, nodeToRPC(result))
 		if len(p.Nodes) == maxNeighbors || i == len(results)-1 {
-		    _,err := t.sendPacket(remote.ID, remote.addr(), byte(neighborsPacket), p)
-		    if err != nil {
-			fmt.Printf("sendNeighbours,send neighbours fail,err =%v\n",err)
-			return
-		    }
+			_, err := t.sendPacket(remote.ID, remote.addr(), byte(neighborsPacket), p)
+			if err != nil {
+				fmt.Printf("sendNeighbours,send neighbours fail,err =%v\n", err)
+				return
+			}
 			p.Nodes = p.Nodes[:0]
 		}
 	}
 }
 
 func (t *udp) sendFindnodeHash(remote *Node, target common.Hash) {
-    _,err := t.sendPacket(remote.ID, remote.addr(), byte(findnodeHashPacket), findnodeHash{
+	_, err := t.sendPacket(remote.ID, remote.addr(), byte(findnodeHashPacket), findnodeHash{
 		Target:     target,
 		Expiration: uint64(time.Now().Add(expiration).Unix()),
 	})
 	if err != nil {
-	    fmt.Printf("sendFindnodeHash,send find node hash fail,err =%v\n",err)
-	    return
+		fmt.Printf("sendFindnodeHash,send find node hash fail,err =%v\n", err)
+		return
 	}
 }
 
 func (t *udp) sendTopicRegister(remote *Node, topics []Topic, idx int, pong []byte) {
-    _,err := t.sendPacket(remote.ID, remote.addr(), byte(topicRegisterPacket), topicRegister{
+	_, err := t.sendPacket(remote.ID, remote.addr(), byte(topicRegisterPacket), topicRegister{
 		Topics: topics,
 		Idx:    uint(idx),
 		Pong:   pong,
 	})
 	if err != nil {
-	    fmt.Printf("sendTopicRegister,send topic register fail,err =%v\n",err)
-	    return
+		fmt.Printf("sendTopicRegister,send topic register fail,err =%v\n", err)
+		return
 	}
 }
 
@@ -330,20 +330,20 @@ func (t *udp) sendTopicNodes(remote *Node, queryHash common.Hash, nodes []*Node)
 			p.Nodes = append(p.Nodes, nodeToRPC(result))
 		}
 		if len(p.Nodes) == maxTopicNodes {
-		    _,err := t.sendPacket(remote.ID, remote.addr(), byte(topicNodesPacket), p)
-		    if err != nil {
-			return
-		    }
+			_, err := t.sendPacket(remote.ID, remote.addr(), byte(topicNodesPacket), p)
+			if err != nil {
+				return
+			}
 
 			p.Nodes = p.Nodes[:0]
 			sent = true
 		}
 	}
 	if !sent || len(p.Nodes) > 0 {
-	    _,err := t.sendPacket(remote.ID, remote.addr(), byte(topicNodesPacket), p)
-	    if err != nil {
-		return
-	    }
+		_, err := t.sendPacket(remote.ID, remote.addr(), byte(topicNodesPacket), p)
+		if err != nil {
+			return
+		}
 	}
 }
 
@@ -355,7 +355,7 @@ func (t *udp) sendPacket(toid NodeID, toaddr *net.UDPAddr, ptype byte, req inter
 		return hash, err
 	}
 	if nbytes, err := t.conn.WriteToUDP(packet, toaddr); err != nil {
-		return hash,err
+		return hash, err
 	} else {
 		egressTrafficMeter.Mark(int64(nbytes))
 	}
@@ -404,7 +404,7 @@ func (t *udp) readLoop() {
 		}
 		err = t.handlePacket(from, buf[:nbytes])
 		if err != nil {
-		    return
+			return
 		}
 	}
 }

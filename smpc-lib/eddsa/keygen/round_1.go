@@ -22,9 +22,9 @@ import (
 	"fmt"
 	"io"
 
-	"github.com/anyswap/FastMulThreshold-DSA/smpc-lib/crypto/ed"
-	"github.com/anyswap/FastMulThreshold-DSA/smpc-lib/crypto/ed_ristretto"
-	"github.com/anyswap/FastMulThreshold-DSA/smpc-lib/smpc"
+	"github.com/deltaswapio/gsmpc/smpc-lib/crypto/ed"
+	"github.com/deltaswapio/gsmpc/smpc-lib/crypto/ed_ristretto"
+	"github.com/deltaswapio/gsmpc/smpc-lib/smpc"
 	r255 "github.com/gtank/ristretto255"
 )
 
@@ -60,7 +60,7 @@ func (round *round1) Start() error {
 		if err != nil {
 			return err
 		}
-	}else{
+	} else {
 		var skTem [64]byte
 		if _, err = io.ReadFull(rand, skTem[:]); err != nil {
 			fmt.Println("Error: io.ReadFull(rand, sk)")
@@ -71,7 +71,7 @@ func (round *round1) Start() error {
 		ed.GeScalarMultBase(&A, &sk)
 		A.ToBytes(&pk)
 
-		zkPk, err = ed.Prove2(sk,pk)
+		zkPk, err = ed.Prove2(sk, pk)
 		if err != nil {
 			return err
 		}
@@ -79,7 +79,7 @@ func (round *round1) Start() error {
 
 	CPk, DPk, err := ed.Commit(pk)
 	if err != nil {
-	    return err
+		return err
 	}
 
 	round.temp.sk = sk
@@ -89,7 +89,7 @@ func (round *round1) Start() error {
 
 	index, err := round.GetDNodeIDIndex(round.dnodeid)
 	if err != nil {
-		fmt.Printf("============round1 start,get dnode id index fail,uid = %v,err = %v ===========\n", round.dnodeid,err)
+		fmt.Printf("============round1 start,get dnode id index fail,uid = %v,err = %v ===========\n", round.dnodeid, err)
 		return err
 	}
 
@@ -109,7 +109,7 @@ func (round *round1) Start() error {
 	return nil
 }
 
-// CanAccept is it legal to receive this message 
+// CanAccept is it legal to receive this message
 func (round *round1) CanAccept(msg smpc.Message) bool {
 	if _, ok := msg.(*KGRound1Message); ok {
 		return msg.IsBroadcast()
@@ -117,7 +117,7 @@ func (round *round1) CanAccept(msg smpc.Message) bool {
 	return false
 }
 
-// Update  is the message received and ready for the next round? 
+// Update  is the message received and ready for the next round?
 func (round *round1) Update() (bool, error) {
 	for j, msg := range round.temp.kgRound1Messages {
 		if round.ok[j] {

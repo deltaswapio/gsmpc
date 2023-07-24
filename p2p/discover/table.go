@@ -32,9 +32,9 @@ import (
 	"sync"
 	"time"
 
-	"github.com/anyswap/FastMulThreshold-DSA/crypto"
-	"github.com/anyswap/FastMulThreshold-DSA/internal/common"
-	"github.com/anyswap/FastMulThreshold-DSA/p2p/netutil"
+	"github.com/deltaswapio/gsmpc/crypto"
+	"github.com/deltaswapio/gsmpc/internal/common"
+	"github.com/deltaswapio/gsmpc/p2p/netutil"
 )
 
 const (
@@ -91,7 +91,7 @@ type transport interface {
 	sendMsgToPeer(toid NodeID, toaddr *net.UDPAddr, msg string) error
 	sendToGroupCC(toid NodeID, toaddr *net.UDPAddr, msg string, p2pType int) (string, error)
 	sendMsgToBroadcastNode(toid NodeID, toaddr *net.UDPAddr, msg string) error
-	sendMsgSplitToPeerWithUDP(toid NodeID, toaddr *net.UDPAddr, packet []byte, p2pType int,ptype int) error
+	sendMsgSplitToPeerWithUDP(toid NodeID, toaddr *net.UDPAddr, packet []byte, p2pType int, ptype int) error
 	close()
 }
 
@@ -141,9 +141,9 @@ func newTable(t transport, ourID NodeID, ourAddr *net.UDPAddr, nodeDBPath string
 
 func (tab *Table) seedRand() {
 	var b [8]byte
-	_,err := crand.Read(b[:])
+	_, err := crand.Read(b[:])
 	if err != nil {
-	    return
+		return
 	}
 
 	tab.mutex.Lock()
@@ -331,7 +331,7 @@ func (tab *Table) findnode(n *Node, targetID NodeID, reply chan<- []*Node) {
 		fails++
 		err = tab.db.updateFindFails(n.ID, fails)
 		if err != nil {
-		    return
+			return
 		}
 
 		if fails >= maxFindnodeFailures {
@@ -340,7 +340,7 @@ func (tab *Table) findnode(n *Node, targetID NodeID, reply chan<- []*Node) {
 	} else if fails > 0 {
 		err = tab.db.updateFindFails(n.ID, fails-1)
 		if err != nil {
-		    return
+			return
 		}
 	}
 
@@ -447,9 +447,9 @@ func (tab *Table) doRefresh(done chan struct{}) {
 	// We perform a few lookups with a random target instead.
 	for i := 0; i < 3; i++ {
 		var target NodeID
-		_,err := crand.Read(target[:])
+		_, err := crand.Read(target[:])
 		if err != nil {
-		    return
+			return
 		}
 
 		tab.lookup(target, false)
@@ -532,10 +532,10 @@ func (tab *Table) copyLiveNodes() {
 	for _, b := range &tab.buckets {
 		for _, n := range b.entries {
 			if now.Sub(n.addedAt) >= seedMinTableTime {
-			    err := tab.db.updateNode(n)
-			    if err != nil {
-				return
-			    }
+				err := tab.db.updateNode(n)
+				if err != nil {
+					return
+				}
 			}
 		}
 	}

@@ -19,8 +19,8 @@ package signing
 import (
 	"errors"
 	"fmt"
-	"github.com/anyswap/FastMulThreshold-DSA/crypto/secp256k1"
-	"github.com/anyswap/FastMulThreshold-DSA/smpc-lib/smpc"
+	"github.com/deltaswapio/gsmpc/crypto/secp256k1"
+	"github.com/deltaswapio/gsmpc/smpc-lib/smpc"
 	"math/big"
 )
 
@@ -30,7 +30,7 @@ func (round *round11) Start() error {
 		fmt.Printf("============= round11.start fail =======\n")
 		return errors.New("round already started")
 	}
-	
+
 	round.number = 11
 	round.started = true
 	round.ResetOK()
@@ -67,5 +67,3 @@ func (round *round11) Update() (bool, error) {
 func (round *round11) NextRound() smpc.Round {
 	return nil
 }
-
-

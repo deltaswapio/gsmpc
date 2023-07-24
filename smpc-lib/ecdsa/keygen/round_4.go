@@ -20,18 +20,18 @@ import (
 	"errors"
 	"fmt"
 	//"time"
-	"sync"
-	"github.com/anyswap/FastMulThreshold-DSA/crypto/secp256k1"
-	"github.com/anyswap/FastMulThreshold-DSA/smpc-lib/crypto/ec2"
-	"github.com/anyswap/FastMulThreshold-DSA/smpc-lib/smpc"
+	"github.com/deltaswapio/gsmpc/crypto/secp256k1"
+	"github.com/deltaswapio/gsmpc/smpc-lib/crypto/ec2"
+	"github.com/deltaswapio/gsmpc/smpc-lib/smpc"
 	"math/big"
-	//"github.com/anyswap/FastMulThreshold-DSA/internal/common"
+	"sync"
+	//"github.com/deltaswapio/gsmpc/internal/common"
 	//"crypto/rand"
-	//"github.com/anyswap/FastMulThreshold-DSA/internal/common/math/random"
+	//"github.com/deltaswapio/gsmpc/internal/common/math/random"
 )
 
 var (
-	mutex    sync.Mutex
+	mutex sync.Mutex
 )
 
 // Start verify vss and commitment data,calc pubkey and SKi,create Ntilde
@@ -66,7 +66,7 @@ func (round *round4) Start() error {
 		}
 
 		ps := &ec2.PolyGStruct2{PolyG: msg3.U1PolyGG}
-		if !ushare.Verify2(round.keytype,ps) {
+		if !ushare.Verify2(round.keytype, ps) {
 			fmt.Printf("========= round4 verify share fail, k = %v ==========\n", k)
 			return errors.New("verify share data fail")
 		}
@@ -164,7 +164,7 @@ func (round *round4) Start() error {
 	u1Secrets = append(u1Secrets, xiGy)
 	commitXiG := new(ec2.Commitment).Commit(u1Secrets...)
 	if commitXiG == nil {
-	    return errors.New("error generating commitment for sku1")
+		return errors.New("error generating commitment for sku1")
 	}
 
 	round.temp.commitXiG = commitXiG
@@ -172,12 +172,12 @@ func (round *round4) Start() error {
 
 	// zk of paillier key
 	NtildeLength := 2048
-	u1NtildeH1H2, alpha, beta, p, q,p1,p2 := ec2.GenerateNtildeH1H2(NtildeLength)
+	u1NtildeH1H2, alpha, beta, p, q, p1, p2 := ec2.GenerateNtildeH1H2(NtildeLength)
 	if u1NtildeH1H2 == nil {
 		return errors.New("gen ntilde h1 h2 fail")
 	}
 
-	priv := &ec2.NtildePrivData{Alpha:alpha,Beta:beta,Q1:p,Q2:q}
+	priv := &ec2.NtildePrivData{Alpha: alpha, Beta: beta, Q1: p, Q2: q}
 	round.Save.U1NtildePrivData = priv
 
 	round.temp.p1 = p1
@@ -191,7 +191,7 @@ func (round *round4) Start() error {
 		U1NtildeH1H2:   u1NtildeH1H2,
 		NtildeProof1:   ntildeProof1,
 		NtildeProof2:   ntildeProof2,
-		ComXiC:		commitXiG.C,
+		ComXiC:         commitXiG.C,
 		PubKeyX:        pkx,
 		PubKeyY:        pky,
 	}
@@ -207,7 +207,7 @@ func (round *round4) Start() error {
 	return nil
 }
 
-// CanAccept is it legal to receive this message 
+// CanAccept is it legal to receive this message
 func (round *round4) CanAccept(msg smpc.Message) bool {
 	if _, ok := msg.(*KGRound4Message); ok {
 		return msg.IsBroadcast()
@@ -215,7 +215,7 @@ func (round *round4) CanAccept(msg smpc.Message) bool {
 	return false
 }
 
-// Update  is the message received and ready for the next round? 
+// Update  is the message received and ready for the next round?
 func (round *round4) Update() (bool, error) {
 	for j, msg := range round.temp.kgRound4Messages {
 		if round.ok[j] {

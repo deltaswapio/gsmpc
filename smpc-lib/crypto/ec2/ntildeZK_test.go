@@ -17,7 +17,7 @@
 package ec2_test
 
 import (
-	"github.com/anyswap/FastMulThreshold-DSA/smpc-lib/crypto/ec2"
+	"github.com/deltaswapio/gsmpc/smpc-lib/crypto/ec2"
 	"github.com/stretchr/testify/assert"
 	"math/big"
 	"testing"

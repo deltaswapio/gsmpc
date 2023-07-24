@@ -26,11 +26,11 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/anyswap/FastMulThreshold-DSA/p2p"
-	"github.com/anyswap/FastMulThreshold-DSA/p2p/event"
+	"github.com/deltaswapio/gsmpc/p2p"
+	"github.com/deltaswapio/gsmpc/p2p/event"
 
-	//"github.com/anyswap/FastMulThreshold-DSA/p2p/smpc"
-	"github.com/anyswap/FastMulThreshold-DSA/rpc"
+	//"github.com/deltaswapio/gsmpc/p2p/smpc"
+	"github.com/deltaswapio/gsmpc/rpc"
 )
 
 // Node is a container on which services can be registered.

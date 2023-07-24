@@ -25,10 +25,10 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/anyswap/FastMulThreshold-DSA/internal/common"
-	"github.com/anyswap/FastMulThreshold-DSA/rpc"
-	"github.com/anyswap/FastMulThreshold-DSA/smpc"
-	"github.com/anyswap/FastMulThreshold-DSA/log"
+	"github.com/deltaswapio/gsmpc/internal/common"
+	"github.com/deltaswapio/gsmpc/log"
+	"github.com/deltaswapio/gsmpc/rpc"
+	"github.com/deltaswapio/gsmpc/smpc"
 )
 
 func listenSignal(exit chan int) {
@@ -46,7 +46,7 @@ type Service struct{}
 
 // ReqSmpcAddr this will be called by smpc_reqSmpcAddr
 // raw: tx raw data
-//return pubkey and coins addr
+// return pubkey and coins addr
 func (service *Service) ReqSmpcAddr(raw string) map[string]interface{} { //函数名首字母必须大写
 	common.Debug("===============ReqSmpcAddr================", "raw", raw)
 
@@ -82,8 +82,10 @@ func (service *Service) ReqSmpcAddr(raw string) map[string]interface{} { //函�
 	}
 }
 
-// AcceptReqAddr  Agree to generate pubkey 
-//  Raw is a special signed transaction that agrees to reqaddr. The data format is:
+// AcceptReqAddr  Agree to generate pubkey
+//
+//	Raw is a special signed transaction that agrees to reqaddr. The data format is:
+//
 // {
 // "TxType":"ACCEPTREQADDR",
 // "Key":"XXX",
@@ -116,7 +118,7 @@ func (service *Service) AcceptReqAddr(raw string) map[string]interface{} {
 	}
 }
 
-// GetReqAddrNonce  Get the nonce value of the special transaction generating pubkey 
+// GetReqAddrNonce  Get the nonce value of the special transaction generating pubkey
 func (service *Service) GetReqAddrNonce(account string) map[string]interface{} {
 	//fmt.Println("%v =========call rpc.GetReqAddrNonce from web,account = %v =================", common.CurrentTime(), account)
 
@@ -153,7 +155,7 @@ func (service *Service) GetReqAddrNonce(account string) map[string]interface{} {
 	}
 }
 
-// GetCurNodeReqAddrInfo  Get the list of generating pubkey command data currently to be approved 
+// GetCurNodeReqAddrInfo  Get the list of generating pubkey command data currently to be approved
 func (service *Service) GetCurNodeReqAddrInfo(account string) map[string]interface{} {
 	common.Debug("==================GetCurNodeReqAddrInfo====================", "account", account)
 
@@ -177,7 +179,7 @@ func (service *Service) GetCurNodeReqAddrInfo(account string) map[string]interfa
 }
 
 // GetReqAddrStatus  Get the result of generating pubkey
-// key:  This generates the unique identification value of the pubkey command 
+// key:  This generates the unique identification value of the pubkey command
 func (service *Service) GetReqAddrStatus(key string) map[string]interface{} {
 	common.Debug("==================GetReqAddrStatus====================", "key", key)
 
@@ -234,7 +236,7 @@ func (service *Service) AcceptSign(raw string) map[string]interface{} {
 	}
 }
 
-// Sign  Execute the sign command 
+// Sign  Execute the sign command
 // Raw is a special signed transaction. The nonce of the transaction is through SMPC_ Getsignnonce function. The data format is:
 // {
 // "TxType":"SIGN",
@@ -271,7 +273,7 @@ func (service *Service) Sign(raw string) map[string]interface{} {
 	}
 }
 
-// GetSignNonce  Get the nonce value of the special transaction of the sign command 
+// GetSignNonce  Get the nonce value of the special transaction of the sign command
 func (service *Service) GetSignNonce(account string) map[string]interface{} {
 	data := make(map[string]interface{})
 	if account == "" {
@@ -379,7 +381,7 @@ func (service *Service) ReShare(raw string) map[string]interface{} {
 	}
 }
 
-// GetReShareNonce  Get the nonce value of this resare command special transaction 
+// GetReShareNonce  Get the nonce value of this resare command special transaction
 func (service *Service) GetReShareNonce(account string) map[string]interface{} {
 	data := make(map[string]interface{})
 	if account == "" {
@@ -438,7 +440,7 @@ func (service *Service) AcceptReShare(raw string) map[string]interface{} {
 	}
 }
 
-// GetCurNodeReShareInfo  Get the Reshare command approval list 
+// GetCurNodeReShareInfo  Get the Reshare command approval list
 func (service *Service) GetCurNodeReShareInfo() map[string]interface{} {
 	s, tip, err := smpc.GetCurNodeReShareInfo()
 	//fmt.Printf("%v ==============finish call rpc GetCurNodeReShareInfo ,ret = %v,err = %v ================\n", common.CurrentTime(), s, err)
@@ -459,7 +461,7 @@ func (service *Service) GetCurNodeReShareInfo() map[string]interface{} {
 	}
 }
 
-// GetReShareStatus  Get the result of the Reshare command  
+// GetReShareStatus  Get the result of the Reshare command
 func (service *Service) GetReShareStatus(key string) map[string]interface{} {
 	data := make(map[string]interface{})
 	ret, tip, err := smpc.GetReShareStatus(key)
@@ -482,7 +484,7 @@ func (service *Service) GetReShareStatus(key string) map[string]interface{} {
 	}
 }
 
-// PreGenSignData  Generate the relevant data required by the sign command in advance 
+// PreGenSignData  Generate the relevant data required by the sign command in advance
 // raw tx:
 // data = pubkey + subgids
 func (service *Service) PreGenSignData(raw string) map[string]interface{} {
@@ -514,9 +516,9 @@ func (service *Service) PreGenSignData(raw string) map[string]interface{} {
 // Rootpubkey is the total public key pubkey of the root node
 // The inputcode format is "m / X1 / x2 /... / xn", where x1,..., xn is the index number of the child node of each level, which is in decimal format, for example: "m / 1234567890123456789012345678901234567890123456789012323455678901234"
 // inputcode = "m/x1/x2/..../xn"
-func (service *Service) GetBip32ChildKey(rootpubkey string, inputcode string,keytype string,mode string) map[string]interface{} {
+func (service *Service) GetBip32ChildKey(rootpubkey string, inputcode string, keytype string, mode string) map[string]interface{} {
 	data := make(map[string]interface{})
-	pub, tip, err := smpc.GetBip32ChildKey(rootpubkey, inputcode,keytype,mode)
+	pub, tip, err := smpc.GetBip32ChildKey(rootpubkey, inputcode, keytype, mode)
 	if err != nil {
 		data["result"] = ""
 		return map[string]interface{}{
@@ -654,7 +656,7 @@ func (service *Service) GetSmpcAddr(pubkey string) map[string]interface{} {
 	}
 }
 
-// GetMpcNodeInfo  get mpc node info 
+// GetMpcNodeInfo  get mpc node info
 func (service *Service) GetMpcNodeInfo() map[string]interface{} {
 	data := make(map[string]interface{})
 	ret, err := smpc.GetMpcNodeInfo()
@@ -688,10 +690,10 @@ var (
 func RPCInit(port int) {
 	rpcport = port
 	go func() {
-	    err := startRPCServer()
-	    if err != nil {
-		return
-	    }
+		err := startRPCServer()
+		if err != nil {
+			return
+		}
 	}()
 }
 
@@ -781,11 +783,11 @@ func startRPCServer() error {
 		vhosts := make([]string, 0)
 		cors := splitAndTrim("*")
 		go func() {
-		    err2 := rpc.NewHTTPServer(cors, vhosts, rpc.DefaultHTTPTimeouts, server).Serve(listener)
-		    if err2 != nil {
-			log.Error("============== new http server fail ==============","err",err2)
-			return
-		    }
+			err2 := rpc.NewHTTPServer(cors, vhosts, rpc.DefaultHTTPTimeouts, server).Serve(listener)
+			if err2 != nil {
+				log.Error("============== new http server fail ==============", "err", err2)
+				return
+			}
 		}()
 		rpcstring := "==================== RPC Service Start! url = " + fmt.Sprintf("http://%s", endpoint) + " ====================="
 		log.Info(rpcstring)

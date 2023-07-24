@@ -18,7 +18,7 @@ package reshare
 
 import (
 	"errors"
-	"github.com/anyswap/FastMulThreshold-DSA/smpc-lib/smpc"
+	"github.com/deltaswapio/gsmpc/smpc-lib/smpc"
 	"math/big"
 )
 

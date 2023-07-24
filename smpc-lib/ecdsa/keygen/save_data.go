@@ -18,8 +18,8 @@ package keygen
 
 import (
 	"fmt"
-	"github.com/anyswap/FastMulThreshold-DSA/smpc-lib/crypto/ec2"
-	"github.com/anyswap/FastMulThreshold-DSA/smpc-lib/smpc"
+	"github.com/deltaswapio/gsmpc/smpc-lib/crypto/ec2"
+	"github.com/deltaswapio/gsmpc/smpc-lib/smpc"
 	"math/big"
 	"strings"
 )
@@ -31,11 +31,11 @@ type LocalDNodeSaveData struct {
 	Pky *big.Int
 	C   *big.Int
 
-	SkU1         *big.Int
-	U1PaillierSk *ec2.PrivateKey
-	U1PaillierPk []*ec2.PublicKey
+	SkU1             *big.Int
+	U1PaillierSk     *ec2.PrivateKey
+	U1PaillierPk     []*ec2.PublicKey
 	U1NtildePrivData *ec2.NtildePrivData
-	U1NtildeH1H2 []*ec2.NtildeH1H2
+	U1NtildeH1H2     []*ec2.NtildeH1H2
 
 	IDs        smpc.SortableIDSSlice
 	CurDNodeID *big.Int
@@ -164,7 +164,6 @@ func GetLocalDNodeSaveData(data map[string]string) *LocalDNodeSaveData {
 
 	curdnodeid, _ := new(big.Int).SetString(data["CurDNodeID"], 10)
 
-	sd := &LocalDNodeSaveData{Pkx: pkx, Pky: pky, C: c, SkU1: sku1, U1PaillierSk: usk, U1PaillierPk: pk, U1NtildePrivData:ntildepriv, U1NtildeH1H2: nt, IDs: ids, CurDNodeID: curdnodeid}
+	sd := &LocalDNodeSaveData{Pkx: pkx, Pky: pky, C: c, SkU1: sku1, U1PaillierSk: usk, U1PaillierPk: pk, U1NtildePrivData: ntildepriv, U1NtildeH1H2: nt, IDs: ids, CurDNodeID: curdnodeid}
 	return sd
 }
-

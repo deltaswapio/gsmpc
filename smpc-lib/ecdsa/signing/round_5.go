@@ -19,12 +19,12 @@ package signing
 import (
 	"errors"
 	"fmt"
-	"github.com/anyswap/FastMulThreshold-DSA/smpc-lib/smpc"
-	"github.com/anyswap/FastMulThreshold-DSA/crypto/secp256k1"
-	"github.com/anyswap/FastMulThreshold-DSA/smpc-lib/crypto/ec2"
-	"github.com/anyswap/FastMulThreshold-DSA/internal/common/math/random"
+	"github.com/deltaswapio/gsmpc/crypto/secp256k1"
+	"github.com/deltaswapio/gsmpc/internal/common/math/random"
+	"github.com/deltaswapio/gsmpc/log"
+	"github.com/deltaswapio/gsmpc/smpc-lib/crypto/ec2"
+	"github.com/deltaswapio/gsmpc/smpc-lib/smpc"
 	"math/big"
-	"github.com/anyswap/FastMulThreshold-DSA/log"
 )
 
 // Start verify MtAZK2Proof,paillier Decrypt,calc delta1
@@ -65,9 +65,9 @@ func (round *round5) Start() error {
 		u1PaillierPk := round.save.U1PaillierPk[oldindex]
 		u1nt := round.save.U1NtildeH1H2[index]
 		msg4, _ := round.temp.signRound4Messages[k].(*SignRound4Message)
-		rlt111 := msg4.U1u1MtAZK2Proof.MtARespZKProofVerify(round.keytype,round.temp.ukc, msg4.U1KGamma1Cipher, u1PaillierPk, u1nt)
+		rlt111 := msg4.U1u1MtAZK2Proof.MtARespZKProofVerify(round.keytype, round.temp.ukc, msg4.U1KGamma1Cipher, u1PaillierPk, u1nt)
 		if !rlt111 {
-			log.Error("=====================round5.start,verify mkg fail================","msg4",*msg4,"index",index,"oldindex",oldindex,"idsign",round.idsign,"save.IDs",round.save.IDs,"curIndex",curIndex,"k",k)
+			log.Error("=====================round5.start,verify mkg fail================", "msg4", *msg4, "index", index, "oldindex", oldindex, "idsign", round.idsign, "save.IDs", round.save.IDs, "curIndex", curIndex, "k", k)
 			return errors.New("verify mkg fail")
 		}
 
@@ -75,12 +75,12 @@ func (round *round5) Start() error {
 		msg1, _ := round.temp.signRound1Messages[k].(*SignRound1Message)
 		msg3, _ := round.temp.signRound3Messages[k].(*SignRound3Message)
 		deCommit := &ec2.Commitment{C: msg1.ComWiC, D: msg3.ComWiD}
-		_,xG := deCommit.DeCommit(round.keytype)
+		_, xG := deCommit.DeCommit(round.keytype)
 
 		msg41, _ := round.temp.signRound4Messages1[k].(*SignRound4Message1)
-		rlt112 := msg41.U1u1MtAZK3Proof.MtAwcRespZKProofVefify(round.keytype,xG,round.temp.ukc, msg41.U1Kw1Cipher, u1PaillierPk, u1nt)
+		rlt112 := msg41.U1u1MtAZK3Proof.MtAwcRespZKProofVefify(round.keytype, xG, round.temp.ukc, msg41.U1Kw1Cipher, u1PaillierPk, u1nt)
 		if !rlt112 {
-			log.Error("=====================round5.start,verify mkw fail================","msg41",*msg41,"index",index,"oldindex",oldindex,"idsign",round.idsign,"save.IDs",round.save.IDs,"curIndex",curIndex,"k",k)
+			log.Error("=====================round5.start,verify mkw fail================", "msg41", *msg41, "index", index, "oldindex", oldindex, "idsign", round.idsign, "save.IDs", round.save.IDs, "curIndex", curIndex, "k", k)
 			return errors.New("verify mkw fail")
 		}
 
@@ -120,19 +120,19 @@ func (round *round5) Start() error {
 
 	// gg20: calculate T_i = g^sigma_i * h^l_i = sigma_i*G + l_i*h*G
 	l1 := random.GetRandomIntFromZn(secp256k1.S256(round.keytype).N1())
-	hx,hy,err := ec2.CalcHPoint(round.keytype)
+	hx, hy, err := ec2.CalcHPoint(round.keytype)
 	if err != nil {
-	    fmt.Printf("calc h point fail, err = %v",err)
-	    return err
+		fmt.Printf("calc h point fail, err = %v", err)
+		return err
 	}
 
-	l1Gx,l1Gy := secp256k1.S256(round.keytype).ScalarMult(hx,hy,l1.Bytes())
-	sigmaGx,sigmaGy := secp256k1.S256(round.keytype).ScalarBaseMult(sigma1.Bytes())
-	t1X,t1Y := secp256k1.S256(round.keytype).Add(sigmaGx,sigmaGy,l1Gx,l1Gy)
+	l1Gx, l1Gy := secp256k1.S256(round.keytype).ScalarMult(hx, hy, l1.Bytes())
+	sigmaGx, sigmaGy := secp256k1.S256(round.keytype).ScalarBaseMult(sigma1.Bytes())
+	t1X, t1Y := secp256k1.S256(round.keytype).Add(sigmaGx, sigmaGy, l1Gx, l1Gy)
 	// gg20: generate the ZK proof of T_i
-	tProof := ec2.TProve(round.keytype,t1X,t1Y,hx,hy,sigma1,l1)
+	tProof := ec2.TProve(round.keytype, t1X, t1Y, hx, hy, sigma1, l1)
 	if tProof == nil {
-	    return errors.New("prove Ti proof fail")
+		return errors.New("prove Ti proof fail")
 	}
 	//
 
@@ -143,9 +143,9 @@ func (round *round5) Start() error {
 	srm := &SignRound5Message{
 		SignRoundMessage: new(SignRoundMessage),
 		Delta1:           delta1,
-		T1X:		t1X,
-		T1Y:		t1Y,
-		Tpf:		tProof,
+		T1X:              t1X,
+		T1Y:              t1Y,
+		Tpf:              tProof,
 	}
 	srm.SetFromID(round.kgid)
 	srm.SetFromIndex(curIndex)
@@ -158,7 +158,7 @@ func (round *round5) Start() error {
 	return nil
 }
 
-// CanAccept is it legal to receive this message 
+// CanAccept is it legal to receive this message
 func (round *round5) CanAccept(msg smpc.Message) bool {
 	if _, ok := msg.(*SignRound5Message); ok {
 		return msg.IsBroadcast()
@@ -166,7 +166,7 @@ func (round *round5) CanAccept(msg smpc.Message) bool {
 	return false
 }
 
-// Update  is the message received and ready for the next round? 
+// Update  is the message received and ready for the next round?
 func (round *round5) Update() (bool, error) {
 	for j, msg := range round.temp.signRound5Messages {
 		if round.ok[j] {

@@ -14,36 +14,36 @@
  *
  */
 
-// Package reshare  MPC implementation of reshare 
+// Package reshare  MPC implementation of reshare
 package reshare
 
 import (
+	"encoding/hex"
 	"errors"
 	"fmt"
-	"time"
-	"github.com/anyswap/FastMulThreshold-DSA/crypto/secp256k1"
-	"github.com/anyswap/FastMulThreshold-DSA/internal/common/math/random"
-	"github.com/anyswap/FastMulThreshold-DSA/smpc-lib/crypto/ec2"
-	"github.com/anyswap/FastMulThreshold-DSA/smpc-lib/ecdsa/keygen"
-	"github.com/anyswap/FastMulThreshold-DSA/smpc-lib/smpc"
+	"github.com/deltaswapio/gsmpc/crypto/secp256k1"
+	"github.com/deltaswapio/gsmpc/internal/common/math/random"
+	"github.com/deltaswapio/gsmpc/smpc-lib/crypto/ec2"
+	"github.com/deltaswapio/gsmpc/smpc-lib/ecdsa/keygen"
+	"github.com/deltaswapio/gsmpc/smpc-lib/smpc"
 	"math/big"
-	"encoding/hex"
+	"time"
 )
 
 // LocalDNode current local node
 type LocalDNode struct {
 	*smpc.BaseDNode
-	temp    localTempData
-	data    *keygen.LocalDNodeSaveData
-	out     chan<- smpc.Message
-	end     chan<- keygen.LocalDNodeSaveData
-	oldnode bool //the node join the keygen and join the reshare
-	oldindex int //the node join the keygen and join the reshare, return it's index in group
+	temp     localTempData
+	data     *keygen.LocalDNodeSaveData
+	out      chan<- smpc.Message
+	end      chan<- keygen.LocalDNodeSaveData
+	oldnode  bool //the node join the keygen and join the reshare
+	oldindex int  //the node join the keygen and join the reshare, return it's index in group
 	//save for check msg0
 	firstround smpc.Round
 }
 
-// localTempData  Store some data of MPC calculation process 
+// localTempData  Store some data of MPC calculation process
 type localTempData struct {
 	reshareRound0Messages,
 	reshareRound1Messages,
@@ -72,7 +72,7 @@ type localTempData struct {
 	u1PaillierPk *ec2.PublicKey
 
 	//round 4
-	u1NtildeH1H2 *ec2.NtildeH1H2
+	u1NtildeH1H2     *ec2.NtildeH1H2
 	u1NtildePrivData *ec2.NtildePrivData
 
 	//round 5
@@ -115,7 +115,7 @@ func NewLocalDNode(
 		out:       out,
 		end:       end,
 		oldnode:   oldnode,
-		oldindex:   oldindex,
+		oldindex:  oldindex,
 	}
 
 	p.ID = id
@@ -138,7 +138,7 @@ func NewLocalDNode(
 
 // FirstRound first round
 func (p *LocalDNode) FirstRound() smpc.Round {
-	fr := newRound0(p.data, &p.temp, p.out, p.end, p.ID, p.DNodeCountInGroup, p.ThresHold, p.PaillierKeyLength, p.oldnode,p.oldindex,p.KeyType)
+	fr := newRound0(p.data, &p.temp, p.out, p.end, p.ID, p.DNodeCountInGroup, p.ThresHold, p.PaillierKeyLength, p.oldnode, p.oldindex, p.KeyType)
 	p.firstround = fr
 	return fr
 }
@@ -153,12 +153,12 @@ func (p *LocalDNode) Finalize() bool {
 	return false
 }
 
-// Start reshare start 
+// Start reshare start
 func (p *LocalDNode) Start() error {
 	return smpc.BaseStart(p)
 }
 
-// Update Collect data from other nodes and enter the next round 
+// Update Collect data from other nodes and enter the next round
 func (p *LocalDNode) Update(msg smpc.Message) (ok bool, err error) {
 	return smpc.BaseUpdate(p, msg)
 }
@@ -176,7 +176,7 @@ func (p *LocalDNode) SetDNodeID(id string) {
 	p.ID = hex.EncodeToString([]byte(id))
 }
 
-// CheckFull  Check for empty messages 
+// CheckFull  Check for empty messages
 func CheckFull(msg []smpc.Message) bool {
 	if len(msg) == 0 {
 		return false
@@ -191,55 +191,55 @@ func CheckFull(msg []smpc.Message) bool {
 	return true
 }
 
-func find(l []smpc.Message,msg smpc.Message) bool {
-    if msg == nil || l == nil {
-	return true
-    }
-
-    for _,v := range l {
-	    if v == nil {
-		    continue
-	    }
-
-	if v.GetMsgType() == msg.GetMsgType() && v.GetFromID() == msg.GetFromID() {
-	    return true
+func find(l []smpc.Message, msg smpc.Message) bool {
+	if msg == nil || l == nil {
+		return true
 	}
-    }
 
-    return false
+	for _, v := range l {
+		if v == nil {
+			continue
+		}
+
+		if v.GetMsgType() == msg.GetMsgType() && v.GetFromID() == msg.GetFromID() {
+			return true
+		}
+	}
+
+	return false
 }
 
 // DulMessage check whether the msg already exists in the list.
 func (p *LocalDNode) DulMessage(msg smpc.Message) bool {
 	switch msg.(type) {
 	case *ReRound0Message:
-	    if find(p.temp.reshareRound0Messages,msg) {
-		return true
-	    }
+		if find(p.temp.reshareRound0Messages, msg) {
+			return true
+		}
 	case *ReRound1Message:
-	    if find(p.temp.reshareRound1Messages,msg) {
-		return true
-	    }
+		if find(p.temp.reshareRound1Messages, msg) {
+			return true
+		}
 	case *ReRound2Message:
-	    if find(p.temp.reshareRound2Messages,msg) {
-		return true
-	    }
+		if find(p.temp.reshareRound2Messages, msg) {
+			return true
+		}
 	case *ReRound2Message1:
-	    if find(p.temp.reshareRound2Messages1,msg) {
-		return true
-	    }
+		if find(p.temp.reshareRound2Messages1, msg) {
+			return true
+		}
 	case *ReRound3Message:
-	    if find(p.temp.reshareRound3Messages,msg) {
-		return true
-	    }
+		if find(p.temp.reshareRound3Messages, msg) {
+			return true
+		}
 	case *ReRound4Message:
-	    if find(p.temp.reshareRound4Messages,msg) {
-		return true
-	    }
+		if find(p.temp.reshareRound4Messages, msg) {
+			return true
+		}
 	case *ReRound5Message:
-	    if find(p.temp.reshareRound5Messages,msg) {
-		return true
-	    }
+		if find(p.temp.reshareRound5Messages, msg) {
+			return true
+		}
 	default: // unrecognised message, just ignore!
 		fmt.Printf("storemessage,unrecognised message ignored: %v\n", msg)
 		return true
@@ -252,22 +252,22 @@ func (p *LocalDNode) DulMessage(msg smpc.Message) bool {
 func (p *LocalDNode) StoreMessage(msg smpc.Message) (bool, error) {
 	switch msg.(type) {
 	case *ReRound0Message:
-		if !find(p.temp.reshareRound0Messages,msg) {
-		    if len(p.temp.reshareRound0Messages) < p.DNodeCountInGroup {
-			    p.temp.reshareRound0Messages = append(p.temp.reshareRound0Messages, msg)
-		    }
+		if !find(p.temp.reshareRound0Messages, msg) {
+			if len(p.temp.reshareRound0Messages) < p.DNodeCountInGroup {
+				p.temp.reshareRound0Messages = append(p.temp.reshareRound0Messages, msg)
+			}
 
-		    if len(p.temp.reshareRound0Messages) == p.DNodeCountInGroup {
-			    fmt.Printf("================ StoreMessage,get all ec reshare 0 messages ==============\n")
-			    time.Sleep(time.Duration(1000000)) //tmp code
-			    return true, nil
-		    }
+			if len(p.temp.reshareRound0Messages) == p.DNodeCountInGroup {
+				fmt.Printf("================ StoreMessage,get all ec reshare 0 messages ==============\n")
+				time.Sleep(time.Duration(1000000)) //tmp code
+				return true, nil
+			}
 		}
 	case *ReRound1Message:
-		if find(p.temp.reshareRound1Messages,msg) {
-		    return false,nil
+		if find(p.temp.reshareRound1Messages, msg) {
+			return false, nil
 		}
-		
+
 		index := msg.GetFromIndex()
 		p.temp.reshareRound1Messages[index] = msg
 		if len(p.temp.reshareRound1Messages) == p.ThresHold && CheckFull(p.temp.reshareRound1Messages) {
@@ -276,10 +276,10 @@ func (p *LocalDNode) StoreMessage(msg smpc.Message) (bool, error) {
 			return true, nil
 		}
 	case *ReRound2Message:
-		if find(p.temp.reshareRound2Messages,msg) {
-		    return false,nil
+		if find(p.temp.reshareRound2Messages, msg) {
+			return false, nil
 		}
-		
+
 		index := msg.GetFromIndex()
 		p.temp.reshareRound2Messages[index] = msg
 		if len(p.temp.reshareRound2Messages) == p.ThresHold && CheckFull(p.temp.reshareRound2Messages) {
@@ -288,10 +288,10 @@ func (p *LocalDNode) StoreMessage(msg smpc.Message) (bool, error) {
 			return true, nil
 		}
 	case *ReRound2Message1:
-		if find(p.temp.reshareRound2Messages1,msg) {
-		    return false,nil
+		if find(p.temp.reshareRound2Messages1, msg) {
+			return false, nil
 		}
-		
+
 		index := msg.GetFromIndex()
 		p.temp.reshareRound2Messages1[index] = msg
 		if len(p.temp.reshareRound2Messages1) == p.ThresHold && CheckFull(p.temp.reshareRound2Messages1) {
@@ -300,10 +300,10 @@ func (p *LocalDNode) StoreMessage(msg smpc.Message) (bool, error) {
 			return true, nil
 		}
 	case *ReRound3Message:
-		if find(p.temp.reshareRound3Messages,msg) {
-		    return false,nil
+		if find(p.temp.reshareRound3Messages, msg) {
+			return false, nil
 		}
-		
+
 		index := msg.GetFromIndex()
 		p.temp.reshareRound3Messages[index] = msg
 		m := msg.(*ReRound3Message)
@@ -314,10 +314,10 @@ func (p *LocalDNode) StoreMessage(msg smpc.Message) (bool, error) {
 			return true, nil
 		}
 	case *ReRound4Message:
-		if find(p.temp.reshareRound4Messages,msg) {
-		    return false,nil
+		if find(p.temp.reshareRound4Messages, msg) {
+			return false, nil
 		}
-		
+
 		index := msg.GetFromIndex()
 		m := msg.(*ReRound4Message)
 
@@ -343,10 +343,10 @@ func (p *LocalDNode) StoreMessage(msg smpc.Message) (bool, error) {
 			return true, nil
 		}
 	case *ReRound5Message:
-		if find(p.temp.reshareRound5Messages,msg) {
-		    return false,nil
+		if find(p.temp.reshareRound5Messages, msg) {
+			return false, nil
 		}
-		
+
 		index := msg.GetFromIndex()
 		p.temp.reshareRound5Messages[index] = msg
 		if len(p.temp.reshareRound5Messages) == p.DNodeCountInGroup && CheckFull(p.temp.reshareRound5Messages) {

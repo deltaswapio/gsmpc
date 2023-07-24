@@ -17,13 +17,13 @@
 package ed_test
 
 import (
-	"github.com/stretchr/testify/assert"
-	"testing"
 	cryptorand "crypto/rand"
-	"io"
-	"github.com/anyswap/FastMulThreshold-DSA/smpc-lib/crypto/ed"
-	"fmt"
 	"crypto/sha512"
+	"fmt"
+	"github.com/deltaswapio/gsmpc/smpc-lib/crypto/ed"
+	"github.com/stretchr/testify/assert"
+	"io"
+	"testing"
 )
 
 func TestVerify_zk(t *testing.T) {
@@ -49,8 +49,6 @@ func TestVerify_zk(t *testing.T) {
 	A.ToBytes(&pk)
 
 	proof := ed.Prove(temSk)
-	succ := ed.Verify_zk(proof,pk)
+	succ := ed.Verify_zk(proof, pk)
 	assert.True(t, succ, "success")
 }
-
-

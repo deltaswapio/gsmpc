@@ -26,12 +26,12 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/anyswap/FastMulThreshold-DSA/internal/common"
-	"github.com/anyswap/FastMulThreshold-DSA/p2p/discover"
-	"github.com/anyswap/FastMulThreshold-DSA/p2p/discv5"
-	"github.com/anyswap/FastMulThreshold-DSA/p2p/event"
-	"github.com/anyswap/FastMulThreshold-DSA/p2p/nat"
-	"github.com/anyswap/FastMulThreshold-DSA/p2p/netutil"
+	"github.com/deltaswapio/gsmpc/internal/common"
+	"github.com/deltaswapio/gsmpc/p2p/discover"
+	"github.com/deltaswapio/gsmpc/p2p/discv5"
+	"github.com/deltaswapio/gsmpc/p2p/event"
+	"github.com/deltaswapio/gsmpc/p2p/nat"
+	"github.com/deltaswapio/gsmpc/p2p/netutil"
 )
 
 var Dialer dialer
@@ -40,10 +40,10 @@ const (
 	defaultDialTimeout = 15 * time.Second
 
 	// Connectivity defaults.
-	maxActiveDialTasks     = 16
+	maxActiveDialTasks       = 16
 	maxActiveDialTasksStatic = 1000
-	defaultMaxPendingPeers = 50
-	defaultDialRatio       = 3
+	defaultMaxPendingPeers   = 50
+	defaultDialRatio         = 3
 
 	// Maximum time allowed for reading a complete message.
 	// This is effectively the amount of time a connection can be idle.
@@ -581,12 +581,12 @@ func (srv *Server) run(dialstate dialer) {
 	Dialer = dialstate
 	defer srv.loopWG.Done()
 	var (
-		peers        = make(map[discover.NodeID]*Peer)
-		inboundCount = 0
-		trusted      = make(map[discover.NodeID]bool, len(srv.TrustedNodes))
-		taskdone     = make(chan task, maxActiveDialTasks)
-		runningTasks []task
-		queuedTasks  []task // tasks that can't run yet
+		peers              = make(map[discover.NodeID]*Peer)
+		inboundCount       = 0
+		trusted            = make(map[discover.NodeID]bool, len(srv.TrustedNodes))
+		taskdone           = make(chan task, maxActiveDialTasks)
+		runningTasks       []task
+		queuedTasks        []task // tasks that can't run yet
 		runningTasksStatic []task
 		queuedTasksStatic  []task // tasks that can't run yet
 	)
@@ -645,7 +645,7 @@ func (srv *Server) run(dialstate dialer) {
 		// Start from queue first.
 		queuedTasksStatic = append(queuedTasksStatic[:0], startTasksStatic(queuedTasksStatic)...)
 		// Query dialer for new tasks and start as many as possible now.
-		common.Debug("p2ptest srv run static", "len(runningTasksStatic)", len(runningTasksStatic), "maxActiveDialTasksStatic", maxActiveDialTasksStatic, "peers",peers)
+		common.Debug("p2ptest srv run static", "len(runningTasksStatic)", len(runningTasksStatic), "maxActiveDialTasksStatic", maxActiveDialTasksStatic, "peers", peers)
 		if len(runningTasksStatic) < maxActiveDialTasksStatic {
 			nt := dialstate.newTasksStatic(len(runningTasksStatic)+len(queuedTasksStatic), peers, time.Now())
 			queuedTasksStatic = append(queuedTasksStatic, startTasksStatic(nt)...)
@@ -664,7 +664,7 @@ running:
 		case n := <-srv.addstatic:
 			if srv.NetRestrict != nil && !srv.NetRestrict.Contains(n.IP) {
 				cidr := fmt.Sprintf("%v/32", n.IP)
-				common.Debug("==================server.run,add static node,srv.NetRestrict.Add===============", "cidr", cidr,"node",n)
+				common.Debug("==================server.run,add static node,srv.NetRestrict.Add===============", "cidr", cidr, "node", n)
 				srv.NetRestrict.Add(cidr)
 			}
 			// This channel is used by AddPeer to add to the
@@ -675,7 +675,7 @@ running:
 			// This channel is used by RemovePeer to send a
 			// disconnect request to a peer and begin the
 			// stop keeping the node connected.
-			common.Debug("==================server.run,remove static node===============","node",n)
+			common.Debug("==================server.run,remove static node===============", "node", n)
 			dialstate.removeStatic(n)
 			if p, ok := peers[n.ID]; ok {
 				p.Disconnect(DiscRequested)
@@ -727,7 +727,7 @@ running:
 			// At this point the connection is past the protocol handshake.
 			// Its capabilities are known and the remote identity is verified.
 			err := srv.protoHandshakeChecks(peers, inboundCount, c)
-			common.Debug("==================server.run,addpeer==============", "node ID", c.id,"err",err)
+			common.Debug("==================server.run,addpeer==============", "node ID", c.id, "err", err)
 			if err == nil {
 				// The handshakes are done and it passed all checks.
 				p := newPeer(c, srv.Protocols)
@@ -871,10 +871,10 @@ func (srv *Server) listenLoop() {
 
 		fd = newMeteredConn(fd, true)
 		go func() {
-		    err := srv.SetupConn(fd, inboundConn, nil)
-		    if err != nil {
-			return
-		    }
+			err := srv.SetupConn(fd, inboundConn, nil)
+			if err != nil {
+				return
+			}
 			slots <- struct{}{}
 		}()
 	}
@@ -892,7 +892,7 @@ func (srv *Server) SetupConn(fd net.Conn, flags connFlag, dialDest *discover.Nod
 	c := &conn{fd: fd, transport: srv.newTransport(fd), flags: flags, cont: make(chan error)}
 	err := srv.setupConn(c, flags, dialDest)
 	if err != nil {
-		common.Debug("==============server.SetupConn==================", "dest", dialDest,"err",err)
+		common.Debug("==============server.SetupConn==================", "dest", dialDest, "err", err)
 		c.close(err)
 		return err
 	}
@@ -1001,8 +1001,6 @@ func (srv *Server) runPeer(p *Peer) {
 			Error: "",
 		})
 	}
-
-	
 
 	// Note: run waits for existing peers to be sent on srv.delpeer
 	// before returning, so this send should not select on srv.quit.

@@ -14,16 +14,16 @@
  *
  */
 
-// Package ed_test test MPC ed algorithm 
+// Package ed_test test MPC ed algorithm
 package ed_test
 
 import (
-	"github.com/stretchr/testify/assert"
-	"testing"
 	cryptorand "crypto/rand"
-	"io"
-	"github.com/anyswap/FastMulThreshold-DSA/smpc-lib/crypto/ed"
 	"fmt"
+	"github.com/deltaswapio/gsmpc/smpc-lib/crypto/ed"
+	"github.com/stretchr/testify/assert"
+	"io"
+	"testing"
 )
 
 func TestVerify(t *testing.T) {
@@ -34,8 +34,7 @@ func TestVerify(t *testing.T) {
 		return
 	}
 
-	comC,comD := ed.Commit(secr)
-	succ := ed.Verify(comC,comD)
+	comC, comD := ed.Commit(secr)
+	succ := ed.Verify(comC, comD)
 	assert.True(t, succ, "success")
 }
-

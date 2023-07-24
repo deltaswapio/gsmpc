@@ -25,23 +25,23 @@ import (
 	"sync"
 	"time"
 
-	"github.com/anyswap/FastMulThreshold-DSA/crypto/secp256k1"
-	"github.com/anyswap/FastMulThreshold-DSA/internal/common"
-	"github.com/anyswap/FastMulThreshold-DSA/smpc-lib/crypto/ec2"
-	"github.com/anyswap/FastMulThreshold-DSA/smpc-lib/ecdsa/keygen"
-	"github.com/anyswap/FastMulThreshold-DSA/smpc-lib/ecdsa/reshare"
-	smpclib "github.com/anyswap/FastMulThreshold-DSA/smpc-lib/smpc"
+	"errors"
+	"github.com/deltaswapio/gsmpc/crypto/secp256k1"
+	"github.com/deltaswapio/gsmpc/internal/common"
+	"github.com/deltaswapio/gsmpc/smpc-lib/crypto/ec2"
+	"github.com/deltaswapio/gsmpc/smpc-lib/ecdsa/keygen"
+	"github.com/deltaswapio/gsmpc/smpc-lib/ecdsa/reshare"
+	smpclib "github.com/deltaswapio/gsmpc/smpc-lib/smpc"
 	"github.com/fsn-dev/cryptoCoins/coins"
 	"sort"
-	"errors"
 )
 
 //----------------------------------------------------------------------------------------
 
 // GetReShareNonce get reshare special tx nonce
 func GetReShareNonce(account string) (string, string, error) {
-    	if account == "" {
-	    return "","",errors.New("param error")
+	if account == "" {
+		return "", "", errors.New("param error")
 	}
 
 	key := Keccak256Hash([]byte(strings.ToLower(account + ":" + "RESHARE"))).Hex()
@@ -58,8 +58,8 @@ func GetReShareNonce(account string) (string, string, error) {
 
 // SetReShareNonce set reshare special tx nonce
 func SetReShareNonce(account string, nonce string) (string, error) {
-    	if account == "" || nonce == "" {
-	    return "",errors.New("param error")
+	if account == "" || nonce == "" {
+		return "", errors.New("param error")
 	}
 
 	key2 := Keccak256Hash([]byte(strings.ToLower(account + ":" + "RESHARE"))).Hex()
@@ -107,27 +107,27 @@ func IsValidReShareAccept(from string, gid string) bool {
 
 // TxDataReShare the data of the special tx of reshare
 type TxDataReShare struct {
-	TxType    string
-	Nonce    string
-	PubKey    string
-	GroupID   string
-	TSGroupID string
-	ThresHold string
-	Account   string
-	Mode      string
-	AcceptTimeOut      string
-	Sigs      string
-	TimeStamp string
+	TxType        string
+	Nonce         string
+	PubKey        string
+	GroupID       string
+	TSGroupID     string
+	ThresHold     string
+	Account       string
+	Mode          string
+	AcceptTimeOut string
+	Sigs          string
+	TimeStamp     string
 	FixedApprover []string
-	Comment string
-	Keytype string
+	Comment       string
+	Keytype       string
 }
 
 // ReShare execute the reshare command
 // raw : reshare command data
 func ReShare(raw string) (string, string, error) {
-    	if raw == "" {
-	    return "","",errors.New("param error")
+	if raw == "" {
+		return "", "", errors.New("param error")
 	}
 
 	key, _, _, txdata, err := CheckRaw(raw)
@@ -149,11 +149,11 @@ func ReShare(raw string) (string, string, error) {
 
 //-----------------------------------------------------------------------------------
 
-// RPCAcceptReShare Agree to the reshare request 
+// RPCAcceptReShare Agree to the reshare request
 // raw : accept data, including the key of the reshare request
 func RPCAcceptReShare(raw string) (string, string, error) {
-    	if raw == "" {
-	    return "","",errors.New("param error")
+	if raw == "" {
+		return "", "", errors.New("param error")
 	}
 
 	_, _, _, txdata, err := CheckRaw(raw)
@@ -185,10 +185,10 @@ func RPCAcceptReShare(raw string) (string, string, error) {
 
 // ReShareStatus reshare result
 type ReShareStatus struct {
-	KeyID    string
-	From string
-	GroupID string
-	ThresHold    string
+	KeyID     string
+	From      string
+	GroupID   string
+	ThresHold string
 	Status    string
 	Pubkey    string
 	Tip       string
@@ -199,8 +199,8 @@ type ReShareStatus struct {
 
 // GetReShareStatus get the result of the reshare request by key
 func GetReShareStatus(key string) (string, string, error) {
-    	if key == "" {
-	    return "","",errors.New("param error")
+	if key == "" {
+		return "", "", errors.New("param error")
 	}
 
 	exsit, da := GetPubKeyData([]byte(key))
@@ -213,7 +213,7 @@ func GetReShareStatus(key string) (string, string, error) {
 		return "", "smpc back-end internal error:get reshare accept data error from db when GetReShareStatus", fmt.Errorf("get reshare accept data error from db")
 	}
 
-	los := &ReShareStatus{KeyID:key,From:ac.Account,GroupID:ac.GroupID,ThresHold:ac.LimitNum,Status: ac.Status, Pubkey: ac.PubKey, Tip: ac.Tip, Error: ac.Error, AllReply: ac.AllReply, TimeStamp: ac.TimeStamp}
+	los := &ReShareStatus{KeyID: key, From: ac.Account, GroupID: ac.GroupID, ThresHold: ac.LimitNum, Status: ac.Status, Pubkey: ac.PubKey, Tip: ac.Tip, Error: ac.Error, AllReply: ac.AllReply, TimeStamp: ac.TimeStamp}
 	ret, _ := json.Marshal(los)
 	return string(ret), "", nil
 }
@@ -254,7 +254,7 @@ func (r *ReShareCurNodeInfoSort) Swap(i, j int) {
 	r.Info[i], r.Info[j] = r.Info[j], r.Info[i]
 }
 
-// GetCurNodeReShareInfo  Get current node's reshare command approval list 
+// GetCurNodeReShareInfo  Get current node's reshare command approval list
 func GetCurNodeReShareInfo() ([]*ReShareCurNodeInfo, string, error) {
 	var ret []*ReShareCurNodeInfo
 	data := make(chan *ReShareCurNodeInfo, 1000)
@@ -311,10 +311,10 @@ func GetCurNodeReShareInfo() ([]*ReShareCurNodeInfo, string, error) {
 // _reshare execute reshare
 // param groupid is not subgroupid
 // w.groupid is subgroupid
-func _reshare(raw string, wsid string, initator string, groupid string, pubkey string, account string, mode string, sigs string, ch chan interface{},keytype string) {
+func _reshare(raw string, wsid string, initator string, groupid string, pubkey string, account string, mode string, sigs string, ch chan interface{}, keytype string) {
 
 	rch := make(chan interface{}, 1)
-	smpcReshare(raw, wsid, initator, groupid, pubkey, account, mode, sigs, rch,keytype)
+	smpcReshare(raw, wsid, initator, groupid, pubkey, account, mode, sigs, rch, keytype)
 	ret, _, cherr := GetChannelValue(cht, rch)
 	if ret != "" {
 		w, err := FindWorker(wsid)
@@ -360,7 +360,7 @@ func _reshare(raw string, wsid string, initator string, groupid string, pubkey s
 // ec2
 // msgprex = hash
 // return value is the backup for smpc sig.
-func smpcReshare(raw string, msgprex string, initator string, groupid string, pubkey string, account string, mode string, sigs string, ch chan interface{},keytype string) {
+func smpcReshare(raw string, msgprex string, initator string, groupid string, pubkey string, account string, mode string, sigs string, ch chan interface{}, keytype string) {
 
 	w, err := FindWorker(msgprex)
 	if w == nil || err != nil {
@@ -376,7 +376,7 @@ func smpcReshare(raw string, msgprex string, initator string, groupid string, pu
 			<-ch1
 		}
 
-		ReShareEC2(raw, msgprex, initator, groupid, pubkey, account, mode, sigs, ch1, id,keytype)
+		ReShareEC2(raw, msgprex, initator, groupid, pubkey, account, mode, sigs, ch1, id, keytype)
 		ret, _, cherr := GetChannelValue(cht, ch1)
 		if ret != "" && cherr == nil {
 			res := RPCSmpcRes{Ret: ret, Tip: "", Err: cherr}
@@ -394,7 +394,7 @@ func smpcReshare(raw string, msgprex string, initator string, groupid string, pu
 // ReShareEC2 execute reshare
 // msgprex = hash
 // return value is the backup for the smpc sig
-func ReShareEC2(raw string, msgprex string, initator string, groupid string, pubkey string, account string, mode string, sigs string, ch chan interface{}, id int,keytype string) {
+func ReShareEC2(raw string, msgprex string, initator string, groupid string, pubkey string, account string, mode string, sigs string, ch chan interface{}, id int, keytype string) {
 	if id < 0 || id >= len(workers) {
 		res := RPCSmpcRes{Ret: "", Err: fmt.Errorf("no find worker")}
 		ch <- res
@@ -417,9 +417,9 @@ func ReShareEC2(raw string, msgprex string, initator string, groupid string, pub
 
 	smpcpks, err := hex.DecodeString(pubkey)
 	if err != nil {
-	    res := RPCSmpcRes{Ret: "", Err: err}
-	    ch <- res
-	    return
+		res := RPCSmpcRes{Ret: "", Err: err}
+		ch <- res
+		return
 	}
 
 	exsit, da := GetPubKeyData(smpcpks[:])
@@ -475,20 +475,20 @@ func ReShareEC2(raw string, msgprex string, initator string, groupid string, pub
 		sd.U1PaillierPk = U1PaillierPk
 		sd.U1NtildeH1H2 = U1NtildeH1H2
 
-		sd.IDs = GetGroupNodeUIDs(keytype,groupid,groupid) // 1,2,3,4,6
-		_,sd.CurDNodeID = GetNodeUID(curEnode,keytype,groupid) 
+		sd.IDs = GetGroupNodeUIDs(keytype, groupid, groupid) // 1,2,3,4,6
+		_, sd.CurDNodeID = GetNodeUID(curEnode, keytype, groupid)
 
 		//msgtoenode := GetMsgToEnode(smpclib.EC256K1,(da.(*PubKeyData)).GroupID,(da.(*PubKeyData)).GroupID)
 		//kgsave := &KGLocalDBSaveData{Save: sd, MsgToEnode: msgtoenode}
 
 		found := false
-		ids := GetGroupNodeUIDs(keytype,groupid,w.groupid)
-		_,uid := GetNodeUID(curEnode,keytype,groupid)
-		for _,v := range ids {
-		    if v.Cmp(uid) == 0 {
-			found = true
-			break
-		    }
+		ids := GetGroupNodeUIDs(keytype, groupid, w.groupid)
+		_, uid := GetNodeUID(curEnode, keytype, groupid)
+		for _, v := range ids {
+			if v.Cmp(uid) == 0 {
+				found = true
+				break
+			}
 		}
 
 		if !found {
@@ -497,9 +497,9 @@ func ReShareEC2(raw string, msgprex string, initator string, groupid string, pub
 		}
 
 		if oldnode {
-		
-			oldindex,_ := GetNodeUID(curEnode,keytype,(da.(*PubKeyData)).GroupID)
-			sd.U1NtildePrivData = GetNtildePrivDataByIndexFromSaveData(save,w.NodeCnt)
+
+			oldindex, _ := GetNodeUID(curEnode, keytype, (da.(*PubKeyData)).GroupID)
+			sd.U1NtildePrivData = GetNtildePrivDataByIndexFromSaveData(save, w.NodeCnt)
 			if sd.U1NtildePrivData == nil {
 				res := RPCSmpcRes{Ret: "", Tip: "get ntilde priv data fail", Err: fmt.Errorf("get ntilde priv data fail")}
 				ch <- res
@@ -511,9 +511,9 @@ func ReShareEC2(raw string, msgprex string, initator string, groupid string, pub
 			outCh := make(chan smpclib.Message, ns)
 			endCh := make(chan keygen.LocalDNodeSaveData, ns)
 			errChan := make(chan struct{})
-			reshareDNode := reshare.NewLocalDNode(outCh, endCh, ns, w.ThresHold, 2048, sd, true,oldindex,keytype)
+			reshareDNode := reshare.NewLocalDNode(outCh, endCh, ns, w.ThresHold, 2048, sd, true, oldindex, keytype)
 			w.DNode = reshareDNode
-			_,UID := GetNodeUID(curEnode,keytype,groupid)
+			_, UID := GetNodeUID(curEnode, keytype, groupid)
 			reshareDNode.SetDNodeID(fmt.Sprintf("%v", UID))
 
 			uid, _ := new(big.Int).SetString(w.DNode.DNodeID(), 10)
@@ -530,15 +530,15 @@ func ReShareEC2(raw string, msgprex string, initator string, groupid string, pub
 
 				HandleC1Data(nil, w.sid)
 			}()
-			go ReshareProcessInboundMessages(msgprex, keytype,commStopChan, errChan,&reshareWg, ch)
-			newsku1, err := processReshare(raw, msgprex, groupid, pubkey, account, mode, sigs, errChan, outCh, endCh,keytype)
+			go ReshareProcessInboundMessages(msgprex, keytype, commStopChan, errChan, &reshareWg, ch)
+			newsku1, err := processReshare(raw, msgprex, groupid, pubkey, account, mode, sigs, errChan, outCh, endCh, keytype)
 			if err != nil {
 				fmt.Printf("==========process reshare err = %v ==========\n", err)
 				close(commStopChan)
 
 				if len(ch) == 0 {
-				    res := RPCSmpcRes{Ret: "", Err: err}
-				    ch <- res
+					res := RPCSmpcRes{Ret: "", Err: err}
+					ch <- res
 				}
 
 				return
@@ -557,9 +557,9 @@ func ReShareEC2(raw string, msgprex string, initator string, groupid string, pub
 	outCh := make(chan smpclib.Message, ns)
 	endCh := make(chan keygen.LocalDNodeSaveData, ns)
 	errChan := make(chan struct{})
-	reshareDNode := reshare.NewLocalDNode(outCh, endCh, ns, w.ThresHold, 2048, nil, false,-1,keytype)
+	reshareDNode := reshare.NewLocalDNode(outCh, endCh, ns, w.ThresHold, 2048, nil, false, -1, keytype)
 	w.DNode = reshareDNode
-	_,UID := GetNodeUID(curEnode,keytype,groupid)
+	_, UID := GetNodeUID(curEnode, keytype, groupid)
 	reshareDNode.SetDNodeID(fmt.Sprintf("%v", UID))
 
 	uid, _ := new(big.Int).SetString(w.DNode.DNodeID(), 10)
@@ -576,15 +576,15 @@ func ReShareEC2(raw string, msgprex string, initator string, groupid string, pub
 
 		HandleC1Data(nil, w.sid)
 	}()
-	go ReshareProcessInboundMessages(msgprex, keytype,commStopChan, errChan,&reshareWg, ch)
-	newsku1, err := processReshare(raw, msgprex, groupid, pubkey, account, mode, sigs, errChan, outCh, endCh,keytype)
+	go ReshareProcessInboundMessages(msgprex, keytype, commStopChan, errChan, &reshareWg, ch)
+	newsku1, err := processReshare(raw, msgprex, groupid, pubkey, account, mode, sigs, errChan, outCh, endCh, keytype)
 	if err != nil {
 		fmt.Printf("==========process reshare err = %v ==========\n", err)
 		close(commStopChan)
 
 		if len(ch) == 0 {
-		    res := RPCSmpcRes{Ret: "", Err: err}
-		    ch <- res
+			res := RPCSmpcRes{Ret: "", Err: err}
+			ch <- res
 		}
 
 		return
@@ -600,8 +600,8 @@ func ReShareEC2(raw string, msgprex string, initator string, groupid string, pub
 
 // GetIDReshareByGroupID get uid of node in group by groupid,and sort the uids
 func GetIDReshareByGroupID(msgtoenode map[string]string, groupid string) smpclib.SortableIDSSlice {
-    	if msgtoenode == nil || groupid == "" {
-	    return nil
+	if msgtoenode == nil || groupid == "" {
+		return nil
 	}
 
 	var ids smpclib.SortableIDSSlice
@@ -623,5 +623,3 @@ func GetIDReshareByGroupID(msgtoenode map[string]string, groupid string) smpclib
 	sort.Sort(ids)
 	return ids
 }
-
-

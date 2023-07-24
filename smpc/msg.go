@@ -22,32 +22,32 @@ import (
 	crand "crypto/rand"
 	"encoding/hex"
 	"encoding/json"
+	"errors"
 	"fmt"
-	"github.com/anyswap/FastMulThreshold-DSA/crypto"
-	"github.com/anyswap/FastMulThreshold-DSA/crypto/ecies"
-	"github.com/anyswap/FastMulThreshold-DSA/crypto/secp256k1"
-	"github.com/anyswap/FastMulThreshold-DSA/internal/common"
-	"github.com/anyswap/FastMulThreshold-DSA/p2p/discover"
-	p2psmpc "github.com/anyswap/FastMulThreshold-DSA/p2p/layer2"
+	"github.com/deltaswapio/gsmpc/crypto"
+	"github.com/deltaswapio/gsmpc/crypto/ecies"
+	"github.com/deltaswapio/gsmpc/crypto/secp256k1"
+	"github.com/deltaswapio/gsmpc/internal/common"
+	"github.com/deltaswapio/gsmpc/internal/common/math"
+	"github.com/deltaswapio/gsmpc/log"
+	"github.com/deltaswapio/gsmpc/p2p/discover"
+	p2psmpc "github.com/deltaswapio/gsmpc/p2p/layer2"
+	smpclib "github.com/deltaswapio/gsmpc/smpc-lib/smpc"
 	"github.com/fsn-dev/cryptoCoins/coins"
 	"github.com/fsn-dev/cryptoCoins/coins/types"
 	"github.com/fsn-dev/cryptoCoins/tools/rlp"
-	"github.com/anyswap/FastMulThreshold-DSA/log"
 	"math/big"
 	"runtime/debug"
 	"strconv"
 	"strings"
 	"time"
-	smpclib "github.com/anyswap/FastMulThreshold-DSA/smpc-lib/smpc"
-	"errors"
-	"github.com/anyswap/FastMulThreshold-DSA/internal/common/math"
 )
 
 var (
-	cht            = 300
+	cht = 300
 
 	//ec keygen timeout
-	EcKeygenTimeout = 600 
+	EcKeygenTimeout = 600
 
 	//ed keygen timeout
 	EdKeygenTimeout = 600
@@ -59,51 +59,51 @@ var (
 	EdSignTimeout = 600
 
 	//wait for subgid sign data
-       SubGidSignDataTimeOut = 180
+	SubGidSignDataTimeOut = 180
 
-       //wait for creating signing subgid
-       CreatingSignSubGidTimeOut = 8
+	//wait for creating signing subgid
+	CreatingSignSubGidTimeOut = 8
 
 	// WaitMsgTimeGG20 wait msg timeout
 	WaitMsgTimeGG20 = 300
 
-	waitall         = cht * recalcTimes
-	waitallgg20     = WaitMsgTimeGG20 * recalcTimes
+	waitall     = cht * recalcTimes
+	waitallgg20 = WaitMsgTimeGG20 * recalcTimes
 
 	// MaxAcceptTime agree timeout
-	MaxAcceptTime       = 406800 // second
+	MaxAcceptTime = 406800 // second
 
 	// C1Data the data arrive before cmd by p2p
-	C1Data          = common.NewSafeMap(10)
+	C1Data = common.NewSafeMap(10)
 
 	syncpresign = true
 
 	// GetGroup p2p callback
-	GetGroup               func(string) (int, string)
+	GetGroup func(string) (int, string)
 
 	// SendToGroupAllNodes p2p callback
-	SendToGroupAllNodes    func(string, string) (string, error)
+	SendToGroupAllNodes func(string, string) (string, error)
 
 	// GetSelfEnode p2p callback
-	GetSelfEnode           func() string
+	GetSelfEnode func() string
 
 	// BroadcastInGroupOthers p2p callback
 	BroadcastInGroupOthers func(string, string) (string, error)
 
 	// SendToPeer p2p callback
-	SendToPeer             func(string, string) error
+	SendToPeer func(string, string) error
 
 	// ParseNode p2p callback
-	ParseNode              func(string) string
+	ParseNode func(string) string
 
 	// GetEosAccount p2p callback
-	GetEosAccount          func() (string, string, string)
-	
+	GetEosAccount func() (string, string, string)
+
 	// Msg2Peer save the msg that send to special peer
-	Msg2Peer        = common.NewSafeMap(10)
-	
+	Msg2Peer = common.NewSafeMap(10)
+
 	// MsgReceiv save the msg that receive from special peer
-	MsgReceiv        = common.NewSafeMap(10)
+	MsgReceiv = common.NewSafeMap(10)
 )
 
 //----------------------------------------------------------------------------------
@@ -167,8 +167,8 @@ var parts = common.NewSafeMap(10)
 
 // receiveGroupInfo smpc node receive specific msg (for example:group info) from p2p by Call2
 func receiveGroupInfo(msg interface{}) {
-    	if msg == nil {
-	    return
+	if msg == nil {
+		return
 	}
 
 	curEnode = p2psmpc.GetSelfID()
@@ -207,10 +207,10 @@ func receiveGroupInfo(msg interface{}) {
 	}
 }
 
-//Init smpc node with the msg receive from group by Call2
+// Init smpc node with the msg receive from group by Call2
 func Init(groupID string) {
-    	if groupID == "" {
-	    return
+	if groupID == "" {
+		return
 	}
 
 	common.Debug("======================Init==========================", "get group id", groupID, "initTimes", strconv.Itoa(initTimes))
@@ -225,8 +225,8 @@ func Init(groupID string) {
 
 // InitGroupInfo get current node enodeID etc.
 func InitGroupInfo(groupID string) {
-    	if groupID == "" {
-	    return
+	if groupID == "" {
+		return
 	}
 
 	curEnode = discover.GetLocalID().String()
@@ -237,24 +237,24 @@ func InitGroupInfo(groupID string) {
 
 // SendMsgToSmpcGroup brodcast msg to group nodes by group id
 func SendMsgToSmpcGroup(msg string, groupid string) {
-    	if msg == "" || groupid == "" {
-	    return
+	if msg == "" || groupid == "" {
+		return
 	}
 
 	msghash := Keccak256Hash([]byte(strings.ToLower(msg))).Hex()
-	common.Debug("=========SendMsgToSmpcGroup=============", "orig msg hash",msghash,"orgi msg",msg,"groupid",groupid)
+	common.Debug("=========SendMsgToSmpcGroup=============", "orig msg hash", msghash, "orgi msg", msg, "groupid", groupid)
 	_, err := BroadcastInGroupOthers(groupid, msg)
 	if err != nil {
-		common.Debug("=========SendMsgToSmpcGroup,send msg to smpc group fail=============", "orig msg hash",msghash,"orig msg", msg, "groupid", groupid, "err", err)
+		common.Debug("=========SendMsgToSmpcGroup,send msg to smpc group fail=============", "orig msg hash", msghash, "orig msg", msg, "groupid", groupid, "err", err)
 	}
 }
 
 //-------------------------------------------------------------------------------
 
-// EncryptMsg encrypt msg 
+// EncryptMsg encrypt msg
 func EncryptMsg(msg string, enodeID string) (string, error) {
-    	if msg == "" || enodeID == "" {
-	    return "",errors.New("encrypt msg fail")
+	if msg == "" || enodeID == "" {
+		return "", errors.New("encrypt msg fail")
 	}
 
 	hprv, err1 := hex.DecodeString(enodeID)
@@ -282,8 +282,8 @@ func EncryptMsg(msg string, enodeID string) (string, error) {
 
 // DecryptMsg decrypt msg
 func DecryptMsg(cm string) (string, error) {
-    	if cm == "" {
-	    return "",errors.New("decrypt msg fail")
+	if cm == "" {
+		return "", errors.New("decrypt msg fail")
 	}
 
 	nodeKey, errkey := crypto.LoadECDSA(KeyFile)
@@ -303,8 +303,8 @@ func DecryptMsg(cm string) (string, error) {
 
 // SendMsgToPeer send msg to special peer
 func SendMsgToPeer(enodes string, msg string) {
-    	if enodes == "" || msg == "" {
-	    return
+	if enodes == "" || msg == "" {
+		return
 	}
 
 	en := strings.Split(string(enodes[8:]), "@")
@@ -320,9 +320,9 @@ func SendMsgToPeer(enodes string, msg string) {
 }
 
 // SendMsgToPeerWithBrodcast send msg to special peer with brodcast
-func SendMsgToPeerWithBrodcast(key string,enodes string, msg string,groupid string) {
-    	if key == "" || enodes == "" || msg == "" || groupid == "" {
-	    return
+func SendMsgToPeerWithBrodcast(key string, enodes string, msg string, groupid string) {
+	if key == "" || enodes == "" || msg == "" || groupid == "" {
+		return
 	}
 
 	en := strings.Split(string(enodes[8:]), "@")
@@ -337,7 +337,7 @@ func SendMsgToPeerWithBrodcast(key string,enodes string, msg string,groupid stri
 	m["Key"] = key
 	m["MsgType"] = "MSG2PEER"
 	m["Gid"] = groupid
-	m["Msg"] = tmp 
+	m["Msg"] = tmp
 	s, err := json.Marshal(m)
 	if err != nil {
 		return
@@ -346,13 +346,13 @@ func SendMsgToPeerWithBrodcast(key string,enodes string, msg string,groupid stri
 
 	shash := Keccak256Hash([]byte(strings.ToLower(msg))).Hex()
 	msghash := Keccak256Hash([]byte(strings.ToLower(string(s)))).Hex()
-	log.Debug("====================SendMsgToPeerWithBrodcast=====================","orig msg",msg,"msg",string(s),"msg hash",msghash,"orig msg hash",shash,"gid",groupid)
-	SendMsgToSmpcGroup(string(s),groupid)
+	log.Debug("====================SendMsgToPeerWithBrodcast=====================", "orig msg", msg, "msg", string(s), "msg hash", msghash, "orig msg hash", shash, "gid", groupid)
+	SendMsgToSmpcGroup(string(s), groupid)
 }
 
 //-------------------------------------------------------------
 
-// IsReshareCmd Judge whether it is Reshare command data 
+// IsReshareCmd Judge whether it is Reshare command data
 func IsReshareCmd(raw string) (bool, string) {
 	if raw == "" {
 		return false, ""
@@ -371,7 +371,7 @@ func IsReshareCmd(raw string) (bool, string) {
 	return false, ""
 }
 
-// IsGenKeyCmd  Judge whether it is the command data that generating pubkey 
+// IsGenKeyCmd  Judge whether it is the command data that generating pubkey
 func IsGenKeyCmd(raw string) (bool, string) {
 	if raw == "" {
 		return false, ""
@@ -390,7 +390,7 @@ func IsGenKeyCmd(raw string) (bool, string) {
 	return false, ""
 }
 
-// IsPreGenSignData  Judge whether it is the command data that generating pre-sign data 
+// IsPreGenSignData  Judge whether it is the command data that generating pre-sign data
 func IsPreGenSignData(raw string) (string, bool) {
 	msgmap := make(map[string]string)
 	err := json.Unmarshal([]byte(raw), &msgmap)
@@ -406,7 +406,7 @@ func IsPreGenSignData(raw string) (string, bool) {
 	return "", false
 }
 
-// IsEDSignCmd  Judge whether it is the ed sign command data 
+// IsEDSignCmd  Judge whether it is the ed sign command data
 func IsEDSignCmd(raw string) (string, bool) {
 	if raw == "" {
 		return "", false
@@ -446,50 +446,50 @@ func IsSignDataCmd(raw string) (string, bool) {
 	return "", false
 }
 
-func findmsg2peer(list []string,msg string) bool {
-    if msg == "" {
-	return true
-    }
-
-    for _,v := range list {
-	if strings.EqualFold(v,msg) {
-	    return true
+func findmsg2peer(list []string, msg string) bool {
+	if msg == "" {
+		return true
 	}
-    }
 
-    return false
+	for _, v := range list {
+		if strings.EqualFold(v, msg) {
+			return true
+		}
+	}
+
+	return false
 }
 
 // IsMsg2Peer Judge whether it is the msg that send to special peer
-func IsMsg2Peer(msgmap map[string]string) (bool,string,string,string) {
-    val, ok := msgmap["MsgType"]
-    if ok && val == "MSG2PEER" {
-	gid, ok := msgmap["Gid"]
-	if ok && gid != "" {
-	    s, ok := msgmap["Msg"]
-	    if ok && s != "" {
-		key, ok := msgmap["Key"]
-		if ok && key != "" {
-		    tmp, err := hex.DecodeString(s)
-		    if err == nil {
-			msgdata, errdec := DecryptMsg(string(tmp)) //for SendMsgToPeer
-			if errdec == nil {
-			    s = msgdata
-			} else {
-			    s = ""
-			}
-			
-			return true,key,gid,s 
-		    }
+func IsMsg2Peer(msgmap map[string]string) (bool, string, string, string) {
+	val, ok := msgmap["MsgType"]
+	if ok && val == "MSG2PEER" {
+		gid, ok := msgmap["Gid"]
+		if ok && gid != "" {
+			s, ok := msgmap["Msg"]
+			if ok && s != "" {
+				key, ok := msgmap["Key"]
+				if ok && key != "" {
+					tmp, err := hex.DecodeString(s)
+					if err == nil {
+						msgdata, errdec := DecryptMsg(string(tmp)) //for SendMsgToPeer
+						if errdec == nil {
+							s = msgdata
+						} else {
+							s = ""
+						}
 
+						return true, key, gid, s
+					}
+
+				}
+			}
 		}
-	    }
+
+		return true, "", "", ""
 	}
 
-	return true,"","",""
-    }
-
-    return false,"","",""
+	return false, "", "", ""
 }
 
 // GetCmdKey get the key of various of command datas
@@ -532,46 +532,46 @@ var expiredInterval = int64(3600) // seconds
 
 // NowMilliStr returns now timestamp in miliseconds of string format.
 func NowMilliStr() string {
-         return strconv.FormatInt((time.Now().UnixNano() / 1e6), 10)
+	return strconv.FormatInt((time.Now().UnixNano() / 1e6), 10)
 }
 
 // GetUint64FromStr get uint64 from string.
 func GetUint64FromStr(str string) (uint64, error) {
-    res, ok := math.ParseUint64(str)
-    if !ok {
-	    return 0, errors.New("invalid unsigned 64 bit integer: " + str)
-     }
+	res, ok := math.ParseUint64(str)
+	if !ok {
+		return 0, errors.New("invalid unsigned 64 bit integer: " + str)
+	}
 
-     return res, nil
+	return res, nil
 }
 
 func CleanUpMsgReceiv() {
-    for {
-	key,value := MsgReceiv.ListMap()
-	l := len(key)
-	if l != len(value) {
-	    time.Sleep(time.Duration(20) * time.Second) //1000 == 1s
-	    continue
-	}
+	for {
+		key, value := MsgReceiv.ListMap()
+		l := len(key)
+		if l != len(value) {
+			time.Sleep(time.Duration(20) * time.Second) //1000 == 1s
+			continue
+		}
 
-	for i:=0;i<l;i++ {
-	    k := key[i]
-	    val := value[i]
-	    tt,ok := val.(string)
-	    if !ok {
+		for i := 0; i < l; i++ {
+			k := key[i]
+			val := value[i]
+			tt, ok := val.(string)
+			if !ok {
+				time.Sleep(time.Duration(20) * time.Second) //1000 == 1s
+				continue
+			}
+
+			timestamp, _ := GetUint64FromStr(tt)
+			if expiredInterval > 0 && int64(timestamp/1000)+expiredInterval < time.Now().Unix() {
+				log.Debug("==CleanUpMsgReceiv==", "key", k)
+				MsgReceiv.DeleteMap(k)
+			}
+		}
+
 		time.Sleep(time.Duration(20) * time.Second) //1000 == 1s
-		continue
-	    }
-
-	    timestamp, _ := GetUint64FromStr(tt)
-	    if expiredInterval > 0 && int64(timestamp/1000) + expiredInterval < time.Now().Unix() {
-		log.Debug("==CleanUpMsgReceiv==","key",k)
-		MsgReceiv.DeleteMap(k)
-	    }
 	}
-
-	time.Sleep(time.Duration(20) * time.Second) //1000 == 1s
-    }
 }
 
 // Call receive msg from p2p
@@ -582,7 +582,7 @@ func Call(msg interface{}, enode string) {
 	}
 
 	msghash := Keccak256Hash([]byte(strings.ToLower(s))).Hex()
-	common.Debug("====================Call,get p2p msg===================", "msg hash",msghash,"sender node", enode)
+	common.Debug("====================Call,get p2p msg===================", "msg hash", msghash, "sender node", enode)
 	raw, err := UnCompress(s)
 	if err == nil {
 		s = raw
@@ -596,153 +596,153 @@ func Call(msg interface{}, enode string) {
 	msgmap := make(map[string]string)
 	err = json.Unmarshal([]byte(s), &msgmap)
 	if err == nil {
-	    ok,keytmp,gidtmp,ss := IsMsg2Peer(msgmap)
-	    //ok,keytmp,_,ss := IsMsg2Peer(msgmap)
-	    if ok {
-		w, werr := FindWorker(keytmp)
-		if werr != nil {
-		    return
-		}
-
-		if findmsg2peer(w.Msg2Peer,msg.(string)) {
-		    return
-		}
-
-		w.Msg2Peer = append(w.Msg2Peer,msg.(string))
-		if ss == "" {
-		    if RelayInPeers {
-			go func(msg2 string,gid string) {
-			    for i:=0;i<1;i++ {
-			       log.Debug("================Call,also broacast to group for msg===================","key",keytmp,"msg",msg2,"gid",gid,"msg hash",msghash)
-				SendMsgToSmpcGroup(msg2,gid)
-				//time.Sleep(time.Duration(1) * time.Second) //1000 == 1s
-			    }
-			}(msg.(string),gidtmp)
-		    }
-		    
-		    return
-		}
-
-		s = ss
-		msgmap = make(map[string]string)
-		err = json.Unmarshal([]byte(s), &msgmap)
-		if err != nil {
-		    return
-		}
-	    }
-	    
-	    val, ok := msgmap["Key"]
-	    if ok {
-		    shash := Keccak256Hash([]byte(strings.ToLower(s))).Hex()
-		    w, err := FindWorker(val)
-		    if err == nil {
-			    if w.DNode != nil && w.DNode.Round() != nil {
-				    common.Debug("====================Call, get smpc msg,worker found.===================", "key", val, "msg hash",msghash,"orig msg hash",shash,"sender node", enode)
-				    w.SmpcMsg <- s
-			    } else {
-				    from := msgmap["FromID"]
-				    msgtype := msgmap["Type"]
-				    key := strings.ToLower(val + "-" + from + "-" + msgtype)
-				    C1Data.WriteMap(key, s)
-				    //TODO relay the msg
-				    log.Debug("===============================Call, pre-save p2p msg, worker found=============", "key",val,"fromID",from,"orig msg hash",shash,"msg hash",msghash)
-			    }
-		    } else {
-			    from := msgmap["FromID"]
-			    msgtype := msgmap["Type"]
-			    key := strings.ToLower(val + "-" + from + "-" + msgtype)
-			    C1Data.WriteMap(key, s)
-			    //TODO relay the msg
-			    log.Debug("===============================Call, pre-save p2p msg, worker not found============","key",val,"fromID",from,"orig msg hash",shash,"msg hash",msghash)
-		    }
-
-		    return
-	    }
-
-	    if msgmap["Type"] == "SyncPreSign" {
-		    sps := &SyncPreSign{}
-		    if err = sps.UnmarshalJSON([]byte(msgmap["SyncPreSign"])); err == nil {
-			    w, err := FindWorker(sps.MsgPrex)
-			    if err == nil {
-				    if w.msgsyncpresign.Len() < w.ThresHold {
-					    if !Find(w.msgsyncpresign, s) {
-						    w.msgsyncpresign.PushBack(s)
-						    if w.msgsyncpresign.Len() == w.ThresHold {
-							    w.bsyncpresign <- true
-							    //TODO relay the msg
-						    }
-					    }
-				    }
-			    }
-		    }
-
-		    return
-	    }
-	    
-	    //fix bug:don't relay PreSign data in worker thread, it may cause a death loop.
-	    if msgmap["Type"] == "PreSign" {
-		//check msg
-		msghash := Keccak256Hash([]byte(strings.ToLower(s))).Hex()
-		_,exist := MsgReceiv.ReadMap(msghash)
-		if exist {
-		    return
-		}
-
-		MsgReceiv.WriteMap(msghash,NowMilliStr())
-
-		ps := &PreSign{}
-		if err = ps.UnmarshalJSON([]byte(msgmap["PreSign"])); err != nil {
-		    return
-		}
-
-		if RelayInPeers {
-		    go func(msg2 string,gid string) {
-			msghash := Keccak256Hash([]byte(strings.ToLower(msg2))).Hex()
-			for i:=0;i<1;i++ {
-			   log.Debug("================Call,also broacast to group for msg===================","key",ps.Nonce,"gid",gid,"msg hash",msghash)
-			    SendMsgToSmpcGroup(msg2,gid)
-			    //time.Sleep(time.Duration(1) * time.Second) //1000 == 1s
+		ok, keytmp, gidtmp, ss := IsMsg2Peer(msgmap)
+		//ok,keytmp,_,ss := IsMsg2Peer(msgmap)
+		if ok {
+			w, werr := FindWorker(keytmp)
+			if werr != nil {
+				return
 			}
-		    }(s,ps.Gid)
+
+			if findmsg2peer(w.Msg2Peer, msg.(string)) {
+				return
+			}
+
+			w.Msg2Peer = append(w.Msg2Peer, msg.(string))
+			if ss == "" {
+				if RelayInPeers {
+					go func(msg2 string, gid string) {
+						for i := 0; i < 1; i++ {
+							log.Debug("================Call,also broacast to group for msg===================", "key", keytmp, "msg", msg2, "gid", gid, "msg hash", msghash)
+							SendMsgToSmpcGroup(msg2, gid)
+							//time.Sleep(time.Duration(1) * time.Second) //1000 == 1s
+						}
+					}(msg.(string), gidtmp)
+				}
+
+				return
+			}
+
+			s = ss
+			msgmap = make(map[string]string)
+			err = json.Unmarshal([]byte(s), &msgmap)
+			if err != nil {
+				return
+			}
 		}
-		
-	    }
+
+		val, ok := msgmap["Key"]
+		if ok {
+			shash := Keccak256Hash([]byte(strings.ToLower(s))).Hex()
+			w, err := FindWorker(val)
+			if err == nil {
+				if w.DNode != nil && w.DNode.Round() != nil {
+					common.Debug("====================Call, get smpc msg,worker found.===================", "key", val, "msg hash", msghash, "orig msg hash", shash, "sender node", enode)
+					w.SmpcMsg <- s
+				} else {
+					from := msgmap["FromID"]
+					msgtype := msgmap["Type"]
+					key := strings.ToLower(val + "-" + from + "-" + msgtype)
+					C1Data.WriteMap(key, s)
+					//TODO relay the msg
+					log.Debug("===============================Call, pre-save p2p msg, worker found=============", "key", val, "fromID", from, "orig msg hash", shash, "msg hash", msghash)
+				}
+			} else {
+				from := msgmap["FromID"]
+				msgtype := msgmap["Type"]
+				key := strings.ToLower(val + "-" + from + "-" + msgtype)
+				C1Data.WriteMap(key, s)
+				//TODO relay the msg
+				log.Debug("===============================Call, pre-save p2p msg, worker not found============", "key", val, "fromID", from, "orig msg hash", shash, "msg hash", msghash)
+			}
+
+			return
+		}
+
+		if msgmap["Type"] == "SyncPreSign" {
+			sps := &SyncPreSign{}
+			if err = sps.UnmarshalJSON([]byte(msgmap["SyncPreSign"])); err == nil {
+				w, err := FindWorker(sps.MsgPrex)
+				if err == nil {
+					if w.msgsyncpresign.Len() < w.ThresHold {
+						if !Find(w.msgsyncpresign, s) {
+							w.msgsyncpresign.PushBack(s)
+							if w.msgsyncpresign.Len() == w.ThresHold {
+								w.bsyncpresign <- true
+								//TODO relay the msg
+							}
+						}
+					}
+				}
+			}
+
+			return
+		}
+
+		//fix bug:don't relay PreSign data in worker thread, it may cause a death loop.
+		if msgmap["Type"] == "PreSign" {
+			//check msg
+			msghash := Keccak256Hash([]byte(strings.ToLower(s))).Hex()
+			_, exist := MsgReceiv.ReadMap(msghash)
+			if exist {
+				return
+			}
+
+			MsgReceiv.WriteMap(msghash, NowMilliStr())
+
+			ps := &PreSign{}
+			if err = ps.UnmarshalJSON([]byte(msgmap["PreSign"])); err != nil {
+				return
+			}
+
+			if RelayInPeers {
+				go func(msg2 string, gid string) {
+					msghash := Keccak256Hash([]byte(strings.ToLower(msg2))).Hex()
+					for i := 0; i < 1; i++ {
+						log.Debug("================Call,also broacast to group for msg===================", "key", ps.Nonce, "gid", gid, "msg hash", msghash)
+						SendMsgToSmpcGroup(msg2, gid)
+						//time.Sleep(time.Duration(1) * time.Second) //1000 == 1s
+					}
+				}(s, ps.Gid)
+			}
+
+		}
 	}
 
 	////
-	_, from,_, txdata, err := CheckRaw(s)
+	_, from, _, txdata, err := CheckRaw(s)
 	if err == nil {
-	    req, ok := txdata.(*TxDataAcceptReqAddr)
-	    if ok {
-		exsit, da := GetReqAddrInfoData([]byte(req.Key))
-		if !exsit {
-		    return
+		req, ok := txdata.(*TxDataAcceptReqAddr)
+		if ok {
+			exsit, da := GetReqAddrInfoData([]byte(req.Key))
+			if !exsit {
+				return
+			}
+
+			ac, ok := da.(*AcceptReqAddrData)
+			if !ok || ac == nil {
+				return
+			}
+
+			go ExecApproveKeyGen(s, from, req, ac, true)
+			return
 		}
 
-		ac, ok := da.(*AcceptReqAddrData)
-		if !ok || ac == nil {
-		    return
-		}
-		
-		go ExecApproveKeyGen(s,from,req,ac,true)
-		return
-	    }
-	    
-	    sig, ok := txdata.(*TxDataAcceptSign)
-	    if ok {
-		exsit, da := GetSignInfoData([]byte(sig.Key))
-		if !exsit {
-		    return
-		}
+		sig, ok := txdata.(*TxDataAcceptSign)
+		if ok {
+			exsit, da := GetSignInfoData([]byte(sig.Key))
+			if !exsit {
+				return
+			}
 
-		ac, ok := da.(*AcceptSignData)
-		if !ok || ac == nil {
-		    return
+			ac, ok := da.(*AcceptSignData)
+			if !ok || ac == nil {
+				return
+			}
+
+			go ExecApproveSigning(s, from, sig, ac, true)
+			return
 		}
-		
-		go ExecApproveSigning(s,from,sig,ac,true)
-		return
-	    }
 	}
 	////
 
@@ -792,7 +792,7 @@ func (recv *RecvMsg) Run(workid int, ch chan interface{}) bool {
 
 	res := recv.msg
 	if res == "" {
-		common.Error("================RecvMsg.Run, msg error=================", "msg",recv.msg)
+		common.Error("================RecvMsg.Run, msg error=================", "msg", recv.msg)
 		res2 := RPCSmpcRes{Ret: "", Tip: "", Err: fmt.Errorf("msg error")}
 		ch <- res2
 		return false
@@ -809,24 +809,24 @@ func (recv *RecvMsg) Run(workid int, ch chan interface{}) bool {
 	err := json.Unmarshal([]byte(res), &msgmap)
 	bpre := false
 	if err == nil {
-	    if msgmap["Type"] == "PreSign" {
-		bpre = true
-	    }
+		if msgmap["Type"] == "PreSign" {
+			bpre = true
+		}
 	}
 
 	//fix bug: don't write map for PreSign data in worker thread, it may cause a death loop.
 	if !bpre {
-	    //check msg
-	    msghash := Keccak256Hash([]byte(strings.ToLower(res))).Hex()
-	    _,exist := MsgReceiv.ReadMap(msghash)
-	    if exist {
-		log.Debug("===================RecvMsg.Run,already exist the msg hash====================","msghash",msghash,"worker id",workid)
-		return true
-	    }
+		//check msg
+		msghash := Keccak256Hash([]byte(strings.ToLower(res))).Hex()
+		_, exist := MsgReceiv.ReadMap(msghash)
+		if exist {
+			log.Debug("===================RecvMsg.Run,already exist the msg hash====================", "msghash", msghash, "worker id", workid)
+			return true
+		}
 
-	    MsgReceiv.WriteMap(msghash,NowMilliStr())
+		MsgReceiv.WriteMap(msghash, NowMilliStr())
 	}
-	
+
 	if err == nil {
 		if msgmap["Type"] == "SignData" || msgmap["Type"] == "PreSign" || msgmap["Type"] == "ComSignBrocastData" || msgmap["Type"] == "ComSignData" || msgmap["Type"] == "ComSignSubGidBrocastData" {
 			req = &ReqSmpcSign{}
@@ -858,7 +858,7 @@ func Handle(key string, c1data string) {
 
 // HandleKG Process pre-save msg for keygen
 func HandleKG(key string, uid *big.Int) {
-    	uidtmp := fmt.Sprintf("%v", uid)
+	uidtmp := fmt.Sprintf("%v", uid)
 	tmp := hex.EncodeToString([]byte(uidtmp))
 	c1data := strings.ToLower(key + "-" + tmp + "-" + "KGRound0Message")
 	Handle(key, c1data)
@@ -877,18 +877,18 @@ func HandleKG(key string, uid *big.Int) {
 	c1data = strings.ToLower(key + "-" + tmp + "-" + "KGRound4Message")
 	Handle(key, c1data)
 	c1data = strings.ToLower(key + "-" + tmp + "-" + "KGRound5Message")
-        Handle(key, c1data)
-        c1data = strings.ToLower(key + "-" + tmp + "-" + "KGRound5Message1")
-        Handle(key, c1data)
-        c1data = strings.ToLower(key + "-" + tmp + "-" + "KGRound5Message2")
-        Handle(key, c1data)
-        c1data = strings.ToLower(key + "-" + tmp + "-" + "KGRound6Message")
-        Handle(key, c1data)
+	Handle(key, c1data)
+	c1data = strings.ToLower(key + "-" + tmp + "-" + "KGRound5Message1")
+	Handle(key, c1data)
+	c1data = strings.ToLower(key + "-" + tmp + "-" + "KGRound5Message2")
+	Handle(key, c1data)
+	c1data = strings.ToLower(key + "-" + tmp + "-" + "KGRound6Message")
+	Handle(key, c1data)
 }
 
-// HandleSign Process pre-save msg for sign 
+// HandleSign Process pre-save msg for sign
 func HandleSign(key string, uid *big.Int) {
-    	uidtmp := fmt.Sprintf("%v", uid)
+	uidtmp := fmt.Sprintf("%v", uid)
 	tmp := hex.EncodeToString([]byte(uidtmp))
 	c1data := strings.ToLower(key + "-" + tmp + "-" + "SignRound1Message")
 	Handle(key, c1data)
@@ -912,7 +912,7 @@ func HandleSign(key string, uid *big.Int) {
 	Handle(key, c1data)
 }
 
-//HandleC1Data C1Data Key, Three formats are included:
+// HandleC1Data C1Data Key, Three formats are included:
 // 1.  key-enodefrom, for reshare only, enodefrom get from enodeID
 // 2.  key-uid-msgtype, for example: key-uid-"KGRound0Message"
 // 3.  key-accout,for accept reply
@@ -970,29 +970,29 @@ func HandleC1Data(ac *AcceptReqAddrData, key string) {
 
 	for _, node := range nodes {
 		node2 := ParseNode(node)
-		_,uid := GetNodeUID(node2, smpclib.EC256K1, ac.GroupID)
+		_, uid := GetNodeUID(node2, smpclib.EC256K1, ac.GroupID)
 		HandleKG(key, uid)
 		HandleSign(key, uid)
-		_,uid = GetNodeUID(node2, smpclib.EC256STARK, ac.GroupID)
+		_, uid = GetNodeUID(node2, smpclib.EC256STARK, ac.GroupID)
 		HandleKG(key, uid)
 		HandleSign(key, uid)
-		_,uid = GetNodeUID(node2, smpclib.ED25519, ac.GroupID)
+		_, uid = GetNodeUID(node2, smpclib.ED25519, ac.GroupID)
 		HandleKG(key, uid)
 		HandleSign(key, uid)
-		_,uid = GetNodeUID(node2, smpclib.SR25519 ,ac.GroupID)
+		_, uid = GetNodeUID(node2, smpclib.SR25519, ac.GroupID)
 		HandleKG(key, uid)
 		HandleSign(key, uid)
 	}
 
 	// ED
 	for _, node := range nodes {
-	    node2 := ParseNode(node)
-	    c1data := key + "-" + node2 + common.Sep + "EDC21" 
-	    c1, exist := C1Data.ReadMap(strings.ToLower(c1data))
-	    if exist {
-		DisMsg(c1.(string))
-		go C1Data.DeleteMap(strings.ToLower(c1data))
-	    }
+		node2 := ParseNode(node)
+		c1data := key + "-" + node2 + common.Sep + "EDC21"
+		c1, exist := C1Data.ReadMap(strings.ToLower(c1data))
+		if exist {
+			DisMsg(c1.(string))
+			go C1Data.DeleteMap(strings.ToLower(c1data))
+		}
 	}
 
 	mms := strings.Split(ac.Sigs, common.Sep)
@@ -1007,47 +1007,47 @@ func HandleC1Data(ac *AcceptReqAddrData, key string) {
 		c1, exist := C1Data.ReadMap(c1data)
 		if exist {
 			//DisAcceptMsg(c1.(string), w.id)
-			_, from,_, txdata, err := CheckRaw(c1.(string))
+			_, from, _, txdata, err := CheckRaw(c1.(string))
 			if err == nil {
-			    req, ok := txdata.(*TxDataAcceptReqAddr)
-			    if ok {
-				exsit, da := GetReqAddrInfoData([]byte(req.Key))
-				if !exsit {
-				    go C1Data.DeleteMap(c1data)
-				    return
+				req, ok := txdata.(*TxDataAcceptReqAddr)
+				if ok {
+					exsit, da := GetReqAddrInfoData([]byte(req.Key))
+					if !exsit {
+						go C1Data.DeleteMap(c1data)
+						return
+					}
+
+					ac, ok := da.(*AcceptReqAddrData)
+					if !ok || ac == nil {
+						go C1Data.DeleteMap(c1data)
+						return
+					}
+
+					go ExecApproveKeyGen(c1.(string), from, req, ac, false)
+					go C1Data.DeleteMap(c1data)
+					return
 				}
 
-				ac, ok := da.(*AcceptReqAddrData)
-				if !ok || ac == nil {
-				    go C1Data.DeleteMap(c1data)
-				    return
-				}
-				
-				go ExecApproveKeyGen(c1.(string),from,req,ac,false)
-				go C1Data.DeleteMap(c1data)
-				return
-			    }
-			    
-			    sig, ok := txdata.(*TxDataAcceptSign)
-			    if ok {
-				exsit, da := GetSignInfoData([]byte(sig.Key))
-				if !exsit {
-				    go C1Data.DeleteMap(c1data)
-				    return
-				}
+				sig, ok := txdata.(*TxDataAcceptSign)
+				if ok {
+					exsit, da := GetSignInfoData([]byte(sig.Key))
+					if !exsit {
+						go C1Data.DeleteMap(c1data)
+						return
+					}
 
-				ac, ok := da.(*AcceptSignData)
-				if !ok || ac == nil {
-				    go C1Data.DeleteMap(c1data)
-				    return
+					ac, ok := da.(*AcceptSignData)
+					if !ok || ac == nil {
+						go C1Data.DeleteMap(c1data)
+						return
+					}
+
+					go ExecApproveSigning(c1.(string), from, sig, ac, false)
+					go C1Data.DeleteMap(c1data)
+					return
 				}
-				
-				go ExecApproveSigning(c1.(string),from,sig,ac,false)
-				go C1Data.DeleteMap(c1data)
-				return
-			    }
 			}
-			    
+
 			DisAcceptMsg(c1.(string), w.id)
 			go C1Data.DeleteMap(c1data)
 		}
@@ -1064,7 +1064,7 @@ func GetRawType(raw string) (string, string) {
 
 	key, _, _, txdata, err := CheckRaw(raw)
 	if err != nil {
-		common.Error("=======================GetRawType,check accept raw data error===================","raw",raw,"err", err)
+		common.Error("=======================GetRawType,check accept raw data error===================", "raw", raw, "err", err)
 		return "", ""
 	}
 
@@ -1103,7 +1103,7 @@ func GetRawType(raw string) (string, string) {
 
 //---------------------------------------------------------------------------------
 
-// DisAcceptMsg  Collect accept data of nodes in the group, after collection, continue the MPC process 
+// DisAcceptMsg  Collect accept data of nodes in the group, after collection, continue the MPC process
 func DisAcceptMsg(raw string, workid int) {
 	defer func() {
 		if r := recover(); r != nil {
@@ -1138,7 +1138,7 @@ func DisAcceptMsg(raw string, workid int) {
 
 //------------------------------------------------------------------------------------
 
-// MsgRun  1.Parse the command data and implement the process 2.analyze the accept data   
+// MsgRun  1.Parse the command data and implement the process 2.analyze the accept data
 func MsgRun(raw string, workid int, sender string, ch chan interface{}) error {
 	if raw == "" || workid < 0 || sender == "" {
 		res := RPCSmpcRes{Ret: "", Tip: "msg run fail.", Err: fmt.Errorf("msg run fail")}
@@ -1185,25 +1185,25 @@ func GetGroupSigsDataByRaw(raw string) (string, error) {
 	var data []byte
 
 	m := MsgSig{}
-       err := json.Unmarshal([]byte(raw), &m)
-       if err == nil {
-	   data = []byte(m.Msg)
-       } else {
-	    tx := new(types.Transaction)
-	    raws := common.FromHex(raw)
-	    if err := rlp.DecodeBytes(raws, tx); err != nil {
-		    return "", err
-	    }
- 
-	    signer := types.NewEIP155Signer(big.NewInt(30400)) //
-	    _, err := types.Sender(signer, tx)
-	    if err != nil {
-		    return "", err
-	    }
+	err := json.Unmarshal([]byte(raw), &m)
+	if err == nil {
+		data = []byte(m.Msg)
+	} else {
+		tx := new(types.Transaction)
+		raws := common.FromHex(raw)
+		if err := rlp.DecodeBytes(raws, tx); err != nil {
+			return "", err
+		}
 
-	    data = tx.Data()
-       }
- 
+		signer := types.NewEIP155Signer(big.NewInt(30400)) //
+		_, err := types.Sender(signer, tx)
+		if err != nil {
+			return "", err
+		}
+
+		data = tx.Data()
+	}
+
 	var threshold string
 	var mode string
 	var groupsigs string
@@ -1234,14 +1234,14 @@ func GetGroupSigsDataByRaw(raw string) (string, error) {
 		return "", nil
 	}
 
-	if (mode == "0" || mode == "2" ) && groupsigs == "" {
+	if (mode == "0" || mode == "2") && groupsigs == "" {
 		return "", fmt.Errorf("raw data error,must have sigs data when mode = 0")
 	}
 
 	if mode == "2" {
-	    sigs := strings.Split(groupsigs, ":")
-	    ret := strings.Join(sigs, common.Sep)
-	    return ret,nil
+		sigs := strings.Split(groupsigs, ":")
+		ret := strings.Join(sigs, common.Sep)
+		return ret, nil
 	}
 
 	nums := strings.Split(threshold, "/")
@@ -1277,13 +1277,13 @@ func GetGroupSigsDataByRaw(raw string) (string, error) {
 					return "", fmt.Errorf("group sigs error")
 				}
 
-				po := strings.Split(node,":")
+				po := strings.Split(node, ":")
 				if len(po) < 3 {
 					return "", fmt.Errorf("group sigs error")
 				}
 
 				port := po[2]
-				po2 := strings.Split(sigs[j],":")
+				po2 := strings.Split(sigs[j], ":")
 				if len(po2) < 3 {
 					return "", fmt.Errorf("group sigs error")
 				}
@@ -1292,7 +1292,7 @@ func GetGroupSigsDataByRaw(raw string) (string, error) {
 				sigtmp := []rune(tmp)
 				sig := sigtmp[len(port):]
 				//sig := enodesigs[len(node):]
-				log.Debug("==================GetGroupSigsDataByRaw=================","node",node,"node2",node2,"sig",string(sig[:]))
+				log.Debug("==================GetGroupSigsDataByRaw=================", "node", node, "node2", node2, "sig", string(sig[:]))
 				//sigbit, _ := hex.DecodeString(string(sig[:]))
 				sigbit := common.FromHex(string(sig[:]))
 				if sigbit == nil {
@@ -1305,7 +1305,7 @@ func GetGroupSigsDataByRaw(raw string) (string, error) {
 				//pub, err := secp256k1.RecoverPubkey(crypto.Keccak256([]byte(node2)), sigbit)
 				pub, err := secp256k1.RecoverPubkey(hash, sigbit)
 				if err != nil {
-					log.Error("============================GetGroupSigsDataByRaw,recover pubkey err======================","err",err,"hash",string(hash),"hashtmp",hashtmp,"rsv",string(sig[:]),"enode",node2)
+					log.Error("============================GetGroupSigsDataByRaw,recover pubkey err======================", "err", err, "hash", string(hash), "hashtmp", hashtmp, "rsv", string(sig[:]), "enode", node2)
 					return "", err
 				}
 
@@ -1314,11 +1314,11 @@ func GetGroupSigsDataByRaw(raw string) (string, error) {
 					pubkey := hex.EncodeToString(pub)
 					from, err := h.PublicKeyToAddress(pubkey)
 					if err != nil {
-						log.Error("============================GetGroupSigsDataByRaw,pubkey to addr fail======================","err",err,"hash",string(hash),"hashtmp",hashtmp,"rsv",string(sig[:]),"enode",node2)
+						log.Error("============================GetGroupSigsDataByRaw,pubkey to addr fail======================", "err", err, "hash", string(hash), "hashtmp", hashtmp, "rsv", string(sig[:]), "enode", node2)
 						return "", err
 					}
 
-					log.Info("============================GetGroupSigsDataByRaw,pubkey to addr ======================","hash",string(hash),"hashtmp",hashtmp,"rsv",string(sig[:]),"enode",node2,"from",from)
+					log.Info("============================GetGroupSigsDataByRaw,pubkey to addr ======================", "hash", string(hash), "hashtmp", hashtmp, "rsv", string(sig[:]), "enode", node2, "from", from)
 					//5:eid1:acc1:eid2:acc2:eid3:acc3:eid4:acc4:eid5:acc5
 					sstmp += common.Sep
 					sstmp += node2
@@ -1339,7 +1339,7 @@ func GetGroupSigsDataByRaw(raw string) (string, error) {
 
 //--------------------------------------------------------------------------------
 
-// CheckGroupEnode Judge whether there is same enodeID in group 
+// CheckGroupEnode Judge whether there is same enodeID in group
 func CheckGroupEnode(gid string) bool {
 	if gid == "" {
 		return false
@@ -1363,8 +1363,8 @@ func CheckGroupEnode(gid string) bool {
 
 //------------------------------------------------------------------------------
 
-//DisMsg msg: key-enode:C1:X1:X2...:Xn
-//msg: key-enode1:NoReciv:enode2:C1
+// DisMsg msg: key-enode:C1:X1:X2...:Xn
+// msg: key-enode1:NoReciv:enode2:C1
 func DisMsg(msg string) {
 	defer func() {
 		if r := recover(); r != nil {
@@ -1373,8 +1373,8 @@ func DisMsg(msg string) {
 		}
 	}()
 
-    	if msg == "" {
-	    return
+	if msg == "" {
+		return
 	}
 
 	mm := strings.Split(msg, common.Sep)
@@ -1880,7 +1880,7 @@ func Find(l *list.List, msg string) bool {
 
 //--------------------------------------------------------------------------------
 
-// testEq  Judge whether a and B are equal 
+// testEq  Judge whether a and B are equal
 func testEq(a, b []string) bool {
 	// If one is nil, the other must also be nil.
 	if (a == nil) != (b == nil) {
@@ -1904,187 +1904,185 @@ func testEq(a, b []string) bool {
 
 // for p2p msg sig
 
-func getNodePrivate(keyfile string) (*ecdsa.PrivateKey,error) {
-    if keyfile == "" {
-	return nil,errors.New("key file is invalid")
-    }
+func getNodePrivate(keyfile string) (*ecdsa.PrivateKey, error) {
+	if keyfile == "" {
+		return nil, errors.New("key file is invalid")
+	}
 
-    nodeKey, err := crypto.LoadECDSA(keyfile)
-    if err != nil {
-	log.Error("====================getNodePrivate fail========================","err",err)
-	return nil,err
-    }
-    
-    return nodeKey,nil
+	nodeKey, err := crypto.LoadECDSA(keyfile)
+	if err != nil {
+		log.Error("====================getNodePrivate fail========================", "err", err)
+		return nil, err
+	}
+
+	return nodeKey, nil
 }
 
-func getUnSignMsgByte(msg smpclib.Message) ([]byte,error) {
-    if msg == nil {
-	return nil,errors.New("msg error")
-    }
-    
-    s, err := json.Marshal(msg)
-    if err != nil {
-	log.Error("====================getUnSignMsgByte fail========================","err",err)
-	    return nil,err
-    }
+func getUnSignMsgByte(msg smpclib.Message) ([]byte, error) {
+	if msg == nil {
+		return nil, errors.New("msg error")
+	}
 
-    hash := crypto.Keccak256(s)
-    return hash,nil
+	s, err := json.Marshal(msg)
+	if err != nil {
+		log.Error("====================getUnSignMsgByte fail========================", "err", err)
+		return nil, err
+	}
+
+	hash := crypto.Keccak256(s)
+	return hash, nil
 }
 
 // enodeID is the pubkey,corresponding to the private key reading from the 'KeyFile'
-func sigP2pMsg(msg smpclib.Message,enodeID string,keytype string) ([]byte,error) {
-    if msg == nil || enodeID == "" {
-	return nil,errors.New("param error")
-    }
+func sigP2pMsg(msg smpclib.Message, enodeID string, keytype string) ([]byte, error) {
+	if msg == nil || enodeID == "" {
+		return nil, errors.New("param error")
+	}
 
-    priv,err := getNodePrivate(KeyFile)
-    if err != nil {
-	return nil,errors.New("get private fail")
-    }
+	priv, err := getNodePrivate(KeyFile)
+	if err != nil {
+		return nil, errors.New("get private fail")
+	}
 
-    hash,err := getUnSignMsgByte(msg)
-    if err != nil {
-	return nil,err
-    }
+	hash, err := getUnSignMsgByte(msg)
+	if err != nil {
+		return nil, err
+	}
 
-    if len(hash) != 32 {
-	return nil,errors.New("hash len != 32")
-    }
+	if len(hash) != 32 {
+		return nil, errors.New("hash len != 32")
+	}
 
-    sig,err := crypto.Sign(hash,priv)
-    if err != nil {
-	log.Error("====================sigP2pMsg fail=======================","err",err)
-	return nil,err
-    }
+	sig, err := crypto.Sign(hash, priv)
+	if err != nil {
+		log.Error("====================sigP2pMsg fail=======================", "err", err)
+		return nil, err
+	}
 
-    if !checkP2pSig(keytype,sig,msg,enodeID) {
-	return nil,errors.New("check sig error")
-    }
+	if !checkP2pSig(keytype, sig, msg, enodeID) {
+		return nil, errors.New("check sig error")
+	}
 
-    return sig,nil
+	return sig, nil
 }
 
-func checkP2pSig(keytype string,sig []byte,msg smpclib.Message,enodeID string) bool {
-    if sig == nil || msg == nil || enodeID == "" {
+func checkP2pSig(keytype string, sig []byte, msg smpclib.Message, enodeID string) bool {
+	if sig == nil || msg == nil || enodeID == "" {
+		return false
+	}
+
+	hash, err := getUnSignMsgByte(msg)
+	if err != nil {
+		return false
+	}
+
+	public, err := crypto.SigToPub(hash, sig)
+	if err != nil {
+		log.Error("====================checkP2pSig fail=======================", "err", err)
+		return false
+	}
+
+	pub := secp256k1.S256(keytype).Marshal(public.X, public.Y)
+	pub2 := hex.EncodeToString(pub) // 04.....
+	s := []rune(pub2)               // 04.....
+	ss := string(s[2:])
+	// pub2: 04730c8fc7142d15669e8329138953d9484fd4cce0c690e35e105a9714deb741f10b52be1c5d49eeeb6f00aab8f3d2dec4e3352d0bf56bdbc2d86cb5f89c8e90d0
+	// ss: 730c8fc7142d15669e8329138953d9484fd4cce0c690e35e105a9714deb741f10b52be1c5d49eeeb6f00aab8f3d2dec4e3352d0bf56bdbc2d86cb5f89c8e90d0
+	// enodeID: 730c8fc7142d15669e8329138953d9484fd4cce0c690e35e105a9714deb741f10b52be1c5d49eeeb6f00aab8f3d2dec4e3352d0bf56bdbc2d86cb5f89c8e90d0
+	if ss == enodeID {
+		return true
+	}
+
+	tmp := "04" + enodeID
+	pubkey, err := hex.DecodeString(tmp)
+	if err != nil {
+		common.Error("check p2p sig error(decode enode ID error)", "enodeID", enodeID, "err", err)
+		return false
+	}
+
+	if !crypto.VerifySignature(pubkey, hash, sig) {
+		return false
+	}
+
+	//fmt.Printf("====================checkP2pSig, check fail,recover pubkey = %v,enodeID = %v=======================\n",ss,enodeID)
 	return false
-    }
-    
-    hash,err := getUnSignMsgByte(msg)
-    if err != nil {
-	return false 
-    }
-
-    public,err := crypto.SigToPub(hash,sig)
-    if err != nil {
-	log.Error("====================checkP2pSig fail=======================","err",err)
-	return false
-    }
-
-    pub := secp256k1.S256(keytype).Marshal(public.X,public.Y) 
-    pub2 := hex.EncodeToString(pub) // 04.....
-    s := []rune(pub2) // 04.....
-    ss := string(s[2:])
-    // pub2: 04730c8fc7142d15669e8329138953d9484fd4cce0c690e35e105a9714deb741f10b52be1c5d49eeeb6f00aab8f3d2dec4e3352d0bf56bdbc2d86cb5f89c8e90d0
-    // ss: 730c8fc7142d15669e8329138953d9484fd4cce0c690e35e105a9714deb741f10b52be1c5d49eeeb6f00aab8f3d2dec4e3352d0bf56bdbc2d86cb5f89c8e90d0
-    // enodeID: 730c8fc7142d15669e8329138953d9484fd4cce0c690e35e105a9714deb741f10b52be1c5d49eeeb6f00aab8f3d2dec4e3352d0bf56bdbc2d86cb5f89c8e90d0
-    if ss == enodeID {
-	return true
-    }
-
-    tmp := "04" + enodeID
-    pubkey, err := hex.DecodeString(tmp)
-    if err != nil {
-	common.Error("check p2p sig error(decode enode ID error)","enodeID",enodeID,"err",err)
-	return false
-    }
-
-    if !crypto.VerifySignature(pubkey,hash,sig) {
-	return false
-    }
-
-    //fmt.Printf("====================checkP2pSig, check fail,recover pubkey = %v,enodeID = %v=======================\n",ss,enodeID)
-    return false
 }
 
 //--------------------------------------------------------------------
 
-func sigPubKey(pubkey,enodeID string,keytype string) ([]byte,error) {
-    if pubkey == "" || enodeID == "" {
-	return nil,errors.New("param error")
-    }
+func sigPubKey(pubkey, enodeID string, keytype string) ([]byte, error) {
+	if pubkey == "" || enodeID == "" {
+		return nil, errors.New("param error")
+	}
 
-    priv,err := getNodePrivate(KeyFile)
-    if err != nil {
-	return nil,errors.New("get private fail")
-    }
+	priv, err := getNodePrivate(KeyFile)
+	if err != nil {
+		return nil, errors.New("get private fail")
+	}
 
-    pub, err := hex.DecodeString(pubkey)
-    if err != nil {
-	return nil,err
-    }
+	pub, err := hex.DecodeString(pubkey)
+	if err != nil {
+		return nil, err
+	}
 
-    hash := crypto.Keccak256(pub)
+	hash := crypto.Keccak256(pub)
 
-    if len(hash) != 32 {
-	return nil,errors.New("hash len != 32")
-    }
+	if len(hash) != 32 {
+		return nil, errors.New("hash len != 32")
+	}
 
-    sig,err := crypto.Sign(hash,priv)
-    if err != nil {
-	log.Error("====================sigPubKey fail=======================","err",err)
-	return nil,err
-    }
+	sig, err := crypto.Sign(hash, priv)
+	if err != nil {
+		log.Error("====================sigPubKey fail=======================", "err", err)
+		return nil, err
+	}
 
-    if !checkPubKeySig(keytype,sig,pubkey,enodeID) {
-	return nil,errors.New("check sig error")
-    }
+	if !checkPubKeySig(keytype, sig, pubkey, enodeID) {
+		return nil, errors.New("check sig error")
+	}
 
-    return sig,nil
+	return sig, nil
 }
 
-func checkPubKeySig(keytype string,sig []byte,pubkey string,enodeID string) bool {
-    if sig == nil || pubkey == "" || enodeID == "" {
+func checkPubKeySig(keytype string, sig []byte, pubkey string, enodeID string) bool {
+	if sig == nil || pubkey == "" || enodeID == "" {
+		return false
+	}
+
+	pubbyte, err := hex.DecodeString(pubkey)
+	if err != nil {
+		return false
+	}
+
+	hash := crypto.Keccak256(pubbyte)
+
+	public, err := crypto.SigToPub(hash, sig)
+	if err != nil {
+		log.Error("====================checkPubKeySig fail=======================", "err", err)
+		return false
+	}
+
+	pub := secp256k1.S256(keytype).Marshal(public.X, public.Y)
+	pub2 := hex.EncodeToString(pub) // 04.....
+	s := []rune(pub2)               // 04.....
+	ss := string(s[2:])
+	// pub2: 04730c8fc7142d15669e8329138953d9484fd4cce0c690e35e105a9714deb741f10b52be1c5d49eeeb6f00aab8f3d2dec4e3352d0bf56bdbc2d86cb5f89c8e90d0
+	// ss: 730c8fc7142d15669e8329138953d9484fd4cce0c690e35e105a9714deb741f10b52be1c5d49eeeb6f00aab8f3d2dec4e3352d0bf56bdbc2d86cb5f89c8e90d0
+	// enodeID: 730c8fc7142d15669e8329138953d9484fd4cce0c690e35e105a9714deb741f10b52be1c5d49eeeb6f00aab8f3d2dec4e3352d0bf56bdbc2d86cb5f89c8e90d0
+	if ss == enodeID {
+		return true
+	}
+
+	tmp := "04" + enodeID
+	pubkey2, err := hex.DecodeString(tmp)
+	if err != nil {
+		common.Error("check p2p sig error(decode enode ID error)", "enodeID", enodeID, "err", err)
+		return false
+	}
+
+	if !crypto.VerifySignature(pubkey2, hash, sig) {
+		return false
+	}
+
 	return false
-    }
-    
-    pubbyte, err := hex.DecodeString(pubkey)
-    if err != nil {
-	return false 
-    }
-
-    hash := crypto.Keccak256(pubbyte)
-
-    public,err := crypto.SigToPub(hash,sig)
-    if err != nil {
-	log.Error("====================checkPubKeySig fail=======================","err",err)
-	return false
-    }
-
-    pub := secp256k1.S256(keytype).Marshal(public.X,public.Y) 
-    pub2 := hex.EncodeToString(pub) // 04.....
-    s := []rune(pub2) // 04.....
-    ss := string(s[2:])
-    // pub2: 04730c8fc7142d15669e8329138953d9484fd4cce0c690e35e105a9714deb741f10b52be1c5d49eeeb6f00aab8f3d2dec4e3352d0bf56bdbc2d86cb5f89c8e90d0
-    // ss: 730c8fc7142d15669e8329138953d9484fd4cce0c690e35e105a9714deb741f10b52be1c5d49eeeb6f00aab8f3d2dec4e3352d0bf56bdbc2d86cb5f89c8e90d0
-    // enodeID: 730c8fc7142d15669e8329138953d9484fd4cce0c690e35e105a9714deb741f10b52be1c5d49eeeb6f00aab8f3d2dec4e3352d0bf56bdbc2d86cb5f89c8e90d0
-    if ss == enodeID {
-	return true
-    }
-
-    tmp := "04" + enodeID
-    pubkey2, err := hex.DecodeString(tmp)
-    if err != nil {
-	common.Error("check p2p sig error(decode enode ID error)","enodeID",enodeID,"err",err)
-	return false
-    }
-
-    if !crypto.VerifySignature(pubkey2,hash,sig) {
-	return false
-    }
-
-    return false
 }
-
-

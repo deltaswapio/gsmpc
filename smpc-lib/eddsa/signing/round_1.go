@@ -21,15 +21,15 @@ import (
 	"fmt"
 	"math/big"
 
-	"github.com/anyswap/FastMulThreshold-DSA/smpc-lib/eddsa/keygen"
-	"github.com/anyswap/FastMulThreshold-DSA/smpc-lib/smpc"
+	"github.com/deltaswapio/gsmpc/smpc-lib/eddsa/keygen"
+	"github.com/deltaswapio/gsmpc/smpc-lib/smpc"
 
 	//"encoding/hex"
 	cryptorand "crypto/rand"
 	"io"
 
-	"github.com/anyswap/FastMulThreshold-DSA/smpc-lib/crypto/ed"
-	"github.com/anyswap/FastMulThreshold-DSA/smpc-lib/crypto/ed_ristretto"
+	"github.com/deltaswapio/gsmpc/smpc-lib/crypto/ed"
+	"github.com/deltaswapio/gsmpc/smpc-lib/crypto/ed_ristretto"
 	r255 "github.com/gtank/ristretto255"
 )
 
@@ -86,7 +86,7 @@ func (round *round1) Start() error {
 
 	//tmpstr := hex.EncodeToString(round.txhash.Bytes())
 	//round.temp.message, _ = hex.DecodeString(tmpstr)
-	round.temp.message = round.txhash.Bytes() 
+	round.temp.message = round.txhash.Bytes()
 	round.temp.keyType = round.keyType
 
 	// [Notes]
@@ -101,7 +101,7 @@ func (round *round1) Start() error {
 	rand := cryptorand.Reader
 	if _, err := io.ReadFull(rand, rTem[:]); err != nil {
 		fmt.Println("Error: io.ReadFull(rand, r)")
-		return err 
+		return err
 	}
 
 	if round.temp.keyType == smpc.SR25519 {
@@ -117,11 +117,11 @@ func (round *round1) Start() error {
 		}
 
 		// 3. zkSchnorr(rU1)
-		zkR,err = ed_ristretto.Prove2(r,RBytes)
+		zkR, err = ed_ristretto.Prove2(r, RBytes)
 		if err != nil {
 			return err
 		}
-	}else {
+	} else {
 		ed.ScReduce(&r, &rTem)
 
 		var R ed.ExtendedGroupElement
@@ -135,7 +135,7 @@ func (round *round1) Start() error {
 		}
 
 		// 3. zkSchnorr(rU1)
-		zkR,err = ed.Prove2(r,RBytes)
+		zkR, err = ed.Prove2(r, RBytes)
 		if err != nil {
 			return err
 		}
@@ -159,7 +159,7 @@ func (round *round1) Start() error {
 	return nil
 }
 
-// CanAccept is it legal to receive this message 
+// CanAccept is it legal to receive this message
 func (round *round1) CanAccept(msg smpc.Message) bool {
 	if _, ok := msg.(*SignRound1Message); ok {
 		return msg.IsBroadcast()
@@ -168,7 +168,7 @@ func (round *round1) CanAccept(msg smpc.Message) bool {
 	return false
 }
 
-// Update  is the message received and ready for the next round? 
+// Update  is the message received and ready for the next round?
 func (round *round1) Update() (bool, error) {
 	for j, msg := range round.temp.signRound1Messages {
 		if round.ok[j] {

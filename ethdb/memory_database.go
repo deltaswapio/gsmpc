@@ -20,7 +20,7 @@ import (
 	"errors"
 	"sync"
 
-	"github.com/anyswap/FastMulThreshold-DSA/internal/common"
+	"github.com/deltaswapio/gsmpc/internal/common"
 )
 
 /*

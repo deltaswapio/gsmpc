@@ -24,10 +24,10 @@ import (
 	"sync"
 	"time"
 
-	"github.com/anyswap/FastMulThreshold-DSA/p2p"
-	"github.com/anyswap/FastMulThreshold-DSA/p2p/discover"
-	"github.com/anyswap/FastMulThreshold-DSA/p2p/event"
-	"github.com/anyswap/FastMulThreshold-DSA/p2p/simulations/adapters"
+	"github.com/deltaswapio/gsmpc/p2p"
+	"github.com/deltaswapio/gsmpc/p2p/discover"
+	"github.com/deltaswapio/gsmpc/p2p/event"
+	"github.com/deltaswapio/gsmpc/p2p/simulations/adapters"
 )
 
 var DialBanTimeout = 200 * time.Millisecond
@@ -499,8 +499,8 @@ func (net *Network) Shutdown() {
 	close(net.quitc)
 }
 
-//Reset resets all network properties:
-//emtpies the nodes and the connection list
+// Reset resets all network properties:
+// emtpies the nodes and the connection list
 func (net *Network) Reset() {
 	net.lock.Lock()
 	defer net.lock.Unlock()

@@ -17,13 +17,13 @@
 package ec2_test
 
 import (
-	"github.com/anyswap/FastMulThreshold-DSA/internal/common/math/random"
-	"github.com/anyswap/FastMulThreshold-DSA/smpc-lib/crypto/ec2"
+	"github.com/deltaswapio/gsmpc/internal/common/math/random"
+	"github.com/deltaswapio/gsmpc/smpc-lib/crypto/ec2"
 	"github.com/stretchr/testify/assert"
 	"math/big"
 	"testing"
 
-	"github.com/anyswap/FastMulThreshold-DSA/crypto/secp256k1"
+	"github.com/deltaswapio/gsmpc/crypto/secp256k1"
 )
 
 //------------------------------------------------------------------------------------
@@ -73,4 +73,3 @@ func TestZkXiProveVerify(t *testing.T) {
 	ret = ec2.ZkXiVerify(xiG, u1zkXiProof)
 	assert.True(t, ret)
 }
-

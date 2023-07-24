@@ -19,9 +19,9 @@ package reshare
 import (
 	"errors"
 	"fmt"
-	"github.com/anyswap/FastMulThreshold-DSA/crypto/secp256k1"
-	"github.com/anyswap/FastMulThreshold-DSA/smpc-lib/crypto/ec2"
-	"github.com/anyswap/FastMulThreshold-DSA/smpc-lib/smpc"
+	"github.com/deltaswapio/gsmpc/crypto/secp256k1"
+	"github.com/deltaswapio/gsmpc/smpc-lib/crypto/ec2"
+	"github.com/deltaswapio/gsmpc/smpc-lib/smpc"
 	"math/big"
 )
 
@@ -40,12 +40,12 @@ func (round *round1) Start() error {
 	}
 
 	if round.threshold <= 1 || round.threshold > round.dnodecount {
-	    return errors.New("threshold value error")
+		return errors.New("threshold value error")
 	}
 
 	index, err := round.GetDNodeIDIndex(round.dnodeid)
 	if err != nil {
-		fmt.Printf("============round1 start,get dnode id index fail,uid = %v,err = %v ===========\n", round.dnodeid,err)
+		fmt.Printf("============round1 start,get dnode id index fail,uid = %v,err = %v ===========\n", round.dnodeid, err)
 		return err
 	}
 
@@ -70,7 +70,7 @@ func (round *round1) Start() error {
 		sub := new(big.Int).Sub(v, self)
 		subInverse := new(big.Int).ModInverse(sub, secp256k1.S256(round.keytype).N1())
 		if subInverse == nil {
-		    return errors.New("calc times fail")
+			return errors.New("calc times fail")
 		}
 
 		times := new(big.Int).Mul(subInverse, v)
@@ -82,7 +82,7 @@ func (round *round1) Start() error {
 
 	round.temp.w1 = w1
 
-	skP1Poly, skP1PolyG, _ := ec2.Vss2Init(round.keytype,w1, round.threshold)
+	skP1Poly, skP1PolyG, _ := ec2.Vss2Init(round.keytype, w1, round.threshold)
 	skP1Gx, skP1Gy := secp256k1.S256(round.keytype).ScalarBaseMult(w1.Bytes())
 	u1CommitValues := make([]*big.Int, 0)
 	u1CommitValues = append(u1CommitValues, skP1Gx)
@@ -102,7 +102,7 @@ func (round *round1) Start() error {
 
 	re := &ReRound1Message{
 		ReRoundMessage: new(ReRoundMessage),
-		ComC:                commitSkP1G.C,
+		ComC:           commitSkP1G.C,
 	}
 	re.SetFromID(round.dnodeid)
 	re.SetFromIndex(index)
@@ -114,7 +114,7 @@ func (round *round1) Start() error {
 	return nil
 }
 
-// CanAccept is it legal to receive this message 
+// CanAccept is it legal to receive this message
 func (round *round1) CanAccept(msg smpc.Message) bool {
 	if _, ok := msg.(*ReRound1Message); ok {
 		return msg.IsBroadcast()
@@ -122,7 +122,7 @@ func (round *round1) CanAccept(msg smpc.Message) bool {
 	return false
 }
 
-// Update  is the message received and ready for the next round? 
+// Update  is the message received and ready for the next round?
 func (round *round1) Update() (bool, error) {
 	for j, msg := range round.temp.reshareRound1Messages {
 		if round.ok[j] {

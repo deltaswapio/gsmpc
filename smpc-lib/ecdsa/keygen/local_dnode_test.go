@@ -14,33 +14,32 @@
  *
  */
 
-// Package keygen_test test MPC implementation of generating pubkey 
+// Package keygen_test test MPC implementation of generating pubkey
 package keygen_test
 
 import (
+	"github.com/deltaswapio/gsmpc/smpc-lib/ecdsa/keygen"
+	"github.com/deltaswapio/gsmpc/smpc-lib/smpc"
 	"github.com/stretchr/testify/assert"
 	"testing"
-	"github.com/anyswap/FastMulThreshold-DSA/smpc-lib/ecdsa/keygen"
-	"github.com/anyswap/FastMulThreshold-DSA/smpc-lib/smpc"
 )
 
 func TestCheckFull(t *testing.T) {
-    kgRoundiMessages := make([]smpc.Message, 0)
-    succ := keygen.CheckFull(kgRoundiMessages)
-    assert.False(t, succ, "fail")
-    
-    threshold := 3
-    for i:=0;i<threshold;i++ {
-	kg := &keygen.KGRound0Message{
-		KGRoundMessage: new(keygen.KGRoundMessage),
+	kgRoundiMessages := make([]smpc.Message, 0)
+	succ := keygen.CheckFull(kgRoundiMessages)
+	assert.False(t, succ, "fail")
+
+	threshold := 3
+	for i := 0; i < threshold; i++ {
+		kg := &keygen.KGRound0Message{
+			KGRoundMessage: new(keygen.KGRoundMessage),
+		}
+		kg.SetFromID("62472382178168225119626719865491481459304781844424379027070392269894567214882")
+		kg.SetFromIndex(-1)
+
+		kgRoundiMessages = append(kgRoundiMessages, kg)
 	}
-	kg.SetFromID("62472382178168225119626719865491481459304781844424379027070392269894567214882")
-	kg.SetFromIndex(-1)
 
-	kgRoundiMessages = append(kgRoundiMessages,kg)
-    }
-
-    succ = keygen.CheckFull(kgRoundiMessages)
-    assert.True(t, succ, "success")
+	succ = keygen.CheckFull(kgRoundiMessages)
+	assert.True(t, succ, "success")
 }
-

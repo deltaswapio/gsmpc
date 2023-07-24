@@ -24,11 +24,11 @@ import (
 	"net"
 	"time"
 
-	"github.com/anyswap/FastMulThreshold-DSA/crypto"
-	"github.com/anyswap/FastMulThreshold-DSA/crypto/sha3"
-	"github.com/anyswap/FastMulThreshold-DSA/internal/common"
-	"github.com/anyswap/FastMulThreshold-DSA/internal/common/mclock"
-	"github.com/anyswap/FastMulThreshold-DSA/p2p/netutil"
+	"github.com/deltaswapio/gsmpc/crypto"
+	"github.com/deltaswapio/gsmpc/crypto/sha3"
+	"github.com/deltaswapio/gsmpc/internal/common"
+	"github.com/deltaswapio/gsmpc/internal/common/mclock"
+	"github.com/deltaswapio/gsmpc/p2p/netutil"
 	"github.com/fsn-dev/cryptoCoins/tools/rlp"
 )
 
@@ -612,10 +612,10 @@ loop:
 			target := net.tab.chooseBucketRefreshTarget()
 			var tmp common.Hash
 			if target != tmp {
-			    go func() {
-				    net.lookup(target, false)
-				    bucketRefreshTimer.Reset(bucketRefreshInterval)
-			    }()
+				go func() {
+					net.lookup(target, false)
+					bucketRefreshTimer.Reset(bucketRefreshInterval)
+				}()
 			}
 		case newNursery := <-net.refreshReq:
 			if newNursery != nil {
@@ -1130,7 +1130,7 @@ func (net *Network) handleKnownPong(n *Node, pkt *ingressPacket) error {
 		// fmt.Printf("(%x) ticket: %+v\n", net.tab.self.ID[:8], pkt.data)
 		net.ticketStore.addTicket(now, pkt.data.(*pong).ReplyTok, ticket)
 	}
-	
+
 	n.pingEcho = nil
 	n.pingTopics = nil
 	return err
@@ -1228,7 +1228,7 @@ func rlpHash(x interface{}) (h common.Hash) {
 	hw := sha3.NewKeccak256()
 	err := rlp.Encode(hw, x)
 	if err != nil {
-	    return
+		return
 	}
 
 	hw.Sum(h[:0])

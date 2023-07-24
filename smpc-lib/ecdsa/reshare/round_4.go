@@ -18,17 +18,17 @@ package reshare
 
 import (
 	"errors"
-	"github.com/anyswap/FastMulThreshold-DSA/smpc-lib/crypto/ec2"
-	"github.com/anyswap/FastMulThreshold-DSA/smpc-lib/smpc"
+	"github.com/deltaswapio/gsmpc/smpc-lib/crypto/ec2"
+	"github.com/deltaswapio/gsmpc/smpc-lib/smpc"
 	"math/big"
 )
 
-// Start create ntilde 
+// Start create ntilde
 func (round *round4) Start() error {
 	if round.started {
 		return errors.New("round already started")
 	}
-	
+
 	round.number = 4
 	round.started = true
 	round.ResetOK()
@@ -58,17 +58,17 @@ func (round *round4) Start() error {
 	var q *big.Int
 
 	if round.oldnode && round.oldindex != -1 {
-	    u1NtildeH1H2 = round.Save.U1NtildeH1H2[round.oldindex]
-	    alpha = round.Save.U1NtildePrivData.Alpha
-	    beta = round.Save.U1NtildePrivData.Beta
-	    p = round.Save.U1NtildePrivData.Q1
-	    q = round.Save.U1NtildePrivData.Q2
+		u1NtildeH1H2 = round.Save.U1NtildeH1H2[round.oldindex]
+		alpha = round.Save.U1NtildePrivData.Alpha
+		beta = round.Save.U1NtildePrivData.Beta
+		p = round.Save.U1NtildePrivData.Q1
+		q = round.Save.U1NtildePrivData.Q2
 	} else {
-	    NtildeLength := 2048
-	    u1NtildeH1H2, alpha, beta, p, q,_,_ = ec2.GenerateNtildeH1H2(NtildeLength)
-	    if u1NtildeH1H2 == nil {
-		    return errors.New("gen ntilde h1 h2 fail")
-	    }
+		NtildeLength := 2048
+		u1NtildeH1H2, alpha, beta, p, q, _, _ = ec2.GenerateNtildeH1H2(NtildeLength)
+		if u1NtildeH1H2 == nil {
+			return errors.New("gen ntilde h1 h2 fail")
+		}
 
 	}
 
@@ -77,15 +77,15 @@ func (round *round4) Start() error {
 
 	re := &ReRound4Message{
 		ReRoundMessage: new(ReRoundMessage),
-		U1NtildeH1H2:        u1NtildeH1H2,
-		NtildeProof1:        ntildeProof1,
-		NtildeProof2:        ntildeProof2,
+		U1NtildeH1H2:   u1NtildeH1H2,
+		NtildeProof1:   ntildeProof1,
+		NtildeProof2:   ntildeProof2,
 	}
 	re.SetFromID(round.dnodeid)
 	re.SetFromIndex(curIndex)
 
 	round.temp.u1NtildeH1H2 = u1NtildeH1H2
-	round.temp.u1NtildePrivData = &ec2.NtildePrivData{Alpha:alpha,Beta:beta,Q1:p,Q2:q}
+	round.temp.u1NtildePrivData = &ec2.NtildePrivData{Alpha: alpha, Beta: beta, Q1: p, Q2: q}
 	round.temp.reshareRound4Messages[curIndex] = re
 	round.out <- re
 
@@ -93,7 +93,7 @@ func (round *round4) Start() error {
 	return nil
 }
 
-// CanAccept is it legal to receive this message 
+// CanAccept is it legal to receive this message
 func (round *round4) CanAccept(msg smpc.Message) bool {
 	if _, ok := msg.(*ReRound4Message); ok {
 		return msg.IsBroadcast()
@@ -101,7 +101,7 @@ func (round *round4) CanAccept(msg smpc.Message) bool {
 	return false
 }
 
-// Update  is the message received and ready for the next round? 
+// Update  is the message received and ready for the next round?
 func (round *round4) Update() (bool, error) {
 	for j, msg := range round.temp.reshareRound4Messages {
 		if round.ok[j] {

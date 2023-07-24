@@ -17,12 +17,12 @@
 package signing
 
 import (
+	"encoding/hex"
 	"errors"
 	"fmt"
-	"encoding/hex"
-	"github.com/anyswap/FastMulThreshold-DSA/smpc-lib/smpc"
-	"github.com/anyswap/FastMulThreshold-DSA/smpc-lib/crypto/ed"
-	"github.com/anyswap/FastMulThreshold-DSA/smpc-lib/crypto/ed_ristretto"
+	"github.com/deltaswapio/gsmpc/smpc-lib/crypto/ed"
+	"github.com/deltaswapio/gsmpc/smpc-lib/crypto/ed_ristretto"
+	"github.com/deltaswapio/gsmpc/smpc-lib/smpc"
 )
 
 // Start calc S and check (R,S)
@@ -47,7 +47,7 @@ func (round *round7) Start() error {
 
 		if round.temp.keyType == smpc.SR25519 {
 			ed_ristretto.ScAdd(&FinalS, &FinalS, &t)
-		}else {
+		} else {
 			ed.ScAdd(&FinalS, &FinalS, &t)
 		}
 	}
@@ -57,7 +57,7 @@ func (round *round7) Start() error {
 	var pass = EdVerify(inputVerify, round.temp.keyType)
 	//fmt.Printf("===========ed verify, pass = %v============\n", pass)
 	if !pass {
-	    return errors.New("ed verify (r,s) fail")
+		return errors.New("ed verify (r,s) fail")
 	}
 
 	//r
@@ -93,7 +93,7 @@ func (round *round7) Start() error {
 	return nil
 }
 
-// CanAccept end signing 
+// CanAccept end signing
 func (round *round7) CanAccept(msg smpc.Message) bool {
 	return false
 }

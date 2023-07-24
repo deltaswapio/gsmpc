@@ -20,7 +20,7 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
-	"github.com/anyswap/FastMulThreshold-DSA/smpc-lib/smpc"
+	"github.com/deltaswapio/gsmpc/smpc-lib/smpc"
 	"math/big"
 	"sort"
 )
@@ -87,10 +87,10 @@ func (round *base) GetIDs() (smpc.SortableIDSSlice, error) {
 	for _, v := range round.temp.kgRound0Messages {
 		uidtmp, err := hex.DecodeString(v.GetFromID())
 		if err != nil {
-		    return nil,err
+			return nil, err
 		}
 
-		uid,_ := new(big.Int).SetString(string(uidtmp[:]),10)
+		uid, _ := new(big.Int).SetString(string(uidtmp[:]), 10)
 		ids = append(ids, uid)
 	}
 
@@ -111,10 +111,10 @@ func (round *base) GetDNodeIDIndex(id string) (int, error) {
 
 	uidtmp, err := hex.DecodeString(id)
 	if err != nil {
-	    return -1,err
+		return -1, err
 	}
 
-	uid,_ := new(big.Int).SetString(string(uidtmp[:]),10)
+	uid, _ := new(big.Int).SetString(string(uidtmp[:]), 10)
 	for k, v := range ids {
 		if v.Cmp(uid) == 0 {
 			return k, nil

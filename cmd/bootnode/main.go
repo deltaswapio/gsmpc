@@ -25,11 +25,11 @@ import (
 	"os"
 
 	"github.com/BurntSushi/toml"
-	"github.com/anyswap/FastMulThreshold-DSA/crypto"
-	"github.com/anyswap/FastMulThreshold-DSA/internal/common"
-	"github.com/anyswap/FastMulThreshold-DSA/p2p/discover"
-	"github.com/anyswap/FastMulThreshold-DSA/p2p/nat"
-	"github.com/anyswap/FastMulThreshold-DSA/p2p/netutil"
+	"github.com/deltaswapio/gsmpc/crypto"
+	"github.com/deltaswapio/gsmpc/internal/common"
+	"github.com/deltaswapio/gsmpc/p2p/discover"
+	"github.com/deltaswapio/gsmpc/p2p/nat"
+	"github.com/deltaswapio/gsmpc/p2p/netutil"
 )
 
 func main() {
@@ -48,8 +48,8 @@ func main() {
 	flag.Parse()
 	err = getConfig(listenAddr, nodeKeyFile)
 	if err != nil {
-	    fmt.Errorf("get config: %v", err)
-	    return
+		fmt.Errorf("get config: %v", err)
+		return
 	}
 
 	if *listenAddr == "" {

@@ -19,8 +19,8 @@ package reshare
 import (
 	"errors"
 	"fmt"
-	"github.com/anyswap/FastMulThreshold-DSA/smpc-lib/ecdsa/keygen"
-	"github.com/anyswap/FastMulThreshold-DSA/smpc-lib/smpc"
+	"github.com/deltaswapio/gsmpc/smpc-lib/ecdsa/keygen"
+	"github.com/deltaswapio/gsmpc/smpc-lib/smpc"
 	"math/big"
 )
 
@@ -28,12 +28,12 @@ var (
 	zero = big.NewInt(0)
 )
 
-func newRound0(save *keygen.LocalDNodeSaveData, temp *localTempData, out chan<- smpc.Message, end chan<- keygen.LocalDNodeSaveData, dnodeid string, dnodecount int, threshold int, paillierkeylength int, oldnode bool,oldindex int,keytype string) smpc.Round {
+func newRound0(save *keygen.LocalDNodeSaveData, temp *localTempData, out chan<- smpc.Message, end chan<- keygen.LocalDNodeSaveData, dnodeid string, dnodecount int, threshold int, paillierkeylength int, oldnode bool, oldindex int, keytype string) smpc.Round {
 	return &round0{
-		&base{save, temp, out, end, make([]bool, dnodecount), false, 0, dnodeid, dnodecount, threshold, paillierkeylength, oldnode,oldindex, nil,keytype}}
+		&base{save, temp, out, end, make([]bool, dnodecount), false, 0, dnodeid, dnodecount, threshold, paillierkeylength, oldnode, oldindex, nil, keytype}}
 }
 
-// Start  Broadcast current dnode ID to other nodes 
+// Start  Broadcast current dnode ID to other nodes
 func (round *round0) Start() error {
 	if round.started {
 		fmt.Printf("============= round0.start fail =======\n")
@@ -55,7 +55,7 @@ func (round *round0) Start() error {
 	return nil
 }
 
-// CanAccept is it legal to receive this message 
+// CanAccept is it legal to receive this message
 func (round *round0) CanAccept(msg smpc.Message) bool {
 	if _, ok := msg.(*ReRound0Message); ok {
 		return msg.IsBroadcast()
@@ -63,7 +63,7 @@ func (round *round0) CanAccept(msg smpc.Message) bool {
 	return false
 }
 
-// Update  is the message received and ready for the next round? 
+// Update  is the message received and ready for the next round?
 func (round *round0) Update() (bool, error) {
 	for j, msg := range round.temp.reshareRound0Messages {
 		if round.ok[j] {

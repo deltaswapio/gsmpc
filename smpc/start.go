@@ -17,14 +17,14 @@
 package smpc
 
 import (
-	"github.com/anyswap/FastMulThreshold-DSA/internal/common"
-	p2psmpc "github.com/anyswap/FastMulThreshold-DSA/p2p/layer2"
-	smpclibec2 "github.com/anyswap/FastMulThreshold-DSA/smpc-lib/crypto/ec2"
+	"github.com/deltaswapio/gsmpc/internal/common"
+	"github.com/deltaswapio/gsmpc/p2p/discover"
+	p2psmpc "github.com/deltaswapio/gsmpc/p2p/layer2"
+	smpclibec2 "github.com/deltaswapio/gsmpc/smpc-lib/crypto/ec2"
 	"github.com/fsn-dev/cryptoCoins/coins"
 	cryptocoinsconfig "github.com/fsn-dev/cryptoCoins/coins/config"
 	"github.com/fsn-dev/cryptoCoins/coins/eos"
 	"os"
-	"github.com/anyswap/FastMulThreshold-DSA/p2p/discover"
 )
 
 var (
@@ -33,9 +33,9 @@ var (
 	recalcTimes = 1
 
 	// KeyFile bootnode keyfile
-	KeyFile      string
-	
-	RelayInPeers      bool
+	KeyFile string
+
+	RelayInPeers bool
 )
 
 func init() {
@@ -57,17 +57,17 @@ func init() {
 
 // LunchParams lunch params
 type LunchParams struct {
-	WaitMsg      uint64
-	TryTimes     uint64
-	PreSignNum   uint64
-	Jobs   uint64
-	MaxAcceptTime    uint64
-	Bip32Pre     uint64
-	SyncPreSign string
-	RelayInPeers bool
-	AutoPreSign bool
-	TestNet bool
-	NeighRelay bool
+	WaitMsg       uint64
+	TryTimes      uint64
+	PreSignNum    uint64
+	Jobs          uint64
+	MaxAcceptTime uint64
+	Bip32Pre      uint64
+	SyncPreSign   string
+	RelayInPeers  bool
+	AutoPreSign   bool
+	TestNet       bool
+	NeighRelay    bool
 }
 
 // Start init gsmpc
@@ -120,7 +120,7 @@ func Start(params *LunchParams) {
 	}
 
 	if params.AutoPreSign {
-	    AutoPreGenSignData()
+		AutoPreGenSignData()
 	}
 
 	go HandleRPCSign()
@@ -144,6 +144,5 @@ func Start(params *LunchParams) {
 
 	go CleanUpMsgReceiv()
 
-	common.Info("================================smpc.Start,init finish.========================", "curEnode", curEnode, "waitmsg", WaitMsgTimeGG20, "trytimes", recalcTimes,"presignnum", PrePubDataCount, "bip32pre", PreBip32DataCount)
+	common.Info("================================smpc.Start,init finish.========================", "curEnode", curEnode, "waitmsg", WaitMsgTimeGG20, "trytimes", recalcTimes, "presignnum", PrePubDataCount, "bip32pre", PreBip32DataCount)
 }
-

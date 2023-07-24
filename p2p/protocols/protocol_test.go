@@ -23,10 +23,10 @@ import (
 	"testing"
 	"time"
 
-	"github.com/anyswap/FastMulThreshold-DSA/p2p"
-	"github.com/anyswap/FastMulThreshold-DSA/p2p/discover"
-	"github.com/anyswap/FastMulThreshold-DSA/p2p/simulations/adapters"
-	p2ptest "github.com/anyswap/FastMulThreshold-DSA/p2p/testing"
+	"github.com/deltaswapio/gsmpc/p2p"
+	"github.com/deltaswapio/gsmpc/p2p/discover"
+	"github.com/deltaswapio/gsmpc/p2p/simulations/adapters"
+	p2ptest "github.com/deltaswapio/gsmpc/p2p/testing"
 )
 
 // handshake message type
@@ -43,7 +43,7 @@ type kill struct {
 type drop struct {
 }
 
-/// protoHandshake represents module-independent aspects of the protocol and is
+// / protoHandshake represents module-independent aspects of the protocol and is
 // the first message peers send and receive as part the initial exchange
 type protoHandshake struct {
 	Version   uint   // local and remote peer should have identical version

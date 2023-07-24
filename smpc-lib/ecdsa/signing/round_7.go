@@ -19,9 +19,9 @@ package signing
 import (
 	"errors"
 	"fmt"
-	"github.com/anyswap/FastMulThreshold-DSA/crypto/secp256k1"
-	"github.com/anyswap/FastMulThreshold-DSA/smpc-lib/crypto/ec2"
-	"github.com/anyswap/FastMulThreshold-DSA/smpc-lib/smpc"
+	"github.com/deltaswapio/gsmpc/crypto/secp256k1"
+	"github.com/deltaswapio/gsmpc/smpc-lib/crypto/ec2"
+	"github.com/deltaswapio/gsmpc/smpc-lib/smpc"
 	"math/big"
 )
 
@@ -51,7 +51,7 @@ func (round *round7) Start() error {
 		}
 
 		_, u1GammaG := deCommit.DeCommit(round.keytype)
-		if !ec2.ZkUVerify(round.keytype,u1GammaG, msg6.U1GammaZKProof) {
+		if !ec2.ZkUVerify(round.keytype, u1GammaG, msg6.U1GammaZKProof) {
 			return errors.New("verify zkuproof fail")
 		}
 
@@ -72,10 +72,10 @@ func (round *round7) Start() error {
 		_, u1GammaG := deCommit.DeCommit(round.keytype)
 		GammaGSumx, GammaGSumy = secp256k1.S256(round.keytype).Add(GammaGSumx, GammaGSumy, u1GammaG[0], u1GammaG[1])
 	}
-	
+
 	deltaSumInverse := new(big.Int).ModInverse(round.temp.deltaSum, secp256k1.S256(round.keytype).N1())
 	if deltaSumInverse == nil {
-	    return errors.New("calc deltaSum Inverse fail")
+		return errors.New("calc deltaSum Inverse fail")
 	}
 
 	deltaGammaGx, deltaGammaGy := secp256k1.S256(round.keytype).ScalarMult(GammaGSumx, GammaGSumy, deltaSumInverse.Bytes())
@@ -94,8 +94,8 @@ func (round *round7) Start() error {
 	round.temp.deltaGammaGx = deltaGammaGx
 	round.temp.deltaGammaGy = deltaGammaGy
 
-	// gg20: compute ZK proof of consistency between R_i and E_i(k_i) 
-	bigRK1Gx,bigRK1Gy := secp256k1.S256(round.keytype).ScalarMult(deltaGammaGx,deltaGammaGy,round.temp.u1K.Bytes())
+	// gg20: compute ZK proof of consistency between R_i and E_i(k_i)
+	bigRK1Gx, bigRK1Gy := secp256k1.S256(round.keytype).ScalarMult(deltaGammaGx, deltaGammaGy, round.temp.u1K.Bytes())
 
 	oldindex := -1
 	for k, v := range round.save.IDs {
@@ -113,7 +113,7 @@ func (round *round7) Start() error {
 	if u1PaillierPk == nil {
 		return errors.New("error paillier pk for current node")
 	}
-	
+
 	u1NT := round.save.U1NtildeH1H2[oldindex]
 	if u1NT == nil {
 		return errors.New("error ntilde for current node")
@@ -122,29 +122,29 @@ func (round *round7) Start() error {
 	pdlWSlackStatement := &ec2.PDLwSlackStatement{
 		PK:         u1PaillierPk,
 		CipherText: round.temp.ukc,
-		K1RX:	bigRK1Gx,
-		K1RY:   bigRK1Gy,
-		Rx:     deltaGammaGx,
-		Ry:     deltaGammaGy,
+		K1RX:       bigRK1Gx,
+		K1RY:       bigRK1Gy,
+		Rx:         deltaGammaGx,
+		Ry:         deltaGammaGy,
 		H1:         u1NT.H1,
 		H2:         u1NT.H2,
 		NTilde:     u1NT.Ntilde,
 	}
 	pdlWSlackWitness := &ec2.PDLwSlackWitness{
-		SK: round.save.U1PaillierSk,
-		K1:  round.temp.u1K,
-		K1Ra:  round.temp.ukc2,
+		SK:   round.save.U1PaillierSk,
+		K1:   round.temp.u1K,
+		K1Ra: round.temp.ukc2,
 	}
-	pdlWSlackPf := ec2.NewPDLwSlackProof(round.keytype,pdlWSlackWitness, pdlWSlackStatement)
+	pdlWSlackPf := ec2.NewPDLwSlackProof(round.keytype, pdlWSlackWitness, pdlWSlackStatement)
 	if pdlWSlackPf == nil {
-	    return errors.New("compute ZK proof of consistency between R_i and E_i(k_i) fail")
+		return errors.New("compute ZK proof of consistency between R_i and E_i(k_i) fail")
 	}
-	
+
 	srm := &SignRound7Message{
 		SignRoundMessage: new(SignRoundMessage),
-		K1RX:              bigRK1Gx,
-		K1RY:   bigRK1Gy,
-		PdlwSlackPf: pdlWSlackPf,
+		K1RX:             bigRK1Gx,
+		K1RY:             bigRK1Gy,
+		PdlwSlackPf:      pdlWSlackPf,
 	}
 	srm.SetFromID(round.kgid)
 	srm.SetFromIndex(curIndex)
@@ -160,7 +160,7 @@ func (round *round7) Start() error {
 	return nil
 }
 
-// CanAccept is it legal to receive this message 
+// CanAccept is it legal to receive this message
 func (round *round7) CanAccept(msg smpc.Message) bool {
 	if _, ok := msg.(*SignRound7Message); ok {
 		return msg.IsBroadcast()
@@ -168,7 +168,7 @@ func (round *round7) CanAccept(msg smpc.Message) bool {
 	return false
 }
 
-// Update  is the message received and ready for the next round? 
+// Update  is the message received and ready for the next round?
 func (round *round7) Update() (bool, error) {
 	for j, msg := range round.temp.signRound7Messages {
 		if round.ok[j] {

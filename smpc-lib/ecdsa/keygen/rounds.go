@@ -17,12 +17,12 @@
 package keygen
 
 import (
+	"encoding/hex"
 	"errors"
 	"fmt"
-	"github.com/anyswap/FastMulThreshold-DSA/smpc-lib/smpc"
+	"github.com/deltaswapio/gsmpc/smpc-lib/smpc"
 	"math/big"
 	"sort"
-	"encoding/hex"
 )
 
 type (
@@ -92,10 +92,10 @@ func (round *base) GetIDs() (smpc.SortableIDSSlice, error) {
 	for _, v := range round.temp.kgRound0Messages {
 		uidtmp, err := hex.DecodeString(v.GetFromID())
 		if err != nil {
-		    return nil,err
+			return nil, err
 		}
 
-		uid,_ := new(big.Int).SetString(string(uidtmp[:]),10)
+		uid, _ := new(big.Int).SetString(string(uidtmp[:]), 10)
 		ids = append(ids, uid)
 	}
 
@@ -110,17 +110,17 @@ func (round *base) GetDNodeIDIndex(id string) (int, error) {
 
 	uidtmp, err := hex.DecodeString(id)
 	if err != nil {
-	    return -1,err
+		return -1, err
 	}
 
-	idtmp,_ := new(big.Int).SetString(string(uidtmp[:]),10)
+	idtmp, _ := new(big.Int).SetString(string(uidtmp[:]), 10)
 
 	// fixed bug: get wrong index by id
-	for i:=0;i<round.dnodecount;i++ {
-	    v := big.NewInt(int64(i+1))
-	    if v.Cmp(idtmp) == 0 {
-		return i,nil
-	    }
+	for i := 0; i < round.dnodecount; i++ {
+		v := big.NewInt(int64(i + 1))
+		if v.Cmp(idtmp) == 0 {
+			return i, nil
+		}
 	}
 
 	/*ids, err := round.GetIDs()
@@ -142,4 +142,3 @@ func (round *base) ResetOK() {
 		round.ok[j] = false
 	}
 }
-

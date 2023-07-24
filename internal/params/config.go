@@ -20,7 +20,7 @@ import (
 	"fmt"
 	"math/big"
 
-	"github.com/anyswap/FastMulThreshold-DSA/internal/common"
+	"github.com/deltaswapio/gsmpc/internal/common"
 )
 
 // Genesis hashes to enforce below configs on.

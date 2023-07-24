@@ -18,96 +18,96 @@ package ec2
 
 import (
 	"encoding/json"
-	"fmt"
 	"errors"
+	"fmt"
 	"math/big"
 
-	"github.com/anyswap/FastMulThreshold-DSA/crypto/secp256k1"
-	"github.com/anyswap/FastMulThreshold-DSA/internal/common/math/random"
-	"github.com/anyswap/FastMulThreshold-DSA/smpc-lib/smpc"
+	"github.com/deltaswapio/gsmpc/crypto/secp256k1"
+	"github.com/deltaswapio/gsmpc/internal/common/math/random"
+	"github.com/deltaswapio/gsmpc/smpc-lib/smpc"
 )
 
 // ZK proof for knowledge of sigma_i, l_i such that S_i = R^sigma_i, T_i = g^sigma_i h^l_i (GG20)
 type STProof struct {
-    AlphaX *big.Int
-    AlphaY *big.Int
-    BetaX *big.Int
-    BetaY *big.Int
-    T     *big.Int
-    U     *big.Int
+	AlphaX *big.Int
+	AlphaY *big.Int
+	BetaX  *big.Int
+	BetaY  *big.Int
+	T      *big.Int
+	U      *big.Int
 }
 
 //------------------------------------------------------------------------------------
 
 // NewSTProof new STProof
-func NewSTProof(keytype string,T1X *big.Int,T1Y *big.Int,S1X *big.Int,S1Y *big.Int,Rx *big.Int,Ry *big.Int,hGx *big.Int,hGy *big.Int,sigma1 *big.Int,l1 *big.Int) *STProof {
-    if T1X == nil || T1Y == nil || S1X == nil || S1Y == nil || Rx == nil || Ry == nil || hGx == nil || hGy == nil || sigma1 == nil || l1 == nil {
-	return nil
-    }
-    
-    Gx,Gy := secp256k1.S256(keytype).ScalarBaseMult(one.Bytes())
-    a := random.GetRandomIntFromZn(secp256k1.S256(keytype).N1())
-    b := random.GetRandomIntFromZn(secp256k1.S256(keytype).N1())
-    alphax,alphay := secp256k1.S256(keytype).ScalarMult(Rx,Ry,a.Bytes())
-    aGx,aGy := secp256k1.S256(keytype).ScalarBaseMult(a.Bytes())
-    bHGx,bHGy := secp256k1.S256(keytype).ScalarMult(hGx,hGy,b.Bytes())
-    betaX,betaY := secp256k1.S256(keytype).Add(aGx,aGy,bHGx,bHGy)
-    
-    e := Sha512_256(T1X, T1Y, S1X,S1Y,Rx,Ry,hGx, hGy, Gx, Gy, alphax, alphay, betaX, betaY)
-    e = new(big.Int).Mod(e, secp256k1.S256(keytype).N1())
+func NewSTProof(keytype string, T1X *big.Int, T1Y *big.Int, S1X *big.Int, S1Y *big.Int, Rx *big.Int, Ry *big.Int, hGx *big.Int, hGy *big.Int, sigma1 *big.Int, l1 *big.Int) *STProof {
+	if T1X == nil || T1Y == nil || S1X == nil || S1Y == nil || Rx == nil || Ry == nil || hGx == nil || hGy == nil || sigma1 == nil || l1 == nil {
+		return nil
+	}
 
-    t, u := calculateTAndU(secp256k1.S256(keytype).N1(), a, e, sigma1, b, l1)
-    
-    return &STProof{AlphaX: alphax, AlphaY:alphay, BetaX: betaX, BetaY:betaY, T: t, U: u}
+	Gx, Gy := secp256k1.S256(keytype).ScalarBaseMult(one.Bytes())
+	a := random.GetRandomIntFromZn(secp256k1.S256(keytype).N1())
+	b := random.GetRandomIntFromZn(secp256k1.S256(keytype).N1())
+	alphax, alphay := secp256k1.S256(keytype).ScalarMult(Rx, Ry, a.Bytes())
+	aGx, aGy := secp256k1.S256(keytype).ScalarBaseMult(a.Bytes())
+	bHGx, bHGy := secp256k1.S256(keytype).ScalarMult(hGx, hGy, b.Bytes())
+	betaX, betaY := secp256k1.S256(keytype).Add(aGx, aGy, bHGx, bHGy)
+
+	e := Sha512_256(T1X, T1Y, S1X, S1Y, Rx, Ry, hGx, hGy, Gx, Gy, alphax, alphay, betaX, betaY)
+	e = new(big.Int).Mod(e, secp256k1.S256(keytype).N1())
+
+	t, u := calculateTAndU(secp256k1.S256(keytype).N1(), a, e, sigma1, b, l1)
+
+	return &STProof{AlphaX: alphax, AlphaY: alphay, BetaX: betaX, BetaY: betaY, T: t, U: u}
 }
 
-func STVerify(keytype string,S1X *big.Int,S1Y *big.Int,T1X *big.Int,T1Y *big.Int,Rx *big.Int,Ry *big.Int,hGx *big.Int,hGy *big.Int,stpf *STProof) bool {
-    if S1X == nil || S1Y == nil || T1X == nil || T1Y == nil || Rx == nil || Ry == nil || hGx == nil || hGy == nil || stpf == nil {
-	return false
-    }
-    
-    // Check whether the point is on the curve
-    var tmp = []*big.Int{S1X,S1Y,T1X,T1Y,Rx,Ry,hGx,hGy,stpf.AlphaX,stpf.AlphaY,stpf.BetaX,stpf.BetaY}
-    if !checkPointOnCurve(keytype,tmp) {
-	    return false
-    }
+func STVerify(keytype string, S1X *big.Int, S1Y *big.Int, T1X *big.Int, T1Y *big.Int, Rx *big.Int, Ry *big.Int, hGx *big.Int, hGy *big.Int, stpf *STProof) bool {
+	if S1X == nil || S1Y == nil || T1X == nil || T1Y == nil || Rx == nil || Ry == nil || hGx == nil || hGy == nil || stpf == nil {
+		return false
+	}
 
-    if smpc.IsInfinityPoint(S1X,S1Y) || smpc.IsInfinityPoint(T1X,T1Y) || smpc.IsInfinityPoint(Rx,Ry) || smpc.IsInfinityPoint(hGx,hGy) || smpc.IsInfinityPoint(stpf.AlphaX,stpf.AlphaY) || smpc.IsInfinityPoint(stpf.BetaX, stpf.BetaY) {
-	return false
-    }
+	// Check whether the point is on the curve
+	var tmp = []*big.Int{S1X, S1Y, T1X, T1Y, Rx, Ry, hGx, hGy, stpf.AlphaX, stpf.AlphaY, stpf.BetaX, stpf.BetaY}
+	if !checkPointOnCurve(keytype, tmp) {
+		return false
+	}
 
-    mt := new(big.Int).Mod(stpf.T,secp256k1.S256(keytype).N1())
-    mu := new(big.Int).Mod(stpf.U,secp256k1.S256(keytype).N1())
-    if mt.Cmp(big.NewInt(0)) == 0 || mt.Cmp(big.NewInt(1)) == 0 || mu.Cmp(big.NewInt(0)) == 0 || mu.Cmp(big.NewInt(1)) == 0 {
-	return false
-    }
+	if smpc.IsInfinityPoint(S1X, S1Y) || smpc.IsInfinityPoint(T1X, T1Y) || smpc.IsInfinityPoint(Rx, Ry) || smpc.IsInfinityPoint(hGx, hGy) || smpc.IsInfinityPoint(stpf.AlphaX, stpf.AlphaY) || smpc.IsInfinityPoint(stpf.BetaX, stpf.BetaY) {
+		return false
+	}
 
-    Gx,Gy := secp256k1.S256(keytype).ScalarBaseMult(one.Bytes())
-    e := Sha512_256(T1X, T1Y, S1X,S1Y,Rx,Ry,hGx, hGy, Gx, Gy, stpf.AlphaX, stpf.AlphaY, stpf.BetaX, stpf.BetaY)
-    e = new(big.Int).Mod(e, secp256k1.S256(keytype).N1())
-    
-    tRx,tRy := secp256k1.S256(keytype).ScalarMult(Rx,Ry,stpf.T.Bytes())
-    eSx,eSy := secp256k1.S256(keytype).ScalarMult(S1X,S1Y,e.Bytes())
-    aScx,aScy := secp256k1.S256(keytype).Add(stpf.AlphaX,stpf.AlphaY,eSx,eSy)
-    if tRx.Cmp(aScx) != 0 || tRy.Cmp(aScy) != 0 {
-	return false
-    }
-    
-    tGx,tGy := secp256k1.S256(keytype).ScalarBaseMult(stpf.T.Bytes())
-    uHGx,uHGy := secp256k1.S256(keytype).ScalarMult(hGx,hGy,stpf.U.Bytes())
-    eT1x,eT1y := secp256k1.S256(keytype).ScalarMult(T1X,T1Y,e.Bytes())
-    tGuHx,tGuHy := secp256k1.S256(keytype).Add(tGx,tGy,uHGx,uHGy)
-    betaTx,betaTy := secp256k1.S256(keytype).Add(stpf.BetaX,stpf.BetaY,eT1x,eT1y)
-    if betaTx.Cmp(tGuHx) != 0 || betaTy.Cmp(tGuHy) != 0 {
-	return false
-    }
+	mt := new(big.Int).Mod(stpf.T, secp256k1.S256(keytype).N1())
+	mu := new(big.Int).Mod(stpf.U, secp256k1.S256(keytype).N1())
+	if mt.Cmp(big.NewInt(0)) == 0 || mt.Cmp(big.NewInt(1)) == 0 || mu.Cmp(big.NewInt(0)) == 0 || mu.Cmp(big.NewInt(1)) == 0 {
+		return false
+	}
 
-    return true
+	Gx, Gy := secp256k1.S256(keytype).ScalarBaseMult(one.Bytes())
+	e := Sha512_256(T1X, T1Y, S1X, S1Y, Rx, Ry, hGx, hGy, Gx, Gy, stpf.AlphaX, stpf.AlphaY, stpf.BetaX, stpf.BetaY)
+	e = new(big.Int).Mod(e, secp256k1.S256(keytype).N1())
+
+	tRx, tRy := secp256k1.S256(keytype).ScalarMult(Rx, Ry, stpf.T.Bytes())
+	eSx, eSy := secp256k1.S256(keytype).ScalarMult(S1X, S1Y, e.Bytes())
+	aScx, aScy := secp256k1.S256(keytype).Add(stpf.AlphaX, stpf.AlphaY, eSx, eSy)
+	if tRx.Cmp(aScx) != 0 || tRy.Cmp(aScy) != 0 {
+		return false
+	}
+
+	tGx, tGy := secp256k1.S256(keytype).ScalarBaseMult(stpf.T.Bytes())
+	uHGx, uHGy := secp256k1.S256(keytype).ScalarMult(hGx, hGy, stpf.U.Bytes())
+	eT1x, eT1y := secp256k1.S256(keytype).ScalarMult(T1X, T1Y, e.Bytes())
+	tGuHx, tGuHy := secp256k1.S256(keytype).Add(tGx, tGy, uHGx, uHGy)
+	betaTx, betaTy := secp256k1.S256(keytype).Add(stpf.BetaX, stpf.BetaY, eT1x, eT1y)
+	if betaTx.Cmp(tGuHx) != 0 || betaTy.Cmp(tGuHy) != 0 {
+		return false
+	}
+
+	return true
 }
 
 func calculateTAndU(q *big.Int, a *big.Int, e *big.Int, sigma1 *big.Int, b *big.Int, l1 *big.Int) (t *big.Int, u *big.Int) {
-    	if q == nil || a == nil || e == nil || sigma1 == nil || b == nil || l1 == nil {
-	    return
+	if q == nil || a == nil || e == nil || sigma1 == nil || b == nil || l1 == nil {
+		return
 	}
 
 	modQ := ModInt(q)
@@ -123,17 +123,17 @@ func (stpf *STProof) MarshalJSON() ([]byte, error) {
 	return json.Marshal(struct {
 		AlphaX string `json:"AlphaX"`
 		AlphaY string `json:"AlphaY"`
-		BetaX string `json:"BetaX"`
-		BetaY string `json:"BetaY"`
-		T string `json:"T"`
-		U string `json:"U"`
+		BetaX  string `json:"BetaX"`
+		BetaY  string `json:"BetaY"`
+		T      string `json:"T"`
+		U      string `json:"U"`
 	}{
 		AlphaX: fmt.Sprintf("%v", stpf.AlphaX),
 		AlphaY: fmt.Sprintf("%v", stpf.AlphaY),
-		BetaX: fmt.Sprintf("%v", stpf.BetaX),
-		BetaY: fmt.Sprintf("%v", stpf.BetaY),
-		T: fmt.Sprintf("%v", stpf.T),
-		U: fmt.Sprintf("%v", stpf.U),
+		BetaX:  fmt.Sprintf("%v", stpf.BetaX),
+		BetaY:  fmt.Sprintf("%v", stpf.BetaY),
+		T:      fmt.Sprintf("%v", stpf.T),
+		U:      fmt.Sprintf("%v", stpf.U),
 	})
 }
 
@@ -142,10 +142,10 @@ func (stpf *STProof) UnmarshalJSON(raw []byte) error {
 	var zk struct {
 		AlphaX string `json:"AlphaX"`
 		AlphaY string `json:"AlphaY"`
-		BetaX string `json:"BetaX"`
-		BetaY string `json:"BetaY"`
-		T string `json:"T"`
-		U string `json:"U"`
+		BetaX  string `json:"BetaX"`
+		BetaY  string `json:"BetaY"`
+		T      string `json:"T"`
+		U      string `json:"U"`
 	}
 
 	if err := json.Unmarshal(raw, &zk); err != nil {
@@ -160,10 +160,8 @@ func (stpf *STProof) UnmarshalJSON(raw []byte) error {
 	stpf.U, _ = new(big.Int).SetString(zk.U, 10)
 
 	if stpf.AlphaX == nil || stpf.AlphaY == nil || stpf.BetaX == nil || stpf.BetaY == nil || stpf.T == nil || stpf.U == nil {
-	    return errors.New("unmarshal json error")
+		return errors.New("unmarshal json error")
 	}
 
 	return nil
 }
-
-

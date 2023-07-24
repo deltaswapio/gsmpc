@@ -25,9 +25,9 @@ import (
 	"sync"
 	"time"
 
-	"github.com/anyswap/FastMulThreshold-DSA/internal/common/mclock"
-	"github.com/anyswap/FastMulThreshold-DSA/p2p/discover"
-	"github.com/anyswap/FastMulThreshold-DSA/p2p/event"
+	"github.com/deltaswapio/gsmpc/internal/common/mclock"
+	"github.com/deltaswapio/gsmpc/p2p/discover"
+	"github.com/deltaswapio/gsmpc/p2p/event"
 	"github.com/fsn-dev/cryptoCoins/tools/rlp"
 )
 
@@ -264,19 +264,19 @@ func (p *Peer) readLoop(errc chan<- error) {
 }
 
 func senditem(w MsgWriter, msgcode uint64) {
-    err := SendItems(w, msgcode)
-    if err != nil {
-	return
-    }
+	err := SendItems(w, msgcode)
+	if err != nil {
+		return
+	}
 }
 
 func (p *Peer) handle(msg Msg) error {
 	switch {
 	case msg.Code == pingMsg:
-	    err := msg.Discard()
-	    if err != nil {
-		return err
-	    }
+		err := msg.Discard()
+		if err != nil {
+			return err
+		}
 		go senditem(p.rw, pongMsg)
 	case msg.Code == discMsg:
 		var reason [1]DiscReason
@@ -284,7 +284,7 @@ func (p *Peer) handle(msg Msg) error {
 		// check errors because, the connection will be closed after it.
 		err := rlp.Decode(msg.Payload, &reason)
 		if err != nil {
-		    return err
+			return err
 		}
 		return reason[0]
 	case msg.Code < baseProtocolLength:

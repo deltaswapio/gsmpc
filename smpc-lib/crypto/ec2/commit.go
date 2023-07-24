@@ -19,9 +19,9 @@ package ec2
 import (
 	"math/big"
 
-	"github.com/anyswap/FastMulThreshold-DSA/crypto/secp256k1"
-	"github.com/anyswap/FastMulThreshold-DSA/crypto/sha3"
-	"github.com/anyswap/FastMulThreshold-DSA/internal/common/math/random"
+	"github.com/deltaswapio/gsmpc/crypto/secp256k1"
+	"github.com/deltaswapio/gsmpc/crypto/sha3"
+	"github.com/deltaswapio/gsmpc/internal/common/math/random"
 )
 
 // Commitment commitment data
@@ -33,7 +33,7 @@ type Commitment struct {
 // Commit  Generate commitment data by secrets
 func (commitment *Commitment) Commit(secrets ...*big.Int) *Commitment {
 	if len(secrets) == 0 {
-	    return nil
+		return nil
 	}
 
 	// Generate the random num
@@ -49,9 +49,9 @@ func (commitment *Commitment) Commit(secrets ...*big.Int) *Commitment {
 	sha3256.Write(rnd.Bytes())
 
 	for _, secret := range secrets {
-	    sha3256.Write([]byte("hello multichain"))
-	    sha3256.Write(secret.Bytes())
-	    sha3256.Write([]byte("hello multichain"))
+		sha3256.Write([]byte("hello multichain"))
+		sha3256.Write(secret.Bytes())
+		sha3256.Write([]byte("hello multichain"))
 	}
 
 	digestKeccak256 := sha3256.Sum(nil)
@@ -73,26 +73,26 @@ func (commitment *Commitment) Commit(secrets ...*big.Int) *Commitment {
 	return commitment
 }
 
-// Verify  Verify commitment data 
+// Verify  Verify commitment data
 func (commitment *Commitment) Verify(keytype string) bool {
 	C := commitment.C
 	D := commitment.D
 
 	if C == nil {
-	    return false
+		return false
 	}
 
 	if len(D) < 1 { // at least rnd number
-	    return false
+		return false
 	}
 
 	sha3256 := sha3.New256()
 	sha3256.Write(D[0].Bytes())
-	
+
 	for _, secret := range D[1:] {
-	    sha3256.Write([]byte("hello multichain"))
-	    sha3256.Write(secret.Bytes())
-	    sha3256.Write([]byte("hello multichain"))
+		sha3256.Write([]byte("hello multichain"))
+		sha3256.Write(secret.Bytes())
+		sha3256.Write([]byte("hello multichain"))
 	}
 	digestKeccak256 := sha3256.Sum(nil)
 	sha3256.Write(digestKeccak256)
@@ -106,7 +106,7 @@ func (commitment *Commitment) Verify(keytype string) bool {
 	}
 
 	// Check whether the point is on the curve
-	if !checkPointOnCurve(keytype,D[1:]) {
+	if !checkPointOnCurve(keytype, D[1:]) {
 		return false
 	}
 
@@ -118,7 +118,7 @@ func (commitment *Commitment) DeCommit(keytype string) (bool, []*big.Int) {
 	if commitment.Verify(keytype) {
 		return true, commitment.D[1:]
 	}
-	
+
 	return false, nil
 
 }
@@ -126,7 +126,7 @@ func (commitment *Commitment) DeCommit(keytype string) (bool, []*big.Int) {
 //-----------------------------------------------------------
 
 // checkCommitmentGammaGOnCurve Check whether the point is on the curve
-func checkPointOnCurve(keytype string,secrets []*big.Int) bool {
+func checkPointOnCurve(keytype string, secrets []*big.Int) bool {
 	if len(secrets) == 0 || (len(secrets)%2) != 0 {
 		return false
 	}
@@ -142,5 +142,3 @@ func checkPointOnCurve(keytype string,secrets []*big.Int) bool {
 
 	return true
 }
-
-

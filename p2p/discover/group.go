@@ -33,11 +33,11 @@ import (
 	"sync"
 	"time"
 
-	"github.com/anyswap/FastMulThreshold-DSA/crypto"
-	"github.com/anyswap/FastMulThreshold-DSA/internal/common"
-	"github.com/anyswap/FastMulThreshold-DSA/p2p/rlp"
+	"github.com/deltaswapio/gsmpc/crypto"
+	"github.com/deltaswapio/gsmpc/ethdb"
+	"github.com/deltaswapio/gsmpc/internal/common"
+	"github.com/deltaswapio/gsmpc/p2p/rlp"
 	"github.com/syndtr/goleveldb/leveldb"
-	"github.com/anyswap/FastMulThreshold-DSA/ethdb"
 	"os"
 )
 
@@ -51,13 +51,13 @@ var (
 	setlocaliptrue = false
 	LocalIP        string
 	RemoteIP       net.IP
-	RemotePort     = uint16(0)
-	RemoteUpdate   = false
-	SelfEnode      = ""
-	SelfIPPort     = ""
-	changed        = 0
-	Xp_changed     = 0
-	connectOk bool = false
+	RemotePort          = uint16(0)
+	RemoteUpdate        = false
+	SelfEnode           = ""
+	SelfIPPort          = ""
+	changed             = 0
+	Xp_changed          = 0
+	connectOk      bool = false
 
 	SDK_groupList map[NodeID]*Group = make(map[NodeID]*Group)
 	GroupSDK      sync.Mutex
@@ -74,12 +74,12 @@ var (
 	p2pDir                                    = ""
 	nodeOnline       map[NodeID]*OnLineStatus = make(map[NodeID]*OnLineStatus)
 
-	updateGroupsNode  bool           = false // update node dynamically
-	addNodes          map[NodeID]int = make(map[NodeID]int)
-	addNodesLock      sync.Mutex
-	loadedSeeds       map[NodeID]int = make(map[NodeID]int)
-	loadedDone        bool           = false
-	checkNetworkChan  chan int       = make(chan int, 1)
+	updateGroupsNode bool           = false // update node dynamically
+	addNodes         map[NodeID]int = make(map[NodeID]int)
+	addNodesLock     sync.Mutex
+	loadedSeeds      map[NodeID]int = make(map[NodeID]int)
+	loadedDone       bool           = false
+	checkNetworkChan chan int       = make(chan int, 1)
 
 	NeighRelay bool = false
 )
@@ -95,9 +95,9 @@ type OnLineStatus struct {
 }
 
 const (
-	SendWaitTime = 1 * time.Minute
+	SendWaitTime            = 1 * time.Minute
 	checkNetworkConnectTime = 10 * time.Second
-	pingCount    = 10
+	pingCount               = 10
 
 	Smpcprotocol_type = iota + 1
 	Xprotocol_type
@@ -127,9 +127,9 @@ const (
 	Ack_Packet
 )
 
-///get mpc node info
+// /get mpc node info
 var (
-    giddb    *ethdb.LDBDatabase
+	giddb *ethdb.LDBDatabase
 )
 
 // GetSmpcGidDb open database for group db
@@ -367,7 +367,7 @@ func (t *udp) findgroup(gid, toid NodeID, toaddr *net.UDPAddr, target NodeID, p2
 	})
 	if errs != nil {
 		common.Debug("==== (t *udp) sendMsgToPeer ====", "errs", errs)
-		return nil,errs
+		return nil, errs
 	}
 	err := <-errc
 	return nodes, err
@@ -504,7 +504,7 @@ func (t *udp) sendToGroupCC(toid NodeID, toaddr *net.UDPAddr, msg string, p2pTyp
 		_, err = t.udpSendMsg(toid, toaddr, msg, number, p2pType, false)
 		if err != nil {
 			common.Debug("==== (t *udp) sendMsgToPeer ====", "err", common.CurrentTime(), err)
-			return "",err
+			return "", err
 		}
 	} else if len(msg) > 800 && len(msg) < 1600 {
 		number[1] = 1
@@ -512,14 +512,14 @@ func (t *udp) sendToGroupCC(toid NodeID, toaddr *net.UDPAddr, msg string, p2pTyp
 		_, err = t.udpSendMsg(toid, toaddr, msg[0:800], number, p2pType, false)
 		if err != nil {
 			common.Debug("=== (t *udp) sendMsgToPeer ====, err: %v\n", err)
-			return "",err
+			return "", err
 		} else {
 			number[1] = 2
 			number[2] = 2
 			_, err = t.udpSendMsg(toid, toaddr, msg[800:], number, p2pType, false)
 			if err != nil {
 				common.Debug("==== (t *udp) sendMsgToPeer ====", "eer", err)
-				return "",err
+				return "", err
 			}
 		}
 	} else {
@@ -533,12 +533,12 @@ func (req *getsmpcmessage) handle(t *udp, from *net.UDPAddr, fromID NodeID, mac 
 	//	return errExpired
 	//}
 	common.Debug("send ack ==== (req *getsmpcmessage) handle() ====", "to", from, "squencencen", req.Sequence)
-	_,err := t.send(from, byte(Ack_Packet), &Ack{
+	_, err := t.send(from, byte(Ack_Packet), &Ack{
 		Sequence:   req.Sequence,
 		Expiration: uint64(time.Now().Add(expiration).Unix()),
 	})
 	if err != nil {
-	    return err
+		return err
 	}
 
 	ss := fmt.Sprintf("get-%v-%v", fromID, req.Sequence)
@@ -607,12 +607,12 @@ func (req *smpcmessage) handle(t *udp, from *net.UDPAddr, fromID NodeID, mac []b
 	msgHash := crypto.Keccak256Hash([]byte(strings.ToLower(req.Msg))).Hex()
 	common.Debug("==== (req *smpcmessage) handle() ==== p2pBroatcast", "recv from target", fromID, "from", from, "msgHash", msgHash)
 	common.Debug("send ack ==== (req *smpcmessage) handle() ====", "to", from, "msg", req.Msg)
-	_,err := t.send(from, byte(Ack_Packet), &Ack{
+	_, err := t.send(from, byte(Ack_Packet), &Ack{
 		Sequence:   req.Sequence,
 		Expiration: uint64(time.Now().Add(expiration).Unix()),
 	})
 	if err != nil {
-	    return err
+		return err
 	}
 
 	ss := fmt.Sprintf("%v-%v", fromID, req.Sequence)
@@ -782,11 +782,11 @@ func setGroup(n *Node, replace string) {
 	setGroupCC(n, replace, Smpcprotocol_type)
 }
 
-func sendpeer(gid, toid NodeID, ipa *net.UDPAddr,p2pType int) {
-    err := SendToPeer(gid, toid, ipa, "", p2pType)
-    if err != nil {
-	return 
-    }
+func sendpeer(gid, toid NodeID, ipa *net.UDPAddr, p2pType int) {
+	err := SendToPeer(gid, toid, ipa, "", p2pType)
+	if err != nil {
+		return
+	}
 }
 
 func sendGroupToNode(groupList *Group, p2pType int, node *Node) { //nooo
@@ -805,7 +805,7 @@ func sendGroupToNode(groupList *Group, p2pType int, node *Node) { //nooo
 			ipa := &net.UDPAddr{IP: node.IP, Port: int(node.UDP)}
 			err := SendMsgToNode(node.ID, ipa, cDgid)
 			if err != nil {
-			    return
+				return
 			}
 
 			break
@@ -832,7 +832,7 @@ func sendGroupInit2Node(gid NodeID, node RpcNode, i int) {
 	ipa := &net.UDPAddr{IP: node.IP, Port: int(node.UDP)}
 	err := SendMsgToNode(node.ID, ipa, cDgid)
 	if err != nil {
-	    return
+		return
 	}
 }
 
@@ -891,7 +891,7 @@ func buildSDKGroup(gid NodeID, threshold string, enode []*Node, Type string, exi
 	tmpNodes := make([]RpcNode, len(enode))
 	for i, node := range enode {
 		tmpNodes[i] = RpcNode(nodeToRPC(node))
-		common.Debug("==== buildSDKGroup() ====", "tmpNodes", tmpNodes,"i",i,"node",tmpNodes[i],"enode",*node)
+		common.Debug("==== buildSDKGroup() ====", "tmpNodes", tmpNodes, "i", i, "node", tmpNodes[i], "enode", *node)
 		if subGroup {
 			if i >= nodeNum0 {
 				continue
@@ -919,7 +919,7 @@ func updateGroup(n *Node, p2pType int) { //nooo
 				sendGroupInit(g, p2pType)
 				err := StoreGroupToDb(g)
 				if err != nil {
-				    return
+					return
 				}
 
 				break
@@ -978,7 +978,7 @@ func updateGroupSDKNode(nd *Node, p2pType int) { //nooo
 					sendGroupInit(g, p2pType)
 					err := StoreGroupToDb(g)
 					if err != nil {
-					    return
+						return
 					}
 
 					break
@@ -1049,7 +1049,7 @@ func setGroupSDK(n *Node, replace string, p2pType int) {
 			sendGroupInit(SDK_groupList[n.ID], p2pType)
 			err := StoreGroupToDb(SDK_groupList[n.ID])
 			if err != nil {
-			    return
+				return
 			}
 		} else { // add self node
 			if len(groupSDKList) < SDK_groupNum {
@@ -1057,10 +1057,10 @@ func setGroupSDK(n *Node, replace string, p2pType int) {
 				groupSDKList = append(groupSDKList, n)
 				common.Debug("==== setGroupSDK() ====", "len(groupSDKList)", len(groupSDKList))
 				if len(groupSDKList) == (SDK_groupNum - 1) {
-				    err := StoreGroupSDKListToDb()
-				    if err != nil {
-					return
-				    }
+					err := StoreGroupSDKListToDb()
+					if err != nil {
+						return
+					}
 				}
 			}
 		}
@@ -1074,7 +1074,7 @@ func setGroupSDK(n *Node, replace string, p2pType int) {
 	}
 }
 
-//send group info
+// send group info
 func setGroupCC(n *Node, replace string, p2pType int) {
 	groupList := getGroupList(NodeID{}, p2pType)
 	groupChanged := getGroupChange(p2pType)
@@ -1158,7 +1158,7 @@ func setGroupCC(n *Node, replace string, p2pType int) {
 	}
 }
 
-//send group info
+// send group info
 func SendMsgToNode(toid NodeID, toaddr *net.UDPAddr, msg string) error {
 	if msg == "" {
 		return nil
@@ -1169,357 +1169,357 @@ func SendMsgToNode(toid NodeID, toaddr *net.UDPAddr, msg string) error {
 /////////ack for sending msg with udp
 
 var (
-    SmpcCall      func(interface{}, string)
-    Msg2Peer = common.NewSafeMap(10)
-    MsgAckMap  = common.NewSafeMap(10)
-    resend = 1
-    splitlen = 1200
-    repeat = 1 
+	SmpcCall  func(interface{}, string)
+	Msg2Peer  = common.NewSafeMap(10)
+	MsgAckMap = common.NewSafeMap(10)
+	resend    = 1
+	splitlen  = 1200
+	repeat    = 1
 )
 
 func getFullLen(str []string) int {
-    n := 0
-    for _,v := range str {
-	if v != "" {
-	    n++
+	n := 0
+	for _, v := range str {
+		if v != "" {
+			n++
+		}
 	}
-    }
 
-    return n
+	return n
 }
 
 func MergeSplitMsg(ms *MsgSend) string {
-    if ms == nil {
-	return ""
-    }
+	if ms == nil {
+		return ""
+	}
 
-    total,err := strconv.Atoi(ms.Num)
-    if err != nil {
-	return ""
-    }
-    pos,err := strconv.Atoi(ms.Pos)
-    if err != nil {
-	return ""
-    }
+	total, err := strconv.Atoi(ms.Num)
+	if err != nil {
+		return ""
+	}
+	pos, err := strconv.Atoi(ms.Pos)
+	if err != nil {
+		return ""
+	}
 
-    if pos >= total || pos < 0 {
-	common.Error("====================MergeSplitMsg,get split msg pos error====================","msg hash",ms.MsgHash,"pos",pos,"total",total)
-	return ""
-    }
+	if pos >= total || pos < 0 {
+		common.Error("====================MergeSplitMsg,get split msg pos error====================", "msg hash", ms.MsgHash, "pos", pos, "total", total)
+		return ""
+	}
 
-    val,exist := Msg2Peer.ReadMap(ms.MsgHash)
-    if !exist {
-	tmp := make([]string,total)
+	val, exist := Msg2Peer.ReadMap(ms.MsgHash)
+	if !exist {
+		tmp := make([]string, total)
+		tmp[pos] = ms.SplitMsg
+		Msg2Peer.WriteMap(ms.MsgHash, tmp)
+		if getFullLen(tmp) == total {
+			var s string
+			for _, v := range tmp {
+				s += v
+			}
+
+			common.Debug("====================MergeSplitMsg,get msg====================", "msg hash", ms.MsgHash, "pos", pos, "total", total)
+			return s
+		}
+
+		return ""
+	}
+
+	tmp, ok := val.([]string)
+	if !ok {
+		return ""
+	}
+
 	tmp[pos] = ms.SplitMsg
-	Msg2Peer.WriteMap(ms.MsgHash,tmp)
+	Msg2Peer.WriteMap(ms.MsgHash, tmp)
 	if getFullLen(tmp) == total {
-	    var s string
-	    for _,v := range tmp {
-		s += v
-	    }
+		var s string
+		for _, v := range tmp {
+			s += v
+		}
 
-	    common.Debug("====================MergeSplitMsg,get msg====================","msg hash",ms.MsgHash,"pos",pos,"total",total)
-	    return s
+		common.Debug("====================MergeSplitMsg,get msg====================", "msg hash", ms.MsgHash, "pos", pos, "total", total)
+		return s
 	}
 
 	return ""
-    }
-
-    tmp,ok := val.([]string)
-    if !ok {
-	return ""
-    }
-
-    tmp[pos] = ms.SplitMsg
-    Msg2Peer.WriteMap(ms.MsgHash,tmp)
-    if getFullLen(tmp) == total {
-	var s string
-	for _,v := range tmp {
-	    s += v
-	}
-
-	common.Debug("====================MergeSplitMsg,get msg====================","msg hash",ms.MsgHash,"pos",pos,"total",total)
-	return s
-    }
-
-    return ""
 }
 
 type MsgSend struct {
-   MsgHash string
-   Pos string
-   Num string
-   PacketType string
-   SplitMsg string
+	MsgHash    string
+	Pos        string
+	Num        string
+	PacketType string
+	SplitMsg   string
 }
 
-func sendSplitMsg(t *udp,msg string,ptype int,toaddr *net.UDPAddr,toid NodeID) error {
+func sendSplitMsg(t *udp, msg string, ptype int, toaddr *net.UDPAddr, toid NodeID) error {
 
-    if msg == "" || t == nil || toaddr == nil {
-	return errors.New("param error")
-    }
-
-    num := getSplitMsgNum(msg)
-    if num <= 0 {
-	return errors.New("split msg num error")
-    }
-
-    msghash := crypto.Keccak256Hash([]byte(strings.ToLower(msg))).Hex()
-    common.Debug("==============sendSplitMsg,broadcast msg to group===================","orig msg hash",msghash,"send to node.ID",toid,"send to node.IP",toaddr.IP,"send to node.UDP",toaddr.Port,"split len",splitlen,"orig msg len",len(msg),"split msg num",num)
-
-    msgs := []rune(msg)
-    for i:=0;i<num;i++ {
-	ms := &MsgSend{}
-	ms.MsgHash = msghash
-	ms.Pos = strconv.Itoa(i) 
-	ms.Num = strconv.Itoa(num)
-	ms.PacketType = strconv.Itoa(ptype)
-
-	if i == (int(num)-1) {
-	    ms.SplitMsg = string(msgs[splitlen*i:])
-	} else {
-	    ms.SplitMsg = string(msgs[splitlen*i:(i+1)*splitlen])
+	if msg == "" || t == nil || toaddr == nil {
+		return errors.New("param error")
 	}
 
-	for j:=0;j<repeat;j++ {
-	    errc := t.pending(toid, byte(Smpc_MsgSplitPacket), func(r interface{}) bool {
-		    return true
-	    })
-
-	    if errc == nil {
-		break
-	    }
-	    
-	    time.Sleep(time.Duration(20) * time.Millisecond)
+	num := getSplitMsgNum(msg)
+	if num <= 0 {
+		return errors.New("split msg num error")
 	}
 
-	for j:=0;j<repeat;j++ {
-	    _, errt := t.send(toaddr, byte(Smpc_MsgSplitPacket),ms)
-	    if errt == nil {
-		break
-	    }
-	    
-	    common.Debug("====================sendSplitMsg,udp send msg fail=====================","j",j,"err",errt)
-	    time.Sleep(time.Duration(20) * time.Millisecond)
-	}
-	
-	//err := <-errc
-	//return err
-	
-	time.Sleep(time.Duration(20) * time.Millisecond)
-    }
+	msghash := crypto.Keccak256Hash([]byte(strings.ToLower(msg))).Hex()
+	common.Debug("==============sendSplitMsg,broadcast msg to group===================", "orig msg hash", msghash, "send to node.ID", toid, "send to node.IP", toaddr.IP, "send to node.UDP", toaddr.Port, "split len", splitlen, "orig msg len", len(msg), "split msg num", num)
 
-    return nil
+	msgs := []rune(msg)
+	for i := 0; i < num; i++ {
+		ms := &MsgSend{}
+		ms.MsgHash = msghash
+		ms.Pos = strconv.Itoa(i)
+		ms.Num = strconv.Itoa(num)
+		ms.PacketType = strconv.Itoa(ptype)
+
+		if i == (int(num) - 1) {
+			ms.SplitMsg = string(msgs[splitlen*i:])
+		} else {
+			ms.SplitMsg = string(msgs[splitlen*i : (i+1)*splitlen])
+		}
+
+		for j := 0; j < repeat; j++ {
+			errc := t.pending(toid, byte(Smpc_MsgSplitPacket), func(r interface{}) bool {
+				return true
+			})
+
+			if errc == nil {
+				break
+			}
+
+			time.Sleep(time.Duration(20) * time.Millisecond)
+		}
+
+		for j := 0; j < repeat; j++ {
+			_, errt := t.send(toaddr, byte(Smpc_MsgSplitPacket), ms)
+			if errt == nil {
+				break
+			}
+
+			common.Debug("====================sendSplitMsg,udp send msg fail=====================", "j", j, "err", errt)
+			time.Sleep(time.Duration(20) * time.Millisecond)
+		}
+
+		//err := <-errc
+		//return err
+
+		time.Sleep(time.Duration(20) * time.Millisecond)
+	}
+
+	return nil
 }
 
 func getReqObject(ptype int) packet {
-    switch ptype {
-    case Smpc_groupInfoPacket:
-	return new(Group)
-    case Smpc_BroadcastMsgPacket:
-	return new(SmpcBroadcastMsg)
-    default:
-	return nil
-    }
+	switch ptype {
+	case Smpc_groupInfoPacket:
+		return new(Group)
+	case Smpc_BroadcastMsgPacket:
+		return new(SmpcBroadcastMsg)
+	default:
+		return nil
+	}
 
-    return nil
+	return nil
 }
 
 func (ms *MsgSend) handle(t *udp, from *net.UDPAddr, fromID NodeID, mac []byte) error {
-    common.Debug("=====================MsgSend.handle,get msg========================","fromID",fromID,"msghash",ms.MsgHash,"from node.IP",from.IP,"from node.UDP",from.Port)
-    s := MergeSplitMsg(ms)
-    if s == "" {
+	common.Debug("=====================MsgSend.handle,get msg========================", "fromID", fromID, "msghash", ms.MsgHash, "from node.IP", from.IP, "from node.UDP", from.Port)
+	s := MergeSplitMsg(ms)
+	if s == "" {
+		return nil
+	}
+
+	msghash := crypto.Keccak256Hash([]byte(strings.ToLower(s))).Hex()
+	if !strings.EqualFold(msghash, ms.MsgHash) {
+		return nil
+	}
+
+	common.Debug("=====================MsgSend.handle,get orig msg success========================", "fromID", fromID, "orig msghash", ms.MsgHash, "from node.IP", from.IP, "from node.UDP", from.Port)
+
+	ptype, err := strconv.Atoi(ms.PacketType)
+	if err != nil {
+		return err
+	}
+
+	req := getReqObject(ptype)
+	if req == nil {
+		return errors.New("get req object fail")
+	}
+
+	err = json.Unmarshal([]byte(s), req)
+	if err != nil {
+		common.Debug("=====================MsgSend.handle,unmarshal orig msg to UDP Object error========================", "fromID", fromID, "msghash", ms.MsgHash, "err", err, "from node.IP", from.IP, "from node.UDP", from.Port)
+		return err
+	}
+
+	err = req.handle(t, from, fromID, mac)
+	if err != nil {
+		common.Error("=====================MsgSend.handle,call packet handle(such as Call/recvGroupInfo) fail========================", "fromID", fromID, "from node.IP", from.IP, "from node.UDP", from.Port, "msghash", ms.MsgHash, "req", req, "err", err)
+		return err
+	}
+
+	common.Debug("=====================MsgSend.handle,call packet handle(such as Call/recvGroupInfo) success and send orig msg ack========================", "fromID", fromID, "from node.IP", from.IP, "from node.UDP", from.Port, "msghash", ms.MsgHash)
+	Msg2Peer.DeleteMap(ms.MsgHash)
+	SendMsgAck(t, msghash, from, fromID)
 	return nil
-    }
-
-    msghash := crypto.Keccak256Hash([]byte(strings.ToLower(s))).Hex()
-    if !strings.EqualFold(msghash,ms.MsgHash) {
-	return nil
-    }
-    
-    common.Debug("=====================MsgSend.handle,get orig msg success========================","fromID",fromID,"orig msghash",ms.MsgHash,"from node.IP",from.IP,"from node.UDP",from.Port)
-   
-    ptype,err := strconv.Atoi(ms.PacketType)
-    if err != nil {
-	return err
-    }
-
-    req := getReqObject(ptype)
-    if req == nil {
-	return errors.New("get req object fail")
-    }
-
-    err = json.Unmarshal([]byte(s), req)
-    if err != nil {
-	common.Debug("=====================MsgSend.handle,unmarshal orig msg to UDP Object error========================","fromID",fromID,"msghash",ms.MsgHash,"err",err,"from node.IP",from.IP,"from node.UDP",from.Port)
-	return err
-    }
-
-    err = req.handle(t,from,fromID,mac)
-    if err != nil {
-	common.Error("=====================MsgSend.handle,call packet handle(such as Call/recvGroupInfo) fail========================","fromID",fromID,"from node.IP",from.IP,"from node.UDP",from.Port,"msghash",ms.MsgHash,"req",req,"err",err)
-	return err
-    }
-
-    common.Debug("=====================MsgSend.handle,call packet handle(such as Call/recvGroupInfo) success and send orig msg ack========================","fromID",fromID,"from node.IP",from.IP,"from node.UDP",from.Port,"msghash",ms.MsgHash)
-    Msg2Peer.DeleteMap(ms.MsgHash)
-    SendMsgAck(t,msghash,from,fromID)
-    return nil
 }
 
 func (ms *MsgSend) name() string {
-    return "MSGSEND/v4"
+	return "MSGSEND/v4"
 }
 
 //-----------------------------------
 
 type MsgAck struct {
-    MsgHash string
-    Flag string
+	MsgHash string
+	Flag    string
 }
 
-func SendMsgAck(t *udp,msghash string,from *net.UDPAddr,fromid NodeID) {
-    if t == nil || msghash == "" || from == nil {
-	return
-    }
-
-    ma := &MsgAck{}
-    ma.MsgHash = msghash
-    ma.Flag = "Msg Ack"
-
-    for i:=0;i<repeat;i++ {
-	errc := t.pending(fromid, byte(Smpc_MsgSplitAckPacket), func(r interface{}) bool {
-		return true
-	})
-	if errc == nil {
-	    break
+func SendMsgAck(t *udp, msghash string, from *net.UDPAddr, fromid NodeID) {
+	if t == nil || msghash == "" || from == nil {
+		return
 	}
-	
-	time.Sleep(time.Duration(20) * time.Millisecond)
-    }
 
-    for i:=0;i<repeat;i++ {
-	_, errt := t.send(from, byte(Smpc_MsgSplitAckPacket),ma)
-	if errt == nil {
-	    break
+	ma := &MsgAck{}
+	ma.MsgHash = msghash
+	ma.Flag = "Msg Ack"
+
+	for i := 0; i < repeat; i++ {
+		errc := t.pending(fromid, byte(Smpc_MsgSplitAckPacket), func(r interface{}) bool {
+			return true
+		})
+		if errc == nil {
+			break
+		}
+
+		time.Sleep(time.Duration(20) * time.Millisecond)
 	}
-	
-	time.Sleep(time.Duration(20) * time.Millisecond)
-    }
-    
-    common.Debug("=================SendMsgAck,send msg ack success==================","send msg ack to node.ID",fromid,"orig msg hash",msghash,"send msg ack to node.IP",from.IP,"send msg ack to node.UDP",from.Port)
+
+	for i := 0; i < repeat; i++ {
+		_, errt := t.send(from, byte(Smpc_MsgSplitAckPacket), ma)
+		if errt == nil {
+			break
+		}
+
+		time.Sleep(time.Duration(20) * time.Millisecond)
+	}
+
+	common.Debug("=================SendMsgAck,send msg ack success==================", "send msg ack to node.ID", fromid, "orig msg hash", msghash, "send msg ack to node.IP", from.IP, "send msg ack to node.UDP", from.Port)
 }
 
 func (ms *MsgAck) handle(t *udp, from *net.UDPAddr, fromID NodeID, mac []byte) error {
-    msghash2 := crypto.Keccak256Hash([]byte(strings.ToLower(ms.MsgHash + ":" + fromID.String()))).Hex()
-    tmp,exist := MsgAckMap.ReadMap(msghash2)
-    if !exist {
+	msghash2 := crypto.Keccak256Hash([]byte(strings.ToLower(ms.MsgHash + ":" + fromID.String()))).Hex()
+	tmp, exist := MsgAckMap.ReadMap(msghash2)
+	if !exist {
+		return nil
+	}
+
+	ack, ok := tmp.(chan bool)
+	if !ok {
+		return errors.New("msg ack data error")
+	}
+
+	ack <- true
+	common.Debug("================MsgAck.handle,get msg ack=================", "orig msg hash", ms.MsgHash, "fromid", fromID, "node.IP", from.IP, "node.UDP", from.Port)
 	return nil
-    }
-
-    ack,ok := tmp.(chan bool)
-    if !ok {
-	return errors.New("msg ack data error")
-    }
-
-    ack <-true
-    common.Debug("================MsgAck.handle,get msg ack=================","orig msg hash",ms.MsgHash,"fromid",fromID,"node.IP",from.IP,"node.UDP",from.Port)
-    return nil
 }
 
 func (ms *MsgAck) name() string {
-    return "MSGACK/v4"
+	return "MSGACK/v4"
 }
 
 //-------------------------------------
 
-func checkMsgStatus(t *udp,msghash string,msg string,ptype int,toaddr *net.UDPAddr,toid NodeID) {
-    msghash2 := crypto.Keccak256Hash([]byte(strings.ToLower(msghash + ":" + toid.String()))).Hex()
-    ack := make(chan bool, 1)
-    MsgAckMap.WriteMap(msghash2,ack)
+func checkMsgStatus(t *udp, msghash string, msg string, ptype int, toaddr *net.UDPAddr, toid NodeID) {
+	msghash2 := crypto.Keccak256Hash([]byte(strings.ToLower(msghash + ":" + toid.String()))).Hex()
+	ack := make(chan bool, 1)
+	MsgAckMap.WriteMap(msghash2, ack)
 
-    for i:=0;i<resend;i++ {
-	ackWaitTime := 15 * time.Second
-	ackWaitTimeOut := time.NewTicker(ackWaitTime)
+	for i := 0; i < resend; i++ {
+		ackWaitTime := 15 * time.Second
+		ackWaitTimeOut := time.NewTicker(ackWaitTime)
 
-	select {
-	case <-ack:
-	    common.Debug("=================checkMsgStatus,get msg ack success===========================","i",i,"orig msg hash",msghash,"send to node",toaddr)
-		MsgAckMap.DeleteMap(msghash2)
-		return
-	case <-ackWaitTimeOut.C:
-	    common.Debug("=================checkMsgStatus,get msg ack timeout===========================","i",i,"orig msg hash",msghash,"send to node",toaddr)
-		sendSplitMsg(t,msg,ptype,toaddr,toid)
-		break
+		select {
+		case <-ack:
+			common.Debug("=================checkMsgStatus,get msg ack success===========================", "i", i, "orig msg hash", msghash, "send to node", toaddr)
+			MsgAckMap.DeleteMap(msghash2)
+			return
+		case <-ackWaitTimeOut.C:
+			common.Debug("=================checkMsgStatus,get msg ack timeout===========================", "i", i, "orig msg hash", msghash, "send to node", toaddr)
+			sendSplitMsg(t, msg, ptype, toaddr, toid)
+			break
+		}
 	}
-    }
 
-    common.Debug("=================checkMsgStatus,get msg ack fail===========================","orig msg hash",msghash,"send to node",toaddr)
-    MsgAckMap.DeleteMap(msghash2)
+	common.Debug("=================checkMsgStatus,get msg ack fail===========================", "orig msg hash", msghash, "send to node", toaddr)
+	MsgAckMap.DeleteMap(msghash2)
 }
 
 func getSplitMsgNum(msg string) int {
-    l := len(msg)
-    a := l%splitlen
-    b := l/splitlen
-    if a != 0 {
-	b++
-    }
+	l := len(msg)
+	a := l % splitlen
+	b := l / splitlen
+	if a != 0 {
+		b++
+	}
 
-    return b
+	return b
 }
 
-func (t *udp) sendMsgSplitToPeerWithUDP(toid NodeID, toaddr *net.UDPAddr, packet []byte, p2pType int,ptype int) error {
-    if packet == nil || len(packet) == 0 {
-	return errors.New("packet error")
-    }
+func (t *udp) sendMsgSplitToPeerWithUDP(toid NodeID, toaddr *net.UDPAddr, packet []byte, p2pType int, ptype int) error {
+	if packet == nil || len(packet) == 0 {
+		return errors.New("packet error")
+	}
 
-    err := sendSplitMsg(t,string(packet),ptype,toaddr,toid)
-    if err != nil {
+	err := sendSplitMsg(t, string(packet), ptype, toaddr, toid)
+	if err != nil {
+		return err
+	}
+
+	msghash := crypto.Keccak256Hash([]byte(strings.ToLower(string(packet)))).Hex()
+	go checkMsgStatus(t, msghash, string(packet), ptype, toaddr, toid)
+
 	return err
-    }
-
-    msghash := crypto.Keccak256Hash([]byte(strings.ToLower(string(packet)))).Hex()
-    go checkMsgStatus(t,msghash,string(packet),ptype,toaddr,toid)
-
-    return err
 }
 
-//send any object with udp
-//split msg
-func SendMsgSplitToPeerWithUDP(toid NodeID, toaddr *net.UDPAddr, req interface{}, p2pType int,ptype int) error {
-    if req == nil {
-	return errors.New("msg error")
-    }
-    
-    packet, err := json.Marshal(req)
-    if err != nil {
-	common.Error("=====================SendMsgToPeerWithUDP,marshal error====================","err",err)
-	return err
-    }
+// send any object with udp
+// split msg
+func SendMsgSplitToPeerWithUDP(toid NodeID, toaddr *net.UDPAddr, req interface{}, p2pType int, ptype int) error {
+	if req == nil {
+		return errors.New("msg error")
+	}
 
-    return Table4group.net.sendMsgSplitToPeerWithUDP(toid,toaddr,packet,p2pType,ptype)
+	packet, err := json.Marshal(req)
+	if err != nil {
+		common.Error("=====================SendMsgToPeerWithUDP,marshal error====================", "err", err)
+		return err
+	}
+
+	return Table4group.net.sendMsgSplitToPeerWithUDP(toid, toaddr, packet, p2pType, ptype)
 }
 
 type SmpcBroadcastMsg struct {
-    Data string
+	Data string
 }
 
 func (sbm *SmpcBroadcastMsg) handle(t *udp, from *net.UDPAddr, fromID NodeID, mac []byte) error {
-    if sbm.Data == "" {
-	return errors.New("data error")
-    }
+	if sbm.Data == "" {
+		return errors.New("data error")
+	}
 
-    if SmpcCall == nil {
-	return errors.New("call back function nil")
-    }
+	if SmpcCall == nil {
+		return errors.New("call back function nil")
+	}
 
-    go SmpcCall(sbm.Data,fromID.String())
-    return nil
+	go SmpcCall(sbm.Data, fromID.String())
+	return nil
 }
 
 func (sbm *SmpcBroadcastMsg) name() string {
-    return "SMPCBROADCASTMSG/v4"
+	return "SMPCBROADCASTMSG/v4"
 }
 
 /////////end
@@ -1538,16 +1538,16 @@ func (t *udp) sendToPeer(gid, toid NodeID, toaddr *net.UDPAddr, msg string, p2pT
 
 	packet, err := json.Marshal(req)
 	if err != nil {
-	    common.Error("=====================udp.sendToPeer,marshal group info error====================","err",err)
-	    return err
+		common.Error("=====================udp.sendToPeer,marshal group info error====================", "err", err)
+		return err
 	}
-	err = sendSplitMsg(t,string(packet),Smpc_groupInfoPacket,toaddr,toid)
+	err = sendSplitMsg(t, string(packet), Smpc_groupInfoPacket, toaddr, toid)
 	if err != nil {
-	    return err
+		return err
 	}
 
 	msghash := crypto.Keccak256Hash([]byte(strings.ToLower(string(packet)))).Hex()
-	go checkMsgStatus(t,msghash,string(packet),Smpc_groupInfoPacket,toaddr,toid)
+	go checkMsgStatus(t, msghash, string(packet), Smpc_groupInfoPacket, toaddr, toid)
 	////////////////
 
 	/*_, errt := t.send(toaddr, byte(Smpc_groupInfoPacket), req)
@@ -1583,7 +1583,7 @@ func (req *Group) handle(t *udp, from *net.UDPAddr, fromID NodeID, mac []byte) e
 	return nil
 }
 
-//send msg
+// send msg
 func (t *udp) sendMsgToPeer(toid NodeID, toaddr *net.UDPAddr, msg string) error {
 	errc := t.pending(toid, PeerMsgPacket, func(r interface{}) bool {
 		return true
@@ -1610,7 +1610,7 @@ func (req *message) handle(t *udp, from *net.UDPAddr, fromID NodeID, mac []byte)
 	return nil
 }
 
-//send msg to broadcast node after peer.send failed
+// send msg to broadcast node after peer.send failed
 var broadcastNodeCallback func(interface{}, string)
 
 func RegisterBroadcastNodeCallback(callbackfunc func(interface{}, string)) {
@@ -1634,7 +1634,7 @@ func SendMsgToBroadcastNode(node *Node, msg string) error {
 
 func (t *udp) sendMsgToBroadcastNode(toid NodeID, toaddr *net.UDPAddr, msg string) error {
 	msgHash := crypto.Keccak256Hash([]byte(strings.ToLower(msg))).Hex()
-	common.Debug("sendMsgToBroadcastNode","toid",toid,"toaddr",toaddr,"msgHash",msgHash, "len", len(msg))
+	common.Debug("sendMsgToBroadcastNode", "toid", toid, "toaddr", toaddr, "msgHash", msgHash, "len", len(msg))
 	errc := t.pending(toid, msgBroadcastPacket, func(r interface{}) bool {
 		return true
 	})
@@ -1643,11 +1643,11 @@ func (t *udp) sendMsgToBroadcastNode(toid NodeID, toaddr *net.UDPAddr, msg strin
 		Expiration: uint64(time.Now().Add(expirationBroadcast).Unix()),
 	})
 	if errs != nil {
-		common.Debug("==== (t *udp) sendMsgToBroadcastNode ====", "errs", errs, "toid",toid,"toaddr",toaddr,"msgHash",msgHash, "len", len(msg))
+		common.Debug("==== (t *udp) sendMsgToBroadcastNode ====", "errs", errs, "toid", toid, "toaddr", toaddr, "msgHash", msgHash, "len", len(msg))
 		return errs
 	}
 	err := <-errc
-	common.Debug("sendMsgToBroadcastNode success","toid",toid,"toaddr",toaddr,"msgHash",msgHash)
+	common.Debug("sendMsgToBroadcastNode success", "toid", toid, "toaddr", toaddr, "msgHash", msgHash)
 	return err
 }
 func (req *messageBroadcast) name() string { return "MESSAGEBROADCAST/v4" }
@@ -1661,6 +1661,7 @@ func (req *messageBroadcast) handle(t *udp, from *net.UDPAddr, fromID NodeID, ma
 	go callMsgBroadcastEvent(req.Msg, fromID.String())
 	return nil
 }
+
 //end
 
 var groupcallback func(NodeID, string, interface{}, int, string)
@@ -1718,7 +1719,7 @@ func callsdkEvent(e interface{}, fromID string) <-chan string {
 	return sdkcallback(e, fromID)
 }
 
-//peer(of SMPC group) receive other peer msg to run smpc
+// peer(of SMPC group) receive other peer msg to run smpc
 var smpccallback func(interface{}) <-chan string
 
 func RegisterSmpcMsgCallback(callbackfunc func(interface{}) <-chan string) {
@@ -1739,7 +1740,7 @@ func callsdkReturn(e interface{}, fromID string) {
 	}
 }
 
-//return
+// return
 var smpcretcallback func(interface{})
 
 func RegisterSmpcMsgRetCallback(callbackfunc func(interface{})) {
@@ -1749,7 +1750,7 @@ func callsmpcReturn(e interface{}) {
 	smpcretcallback(e)
 }
 
-//peer(of Xp group) receive other peer msg to run dccp
+// peer(of Xp group) receive other peer msg to run dccp
 var xpcallback func(interface{}) <-chan string
 
 func RegisterXpMsgCallback(callbackfunc func(interface{}) <-chan string) {
@@ -1759,7 +1760,7 @@ func callxpEvent(e interface{}) <-chan string {
 	return xpcallback(e)
 }
 
-//return
+// return
 var xpretcallback func(interface{})
 
 func RegisterXpMsgRetCallback(callbackfunc func(interface{})) {
@@ -1780,7 +1781,7 @@ func callCCReturn(e interface{}, p2pType int, fromID string) {
 	}
 }
 
-//get private Key
+// get private Key
 var privatecallback func(interface{})
 
 func RegisterSendCallback(callbackfunc func(interface{})) {
@@ -1828,7 +1829,6 @@ func GetLocalID() NodeID {
 func GetEnode() string {
 	return SelfEnode
 }
-
 
 // GetPublicIP returns your public IP address
 func getPublicIP() (string, error) {
@@ -1961,9 +1961,9 @@ func StoreGroupToDb(groupInfo *Group) error { //nooo
 		//db, err := leveldb.OpenFile(dir, nil)
 		db, err := ethdb.NewLDBDatabase(dir, 76, 512)
 		if err != nil {
-		    common.Error("===================StoreGroupToDb,init group db fail=====================","dir",dir,"err",err)
-		    os.Exit(1) //if open group info fail,exit the start.
-		   return err
+			common.Error("===================StoreGroupToDb,init group db fail=====================", "dir", dir, "err", err)
+			os.Exit(1) //if open group info fail,exit the start.
+			return err
 		}
 		giddb = db
 	}
@@ -1971,8 +1971,8 @@ func StoreGroupToDb(groupInfo *Group) error { //nooo
 	//dir := getGroupDir()
 	//db, err := leveldb.OpenFile(dir, nil)
 	//if err != nil {
-	 //   common.Error("===================StoreGroupToDb=====================","err",err)
-	 //   return err
+	//   common.Error("===================StoreGroupToDb=====================","err",err)
+	//   return err
 	//}
 	// fix bug:resource temporarily unavailable
 
@@ -1990,24 +1990,24 @@ func StoreGroupToDb(groupInfo *Group) error { //nooo
 	if err != nil {
 		//db.Close()
 		//giddb.Close()
-		common.Error("===================StoreGroupToDb,encode fail=====================","err",err)
+		common.Error("===================StoreGroupToDb,encode fail=====================", "err", err)
 		return err
 	}
 	ss, err := Compress([]byte(alos))
 	if err != nil {
 		//db.Close()
 		//giddb.Close()
-		common.Error("===================StoreGroupToDb,compress fail=====================","err",err)
+		common.Error("===================StoreGroupToDb,compress fail=====================", "err", err)
 		return err
 	}
 
 	//err = db.Put([]byte(key), []byte(ss), nil)
 	err = giddb.Put([]byte(key), []byte(ss))
 	if err != nil {
-	    //db.Close()
-	    //giddb.Close()
-	    common.Error("===================StoreGroupToDb,put data to db fail=====================","err",err)
-	    return err
+		//db.Close()
+		//giddb.Close()
+		common.Error("===================StoreGroupToDb,put data to db fail=====================", "err", err)
+		return err
 	}
 
 	//db.Close()
@@ -2025,7 +2025,7 @@ func RecoverGroupByGID(gid NodeID) (*Group, error) {
 		db, err := ethdb.NewLDBDatabase(dir, 76, 512)
 		//db, err := leveldb.OpenFile(dir, nil)
 		if err != nil {
-			common.Error("======RecoverGroupByGID=======","open db error",err)
+			common.Error("======RecoverGroupByGID=======", "open db error", err)
 			os.Exit(1) //if open group info fail,exit the start.
 			return nil, err
 		}
@@ -2088,7 +2088,7 @@ func StoreGroupSDKListToDb() error { //nooo
 	common.Debug("==== StoreGroupSDKListToDb() ==== new", "groupSDKList", ac)
 	err = db.Put([]byte(key), []byte(ss), nil)
 	if err != nil {
-	    db.Close()
+		db.Close()
 		return err
 	}
 
@@ -2204,12 +2204,12 @@ func Compress(c []byte) (string, error) {
 	var in bytes.Buffer
 	w, err := zlib.NewWriterLevel(&in, zlib.BestCompression-1)
 	if err != nil {
-	    return "", err
+		return "", err
 	}
 
-	_,err2 := w.Write(c)
+	_, err2 := w.Write(c)
 	if err2 != nil {
-	    return "", err2
+		return "", err2
 	}
 
 	w.Close()
@@ -2232,9 +2232,9 @@ func UnCompress(s string) (string, error) {
 	}
 
 	var out bytes.Buffer
-	_,err2 := io.Copy(&out, r)
+	_, err2 := io.Copy(&out, r)
 	if err2 != nil {
-	    return "", err2
+		return "", err2
 	}
 
 	return out.String(), nil

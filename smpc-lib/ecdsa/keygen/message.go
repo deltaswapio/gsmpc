@@ -18,7 +18,7 @@ package keygen
 
 import (
 	"fmt"
-	"github.com/anyswap/FastMulThreshold-DSA/smpc-lib/crypto/ec2"
+	"github.com/deltaswapio/gsmpc/smpc-lib/crypto/ec2"
 	"math/big"
 	"strconv"
 	"strings"
@@ -47,7 +47,7 @@ func (kg *KGRoundMessage) AppendToID(toid string) {
 	kg.ToID = append(kg.ToID, toid)
 }
 
-// KGRound0Message  Round 0 sending message 
+// KGRound0Message  Round 0 sending message
 type KGRound0Message struct {
 	*KGRoundMessage
 }
@@ -57,7 +57,7 @@ func (kg *KGRound0Message) GetFromID() string {
 	return kg.FromID
 }
 
-// GetFromIndex get the Serial number of sending nodes in the group 
+// GetFromIndex get the Serial number of sending nodes in the group
 func (kg *KGRound0Message) GetFromIndex() int {
 	return kg.FromIndex
 }
@@ -87,11 +87,11 @@ func (kg *KGRound0Message) GetMsgType() string {
 	return "KGRound0Message"
 }
 
-// KGRound1Message  Round 1 sending message 
+// KGRound1Message  Round 1 sending message
 type KGRound1Message struct {
 	*KGRoundMessage
 
-	ComC       *big.Int `json:"ComC"`
+	ComC      *big.Int `json:"ComC"`
 	ComCBip32 *big.Int `json:"ComCBip32"`
 
 	U1PaillierPk *ec2.PublicKey `json:"U1PaillierPk"`
@@ -102,7 +102,7 @@ func (kg *KGRound1Message) GetFromID() string {
 	return kg.FromID
 }
 
-// GetFromIndex get the Serial number of sending nodes in the group 
+// GetFromIndex get the Serial number of sending nodes in the group
 func (kg *KGRound1Message) GetFromIndex() int {
 	return kg.FromIndex
 }
@@ -128,7 +128,7 @@ func (kg *KGRound1Message) OutMap() map[string]string {
 
 	pk, err := kg.U1PaillierPk.MarshalJSON()
 	if err != nil {
-	    return nil 
+		return nil
 	}
 
 	m["U1PaillierPk"] = string(pk)
@@ -141,7 +141,7 @@ func (kg *KGRound1Message) GetMsgType() string {
 	return "KGRound1Message"
 }
 
-// KGRound2Message  Round 2 sending message 
+// KGRound2Message  Round 2 sending message
 type KGRound2Message struct {
 	*KGRoundMessage
 
@@ -154,7 +154,7 @@ func (kg *KGRound2Message) GetFromID() string {
 	return kg.FromID
 }
 
-// GetFromIndex get the Serial number of sending nodes in the group 
+// GetFromIndex get the Serial number of sending nodes in the group
 func (kg *KGRound2Message) GetFromIndex() int {
 	return kg.FromIndex
 }
@@ -188,7 +188,7 @@ func (kg *KGRound2Message) GetMsgType() string {
 
 //-------------------------------------------------------
 
-// KGRound2Message1  Round 2 sending message 
+// KGRound2Message1  Round 2 sending message
 type KGRound2Message1 struct {
 	*KGRoundMessage
 
@@ -200,7 +200,7 @@ func (kg *KGRound2Message1) GetFromID() string {
 	return kg.FromID
 }
 
-// GetFromIndex get the Serial number of sending nodes in the group 
+// GetFromIndex get the Serial number of sending nodes in the group
 func (kg *KGRound2Message1) GetFromIndex() int {
 	return kg.FromIndex
 }
@@ -233,10 +233,10 @@ func (kg *KGRound2Message1) GetMsgType() string {
 
 //-----------------------------------------------------------
 
-// KGRound2Message2  Round 2 sending message2 
+// KGRound2Message2  Round 2 sending message2
 type KGRound2Message2 struct {
 	*KGRoundMessage
-	Num *big.Int
+	Num  *big.Int
 	SfPf *ec2.SquareFreeProof
 }
 
@@ -245,7 +245,7 @@ func (kg *KGRound2Message2) GetFromID() string {
 	return kg.FromID
 }
 
-// GetFromIndex get the Serial number of sending nodes in the group 
+// GetFromIndex get the Serial number of sending nodes in the group
 func (kg *KGRound2Message2) GetFromIndex() int {
 	return kg.FromIndex
 }
@@ -266,19 +266,19 @@ func (kg *KGRound2Message2) OutMap() map[string]string {
 	m["FromID"] = kg.FromID
 	m["FromIndex"] = strconv.Itoa(kg.FromIndex)
 	m["ToID"] = ""
-	
+
 	if kg.SfPf == nil {
-	    return nil
+		return nil
 	}
-	sf,err := kg.SfPf.MarshalJSON()
+	sf, err := kg.SfPf.MarshalJSON()
 	if err != nil {
-	    return nil
+		return nil
 	}
 	m["SfPf"] = string(sf)
 
-	m["Num"] = fmt.Sprintf("%v",kg.Num)
+	m["Num"] = fmt.Sprintf("%v", kg.Num)
 	m["Type"] = "KGRound2Message2"
-	
+
 	return m
 }
 
@@ -289,7 +289,7 @@ func (kg *KGRound2Message2) GetMsgType() string {
 
 //------------------------------------------------------------
 
-// KGRound3Message  Round 3 sending message 
+// KGRound3Message  Round 3 sending message
 type KGRound3Message struct {
 	*KGRoundMessage
 	ComU1GD  []*big.Int
@@ -302,7 +302,7 @@ func (kg *KGRound3Message) GetFromID() string {
 	return kg.FromID
 }
 
-// GetFromIndex get the Serial number of sending nodes in the group 
+// GetFromIndex get the Serial number of sending nodes in the group
 func (kg *KGRound3Message) GetFromIndex() int {
 	return kg.FromIndex
 }
@@ -362,7 +362,7 @@ func (kg *KGRound3Message) GetMsgType() string {
 
 //--------------------------------------------------------------
 
-// KGRound3Message1  Round 3 sending message1 
+// KGRound3Message1  Round 3 sending message1
 type KGRound3Message1 struct {
 	*KGRoundMessage
 	Y *big.Int
@@ -373,7 +373,7 @@ func (kg *KGRound3Message1) GetFromID() string {
 	return kg.FromID
 }
 
-// GetFromIndex get the Serial number of sending nodes in the group 
+// GetFromIndex get the Serial number of sending nodes in the group
 func (kg *KGRound3Message1) GetFromIndex() int {
 	return kg.FromIndex
 }
@@ -406,7 +406,7 @@ func (kg *KGRound3Message1) GetMsgType() string {
 
 //----------------------------------------------------------------
 
-// KGRound4Message  Round 4 sending message 
+// KGRound4Message  Round 4 sending message
 type KGRound4Message struct {
 	*KGRoundMessage
 	U1NtildeH1H2 *ec2.NtildeH1H2
@@ -417,7 +417,7 @@ type KGRound4Message struct {
 
 	// add for xi commitment
 	ComXiC *big.Int
-	
+
 	//pubkey
 	PubKeyX *big.Int
 	PubKeyY *big.Int
@@ -428,7 +428,7 @@ func (kg *KGRound4Message) GetFromID() string {
 	return kg.FromID
 }
 
-// GetFromIndex get the Serial number of sending nodes in the group 
+// GetFromIndex get the Serial number of sending nodes in the group
 func (kg *KGRound4Message) GetFromIndex() int {
 	return kg.FromIndex
 }
@@ -452,25 +452,25 @@ func (kg *KGRound4Message) OutMap() map[string]string {
 
 	nt, err := kg.U1NtildeH1H2.MarshalJSON()
 	if err != nil {
-	    return nil 
+		return nil
 	}
 	m["U1NtildeH1H2"] = string(nt)
 
 	pf1, err := kg.NtildeProof1.MarshalJSON()
 	if err != nil {
-	    return nil 
+		return nil
 	}
 	m["NtildeProof1"] = string(pf1)
 
 	pf2, err := kg.NtildeProof2.MarshalJSON()
 	if err != nil {
-	    return nil 
+		return nil
 	}
 	m["NtildeProof2"] = string(pf2)
 
-	m["ComXiC"] = fmt.Sprintf("%v",kg.ComXiC)
-	m["PubKeyX"] = fmt.Sprintf("%v",kg.PubKeyX)
-	m["PubKeyY"] = fmt.Sprintf("%v",kg.PubKeyY)
+	m["ComXiC"] = fmt.Sprintf("%v", kg.ComXiC)
+	m["PubKeyX"] = fmt.Sprintf("%v", kg.PubKeyX)
+	m["PubKeyY"] = fmt.Sprintf("%v", kg.PubKeyY)
 	m["Type"] = "KGRound4Message"
 	return m
 }
@@ -480,10 +480,10 @@ func (kg *KGRound4Message) GetMsgType() string {
 	return "KGRound4Message"
 }
 
-// KGRound5Message  Round 5 sending message 
+// KGRound5Message  Round 5 sending message
 type KGRound5Message struct {
 	*KGRoundMessage
-	ComXiGD  []*big.Int
+	ComXiGD []*big.Int
 }
 
 // GetFromID get the ID of sending nodes in the group
@@ -491,7 +491,7 @@ func (kg *KGRound5Message) GetFromID() string {
 	return kg.FromID
 }
 
-// GetFromIndex get the Serial number of sending nodes in the group 
+// GetFromIndex get the Serial number of sending nodes in the group
 func (kg *KGRound5Message) GetFromIndex() int {
 	return kg.FromIndex
 }
@@ -530,11 +530,11 @@ func (kg *KGRound5Message) GetMsgType() string {
 
 //------------------------------------------------------------
 
-// KGRound5Message1  Round 5-1 sending message 
+// KGRound5Message1  Round 5-1 sending message
 type KGRound5Message1 struct {
 	*KGRoundMessage
 
-	Num *big.Int
+	Num  *big.Int
 	HvPf *ec2.HvProof
 }
 
@@ -543,7 +543,7 @@ func (kg *KGRound5Message1) GetFromID() string {
 	return kg.FromID
 }
 
-// GetFromIndex get the Serial number of sending nodes in the group 
+// GetFromIndex get the Serial number of sending nodes in the group
 func (kg *KGRound5Message1) GetFromIndex() int {
 	return kg.FromIndex
 }
@@ -564,19 +564,19 @@ func (kg *KGRound5Message1) OutMap() map[string]string {
 	m["FromID"] = kg.FromID
 	m["FromIndex"] = strconv.Itoa(kg.FromIndex)
 	m["ToID"] = ""
-	
+
 	if kg.HvPf == nil {
-	    return nil
+		return nil
 	}
-	hv,err := kg.HvPf.MarshalJSON()
+	hv, err := kg.HvPf.MarshalJSON()
 	if err != nil {
-	    return nil
+		return nil
 	}
 	m["HvPf"] = string(hv)
 
-	m["Num"] = fmt.Sprintf("%v",kg.Num)
+	m["Num"] = fmt.Sprintf("%v", kg.Num)
 	m["Type"] = "KGRound5Message1"
-	
+
 	return m
 }
 
@@ -587,10 +587,10 @@ func (kg *KGRound5Message1) GetMsgType() string {
 
 //-----------------------------------------------------------------
 
-// KGRound5Message2  Round 5 sending message2 
+// KGRound5Message2  Round 5 sending message2
 type KGRound5Message2 struct {
 	*KGRoundMessage
-	Num *big.Int
+	Num  *big.Int
 	SfPf *ec2.SquareFreeProof
 }
 
@@ -599,7 +599,7 @@ func (kg *KGRound5Message2) GetFromID() string {
 	return kg.FromID
 }
 
-// GetFromIndex get the Serial number of sending nodes in the group 
+// GetFromIndex get the Serial number of sending nodes in the group
 func (kg *KGRound5Message2) GetFromIndex() int {
 	return kg.FromIndex
 }
@@ -620,19 +620,19 @@ func (kg *KGRound5Message2) OutMap() map[string]string {
 	m["FromID"] = kg.FromID
 	m["FromIndex"] = strconv.Itoa(kg.FromIndex)
 	m["ToID"] = ""
-	
+
 	if kg.SfPf == nil {
-	    return nil
+		return nil
 	}
-	sf,err := kg.SfPf.MarshalJSON()
+	sf, err := kg.SfPf.MarshalJSON()
 	if err != nil {
-	    return nil
+		return nil
 	}
 	m["SfPf"] = string(sf)
 
-	m["Num"] = fmt.Sprintf("%v",kg.Num)
+	m["Num"] = fmt.Sprintf("%v", kg.Num)
 	m["Type"] = "KGRound5Message2"
-	
+
 	return m
 }
 
@@ -643,10 +643,10 @@ func (kg *KGRound5Message2) GetMsgType() string {
 
 //-----------------------------------------------------------------
 
-// KGRound6Message  Round 6 sending message 
+// KGRound6Message  Round 6 sending message
 type KGRound6Message struct {
 	*KGRoundMessage
-	U1zkXiProof *ec2.ZkXiProof
+	U1zkXiProof       *ec2.ZkXiProof
 	CheckPubkeyStatus bool
 }
 
@@ -655,7 +655,7 @@ func (kg *KGRound6Message) GetFromID() string {
 	return kg.FromID
 }
 
-// GetFromIndex get the Serial number of sending nodes in the group 
+// GetFromIndex get the Serial number of sending nodes in the group
 func (kg *KGRound6Message) GetFromIndex() int {
 	return kg.FromIndex
 }
@@ -679,7 +679,7 @@ func (kg *KGRound6Message) OutMap() map[string]string {
 
 	zk, err := kg.U1zkXiProof.MarshalJSON()
 	if err != nil {
-	    return nil 
+		return nil
 	}
 	m["U1zkXiProof"] = string(zk)
 
@@ -697,4 +697,3 @@ func (kg *KGRound6Message) OutMap() map[string]string {
 func (kg *KGRound6Message) GetMsgType() string {
 	return "KGRound6Message"
 }
-

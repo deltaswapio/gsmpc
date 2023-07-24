@@ -19,7 +19,7 @@ package signing
 import (
 	"errors"
 	"fmt"
-	"github.com/anyswap/FastMulThreshold-DSA/smpc-lib/smpc"
+	"github.com/deltaswapio/gsmpc/smpc-lib/smpc"
 )
 
 // Start broacast Kc
@@ -40,7 +40,7 @@ func (round *round3) Start() error {
 	srm := &SignRound3Message{
 		SignRoundMessage: new(SignRoundMessage),
 		Kc:               round.temp.ukc,
-		ComWiD:		round.temp.commitwiG.D, // add for GG18 A.2 Respondent ZK Proof for MtAwc
+		ComWiD:           round.temp.commitwiG.D, // add for GG18 A.2 Respondent ZK Proof for MtAwc
 	}
 	srm.SetFromID(round.kgid)
 	srm.SetFromIndex(curIndex)
@@ -52,7 +52,7 @@ func (round *round3) Start() error {
 	return nil
 }
 
-// CanAccept is it legal to receive this message 
+// CanAccept is it legal to receive this message
 func (round *round3) CanAccept(msg smpc.Message) bool {
 	if _, ok := msg.(*SignRound3Message); ok {
 		return msg.IsBroadcast()
@@ -60,7 +60,7 @@ func (round *round3) CanAccept(msg smpc.Message) bool {
 	return false
 }
 
-// Update  is the message received and ready for the next round? 
+// Update  is the message received and ready for the next round?
 func (round *round3) Update() (bool, error) {
 	for j, msg := range round.temp.signRound3Messages {
 		if round.ok[j] {

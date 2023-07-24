@@ -19,10 +19,10 @@ package signing
 import (
 	"errors"
 	"fmt"
-	"github.com/anyswap/FastMulThreshold-DSA/smpc-lib/smpc"
+	"github.com/deltaswapio/gsmpc/smpc-lib/smpc"
 )
 
-// Start broacast zkR 
+// Start broacast zkR
 func (round *round2) Start() error {
 	if round.started {
 		fmt.Printf("============= round2.start fail =======\n")
@@ -51,7 +51,7 @@ func (round *round2) Start() error {
 	return nil
 }
 
-// CanAccept is it legal to receive this message 
+// CanAccept is it legal to receive this message
 func (round *round2) CanAccept(msg smpc.Message) bool {
 	if _, ok := msg.(*SignRound2Message); ok {
 		return msg.IsBroadcast()
@@ -59,7 +59,7 @@ func (round *round2) CanAccept(msg smpc.Message) bool {
 	return false
 }
 
-// Update  is the message received and ready for the next round? 
+// Update  is the message received and ready for the next round?
 func (round *round2) Update() (bool, error) {
 	for j, msg := range round.temp.signRound2Messages {
 		if round.ok[j] {

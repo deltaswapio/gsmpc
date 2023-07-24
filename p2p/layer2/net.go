@@ -21,12 +21,12 @@ import (
 	"sync"
 	"sync/atomic"
 
-	"github.com/anyswap/FastMulThreshold-DSA/p2p"
-	"github.com/anyswap/FastMulThreshold-DSA/p2p/discover"
 	mapset "github.com/deckarep/golang-set"
+	"github.com/deltaswapio/gsmpc/p2p"
+	"github.com/deltaswapio/gsmpc/p2p/discover"
 )
 
-//TODO
+// TODO
 const (
 	SmpcProtocol_type = discover.Smpcprotocol_type
 	Xprotocol_type    = discover.Xprotocol_type

@@ -20,27 +20,28 @@ package smpc
 import (
 	"fmt"
 
-	"github.com/anyswap/FastMulThreshold-DSA/internal/params"
-	"github.com/anyswap/FastMulThreshold-DSA/p2p/layer2"
-	"github.com/anyswap/FastMulThreshold-DSA/internal/common"
+	"github.com/deltaswapio/gsmpc/internal/common"
+	"github.com/deltaswapio/gsmpc/internal/params"
+	"github.com/deltaswapio/gsmpc/p2p/layer2"
 )
 
 // RPCTEST test
 var RPCTEST bool = false
+
 const maxGroupMember int = 100
 
 const (
-    	// SUCCESS success 
+	// SUCCESS success
 	SUCCESS string = "Success"
 
 	// FAIL fail
-	FAIL    string = "Error"
+	FAIL string = "Error"
 
 	// NULLRET retur nil
 	NULLRET string = "Null"
 
 	// REPEAT repeat
-	REPEAT  string = "Repeat"
+	REPEAT string = "Repeat"
 
 	// PENDING pending
 	PENDING string = "Pending"
@@ -95,7 +96,7 @@ func (service *Service) GetEnode() map[string]interface{} {
 	en := layer2.GetEnode()
 	reten := &Enode{Enode: en}
 	//fmt.Printf("==== GetEnode() ====, en: %v, ret: %v\n", en, reten)
-	common.Debug("==== GetEnode() ====","en",en,"ret",reten)
+	common.Debug("==== GetEnode() ====", "en", en, "ret", reten)
 	return packageResult(SUCCESS, "", "", reten)
 }
 
@@ -149,7 +150,7 @@ func (service *Service) ReshareGroup(threshold string, enodes []string) map[stri
 	return packageResult(SUCCESS, "", "", ret)
 }
 
-// CreateGroup create group 
+// CreateGroup create group
 func (service *Service) CreateGroup(threshold string, enodes []string) map[string]interface{} {
 	return service.CreateSDKGroup(threshold, enodes, false)
 }
@@ -174,7 +175,7 @@ func (service *Service) CreateSDKGroup(threshold string, enodes []string, subGro
 		ret := &GroupID{Gid: gid}
 		return packageResult(status, retErr, retErr, ret)
 	}
-	common.Debug("==== CreateSDKGroup() ====","gid",gid,"count",count)
+	common.Debug("==== CreateSDKGroup() ====", "gid", gid, "count", count)
 	ret := &GroupID{Gid: gid}
 	return packageResult(SUCCESS, "", "", ret)
 }
@@ -190,7 +191,7 @@ func (service *Service) GetGroupByID(gid string) map[string]interface{} {
 	return getGroupByID(gid)
 }
 
-// GetSDKGroup get sdk group 
+// GetSDKGroup get sdk group
 func (service *Service) GetSDKGroup(enode string) map[string]interface{} {
 	return getSDKGroup(enode, "1+1+1")
 }

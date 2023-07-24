@@ -14,7 +14,7 @@
  *
  */
 
-// Package main  Gsmpc main program 
+// Package main  Gsmpc main program
 package main
 
 import (
@@ -35,18 +35,18 @@ import (
 	"time"
 
 	"github.com/BurntSushi/toml"
-	"github.com/anyswap/FastMulThreshold-DSA/crypto"
-	"github.com/anyswap/FastMulThreshold-DSA/internal/common"
-	"github.com/anyswap/FastMulThreshold-DSA/internal/flags"
-	"github.com/anyswap/FastMulThreshold-DSA/internal/params"
-	"github.com/anyswap/FastMulThreshold-DSA/p2p"
-	"github.com/anyswap/FastMulThreshold-DSA/p2p/discover"
-	"github.com/anyswap/FastMulThreshold-DSA/p2p/layer2"
-	"github.com/anyswap/FastMulThreshold-DSA/p2p/nat"
-	"github.com/anyswap/FastMulThreshold-DSA/p2p/netutil"
-	rpcsmpc "github.com/anyswap/FastMulThreshold-DSA/rpc/smpc"
-	"github.com/anyswap/FastMulThreshold-DSA/smpc"
-	comlog "github.com/anyswap/FastMulThreshold-DSA/log"
+	"github.com/deltaswapio/gsmpc/crypto"
+	"github.com/deltaswapio/gsmpc/internal/common"
+	"github.com/deltaswapio/gsmpc/internal/flags"
+	"github.com/deltaswapio/gsmpc/internal/params"
+	comlog "github.com/deltaswapio/gsmpc/log"
+	"github.com/deltaswapio/gsmpc/p2p"
+	"github.com/deltaswapio/gsmpc/p2p/discover"
+	"github.com/deltaswapio/gsmpc/p2p/layer2"
+	"github.com/deltaswapio/gsmpc/p2p/nat"
+	"github.com/deltaswapio/gsmpc/p2p/netutil"
+	rpcsmpc "github.com/deltaswapio/gsmpc/rpc/smpc"
+	"github.com/deltaswapio/gsmpc/smpc"
 	"gopkg.in/urfave/cli.v1"
 )
 
@@ -92,16 +92,16 @@ func StartSmpc(c *cli.Context) {
 
 	err := startP2pNode()
 	if err != nil {
-	    comlog.Error("start p2p node fail","err",err)
-	    return
+		comlog.Error("start p2p node fail", "err", err)
+		return
 	}
 
 	time.Sleep(time.Duration(30) * time.Second)
 
 	rpcsmpc.RPCInit(rpcport)
 
-	common.Info("=============================Start Gsmpc=================================","datadir",datadir,"waitmsg",waitmsg,"rotate",rotate,"maxage",maxage,"trytimes",trytimes,"presignnum",presignnum,"nonetrestrict",nonetrestrict,"relay",relayInPeers,"jobs",jobs,"autopre",autopre,"testnet",testnet,"neighbor relay",neigh)
-	params := &smpc.LunchParams{WaitMsg: waitmsg, TryTimes: trytimes, PreSignNum: presignnum, Jobs: jobs, MaxAcceptTime: maxaccepttime, Bip32Pre: bip32pre, SyncPreSign: syncpresign,RelayInPeers: relayInPeers,AutoPreSign:autopre,TestNet:testnet,NeighRelay:neigh}
+	common.Info("=============================Start Gsmpc=================================", "datadir", datadir, "waitmsg", waitmsg, "rotate", rotate, "maxage", maxage, "trytimes", trytimes, "presignnum", presignnum, "nonetrestrict", nonetrestrict, "relay", relayInPeers, "jobs", jobs, "autopre", autopre, "testnet", testnet, "neighbor relay", neigh)
+	params := &smpc.LunchParams{WaitMsg: waitmsg, TryTimes: trytimes, PreSignNum: presignnum, Jobs: jobs, MaxAcceptTime: maxaccepttime, Bip32Pre: bip32pre, SyncPreSign: syncpresign, RelayInPeers: relayInPeers, AutoPreSign: autopre, TestNet: testnet, NeighRelay: neigh}
 	smpc.Start(params)
 	select {} // note for server, or for client
 }
@@ -116,33 +116,33 @@ func SetLogger() {
 
 var (
 	//args
-	rpcport      int
-	port         int
-	config       string
-	bootnodes    string
-	keyfile      string
-	keyfilehex   string
-	pubkey       string
-	genKey       string
-	datadir      string
-	log          string
-	rotate       uint64
-	maxage       uint64
-	verbosity    uint64
+	rpcport       int
+	port          int
+	config        string
+	bootnodes     string
+	keyfile       string
+	keyfilehex    string
+	pubkey        string
+	genKey        string
+	datadir       string
+	log           string
+	rotate        uint64
+	maxage        uint64
+	verbosity     uint64
 	nonetrestrict bool
-	json         bool
-	color        bool
-	waitmsg      uint64
-	trytimes     uint64
-	presignnum   uint64
-	jobs   uint64
-	maxaccepttime    uint64
-	bip32pre     uint64
-	syncpresign string
-	relayInPeers        bool
-	neigh       bool
-	autopre        bool
-	testnet   bool
+	json          bool
+	color         bool
+	waitmsg       uint64
+	trytimes      uint64
+	presignnum    uint64
+	jobs          uint64
+	maxaccepttime uint64
+	bip32pre      uint64
+	syncpresign   string
+	relayInPeers  bool
+	neigh         bool
+	autopre       bool
+	testnet       bool
 
 	statDir = "stat"
 
@@ -220,7 +220,7 @@ func getConfig() error {
 			fmt.Printf("DecodeFile %v: %v\n", path, err)
 			return err
 		}
-		comlog.Info("config file","path", path)
+		comlog.Info("config file", "path", path)
 
 		nkey = cf.Gsmpc.Nodekey
 		bnodes = cf.Gsmpc.Bootnodes
@@ -242,14 +242,14 @@ func getConfig() error {
 	return nil
 }
 
-// startP2pNode  Start P2P service 
+// startP2pNode  Start P2P service
 func startP2pNode() error {
 	common.InitDir(datadir)
 	params.SetVersion(gitVersion, gitCommit, gitDate)
 	layer2.InitP2pDir()
 	err := getConfig()
 	if err != nil {
-	    return err
+		return err
 	}
 
 	if port == 0 {
@@ -259,16 +259,16 @@ func startP2pNode() error {
 		rpcport = 4449
 	}
 	if !privateNet && bootnodes == "" {
-	    if testnet {
-		bootnodes = "enode://c8cd604f8db9e26bea4bdde9d16778027dd1a964298349de6cc5217103cf5181be8fe41893e755c7594f8c0c73a1eaa14ff297e4c606ef39f2decd31d2ccea25@101.32.97.27:20901"
-	    } else {
-		bootnodes = "enode://c189b1fd3c7377ad705266017a2d6d2b649b83db31475705a97940d6e228cd92df9500f5dcc3723f81ef08a7910fcda66463827b89341c30c4c9015861e082c7@101.32.97.27:11920"
-	    }
+		if testnet {
+			bootnodes = "enode://c8cd604f8db9e26bea4bdde9d16778027dd1a964298349de6cc5217103cf5181be8fe41893e755c7594f8c0c73a1eaa14ff297e4c606ef39f2decd31d2ccea25@101.32.97.27:20901"
+		} else {
+			bootnodes = "enode://c189b1fd3c7377ad705266017a2d6d2b649b83db31475705a97940d6e228cd92df9500f5dcc3723f81ef08a7910fcda66463827b89341c30c4c9015861e082c7@101.32.97.27:11920"
+		}
 	}
 	if genKey != "" {
 		nodeKey, err := crypto.GenerateKey()
 		if err != nil {
-			comlog.Error("could not generate key","err", err)
+			comlog.Error("could not generate key", "err", err)
 			os.Exit(1)
 		}
 		if err = crypto.SaveECDSA(genKey, nodeKey); err != nil {
@@ -299,30 +299,30 @@ func startP2pNode() error {
 	if keyfilehex != "" {
 		nodeKey, errkey = crypto.HexToECDSA(keyfilehex)
 		if errkey != nil {
-			comlog.Error("HexToECDSA nodekeyhex","keyfile", keyfilehex, "err",errkey)
+			comlog.Error("HexToECDSA nodekeyhex", "keyfile", keyfilehex, "err", errkey)
 			os.Exit(1)
 		}
-		comlog.Info("start p2p","keyfilehex",keyfilehex,"bootnodes",bootnodes)
+		comlog.Info("start p2p", "keyfilehex", keyfilehex, "bootnodes", bootnodes)
 	} else {
 		if keyfile == "" {
 			keyfile = fmt.Sprintf("node.key")
 		}
-		comlog.Info("start p2p","keyfilehex",keyfilehex,"bootnodes",bootnodes)
+		comlog.Info("start p2p", "keyfilehex", keyfilehex, "bootnodes", bootnodes)
 		smpc.KeyFile = keyfile
 		nodeKey, errkey = crypto.LoadECDSA(keyfile)
 		if errkey != nil {
 			nodeKey, _ = crypto.GenerateKey()
 			err = crypto.SaveECDSA(keyfile, nodeKey)
 			if err != nil {
-			    os.Exit(1)
+				os.Exit(1)
 			}
 
 			var kfd *os.File
 			kfd, _ = os.OpenFile(keyfile, os.O_WRONLY|os.O_APPEND, 0600)
-			_,err2 := kfd.WriteString(fmt.Sprintf("\nenode://%v\n", discover.PubkeyID(&nodeKey.PublicKey)))
+			_, err2 := kfd.WriteString(fmt.Sprintf("\nenode://%v\n", discover.PubkeyID(&nodeKey.PublicKey)))
 			if err2 != nil {
-			    kfd.Close()
-			    os.Exit(1)
+				kfd.Close()
+				os.Exit(1)
 			}
 			kfd.Close()
 		}
@@ -341,7 +341,7 @@ func startP2pNode() error {
 		rpcport = getPort(rpcport)
 		storeRPCPort(pubdir, rpcport)
 	}
-	comlog.Info("start gsmpc","port",port,"rpcport",rpcport)
+	comlog.Info("start gsmpc", "port", port, "rpcport", rpcport)
 	layer2.InitSelfNodeID(nodeidString)
 	layer2.InitIPPort(port)
 
@@ -368,13 +368,13 @@ func startP2pNode() error {
 	if err != nil {
 		return err
 	}
-	comlog.Info("=========== startP2pNode() ==========","bootnodes", bootNodes)
+	comlog.Info("=========== startP2pNode() ==========", "bootnodes", bootNodes)
 	nodeserv.Config.BootstrapNodes = []*discover.Node{bootNodes}
 
 	discover.CheckNetwokConnect()
 	go func() {
 		if err := nodeserv.Start(); err != nil {
-			comlog.Error("==== startP2pNode() ====","nodeserv.Start err", err)
+			comlog.Error("==== startP2pNode() ====", "nodeserv.Start err", err)
 			return
 		}
 
@@ -421,7 +421,7 @@ func GetFreePort() (int, error) {
 	return l.Addr().(*net.TCPAddr).Port, nil
 }
 
-// PortInUse Determine whether the port is used 
+// PortInUse Determine whether the port is used
 func PortInUse(port int) bool {
 	home := common.HomeDir()
 	if home != "" {
@@ -465,10 +465,10 @@ func updateRPCPort(pubdir, rpcport string) {
 	portDir := common.DefaultDataDir()
 	dir := filepath.Join(portDir, statDir, pubdir)
 	if common.FileExist(dir) != true {
-	    err := os.MkdirAll(dir, os.ModePerm)
-	    if err != nil {
-		return
-	    }
+		err := os.MkdirAll(dir, os.ModePerm)
+		if err != nil {
+			return
+		}
 	}
 	rpcfile := filepath.Join(dir, "rpcport")
 	fmt.Printf("==== updateRPCPort() ====, rpcfile: %v, rpcport: %v\n", rpcfile, rpcport)
@@ -479,7 +479,7 @@ func updateRPCPort(pubdir, rpcport string) {
 	} else {
 		_, err = f.Write([]byte(rpcport))
 		if err != nil {
-		    return
+			return
 		}
 	}
 }

@@ -19,9 +19,9 @@ package node
 import (
 	"reflect"
 
-	"github.com/anyswap/FastMulThreshold-DSA/p2p"
-	"github.com/anyswap/FastMulThreshold-DSA/p2p/event"
-	"github.com/anyswap/FastMulThreshold-DSA/rpc"
+	"github.com/deltaswapio/gsmpc/p2p"
+	"github.com/deltaswapio/gsmpc/p2p/event"
+	"github.com/deltaswapio/gsmpc/rpc"
 )
 
 // ServiceContext is a collection of service independent options inherited from

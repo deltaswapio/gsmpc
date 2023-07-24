@@ -42,7 +42,7 @@ import (
 	"fmt"
 	"hash"
 
-	ethcrypto "github.com/anyswap/FastMulThreshold-DSA/crypto"
+	ethcrypto "github.com/deltaswapio/gsmpc/crypto"
 )
 
 var (

@@ -21,9 +21,9 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/anyswap/FastMulThreshold-DSA/internal/common"
-	edkeygen "github.com/anyswap/FastMulThreshold-DSA/smpc-lib/eddsa/keygen"
-	smpclib "github.com/anyswap/FastMulThreshold-DSA/smpc-lib/smpc"
+	"github.com/deltaswapio/gsmpc/internal/common"
+	edkeygen "github.com/deltaswapio/gsmpc/smpc-lib/eddsa/keygen"
+	smpclib "github.com/deltaswapio/gsmpc/smpc-lib/smpc"
 	"strconv"
 	"strings"
 	"sync"
@@ -33,9 +33,9 @@ import (
 //---------------------------------------EDDSA start-----------------------------------------------------------------------
 
 // ProcessInboundMessagesEDDSA Analyze the obtained P2P messages and enter next round
-func ProcessInboundMessagesEDDSA(msgprex string, keytype string,finishChan chan struct{}, errChan chan struct{}, wg *sync.WaitGroup, ch chan interface{}) {
-    	if msgprex == "" {
-	    return
+func ProcessInboundMessagesEDDSA(msgprex string, keytype string, finishChan chan struct{}, errChan chan struct{}, wg *sync.WaitGroup, ch chan interface{}) {
+	if msgprex == "" {
+		return
 	}
 
 	defer func() {
@@ -47,12 +47,12 @@ func ProcessInboundMessagesEDDSA(msgprex string, keytype string,finishChan chan 
 	fmt.Printf("start processing inbound messages, key = %v \n", msgprex)
 	w, err := FindWorker(msgprex)
 	if w == nil || err != nil {
-	    if len(ch) == 0 {
-		res := RPCSmpcRes{Ret: "", Err: fmt.Errorf("ed,fail to process inbound messages")}
-		ch <- res
-	    }
-	    
-	    return
+		if len(ch) == 0 {
+			res := RPCSmpcRes{Ret: "", Err: fmt.Errorf("ed,fail to process inbound messages")}
+			ch <- res
+		}
+
+		return
 	}
 
 	for {
@@ -64,12 +64,12 @@ func ProcessInboundMessagesEDDSA(msgprex string, keytype string,finishChan chan 
 			msgmap := make(map[string]string)
 			err := json.Unmarshal([]byte(m), &msgmap)
 			if err != nil {
-			    if len(ch) == 0 {
-				res := RPCSmpcRes{Ret: "", Err: err}
-				ch <- res
-			    }
-			    
-			    return
+				if len(ch) == 0 {
+					res := RPCSmpcRes{Ret: "", Err: err}
+					ch <- res
+				}
+
+				return
 			}
 
 			if msgmap["Type"] == "KGRound0Message" { //0 message
@@ -79,89 +79,89 @@ func ProcessInboundMessagesEDDSA(msgprex string, keytype string,finishChan chan 
 
 			mm := GetRealMessageEDDSA(msgmap)
 			if mm == nil {
-			    if len(ch) == 0 {
-				res := RPCSmpcRes{Ret: "", Err: fmt.Errorf("ed,fail to process inbound messages")}
-				ch <- res
-			    }
-			    
-			    return
+				if len(ch) == 0 {
+					res := RPCSmpcRes{Ret: "", Err: fmt.Errorf("ed,fail to process inbound messages")}
+					ch <- res
+				}
+
+				return
 			}
 
 			//check sig
 			if msgmap["Sig"] == "" {
-			    if len(ch) == 0 {
-				res := RPCSmpcRes{Ret: "", Err: fmt.Errorf("verify sig fail")}
-				ch <- res
-			    }
-			    
-			    return
+				if len(ch) == 0 {
+					res := RPCSmpcRes{Ret: "", Err: fmt.Errorf("verify sig fail")}
+					ch <- res
+				}
+
+				return
 			}
 
 			if msgmap["ENode"] == "" {
-			    if len(ch) == 0 {
-				res := RPCSmpcRes{Ret: "", Err: fmt.Errorf("verify sig fail")}
-				ch <- res
-			    }
-			    
-			    return
+				if len(ch) == 0 {
+					res := RPCSmpcRes{Ret: "", Err: fmt.Errorf("verify sig fail")}
+					ch <- res
+				}
+
+				return
 			}
 
 			sig, err := hex.DecodeString(msgmap["Sig"])
 			if err != nil {
-			    common.Error("[KEYGEN] decode msg sig data error","err",err,"key",msgprex)
-			    if len(ch) == 0 {
-				res := RPCSmpcRes{Ret: "", Err: err}
-				ch <- res
-			    }
+				common.Error("[KEYGEN] decode msg sig data error", "err", err, "key", msgprex)
+				if len(ch) == 0 {
+					res := RPCSmpcRes{Ret: "", Err: err}
+					ch <- res
+				}
 
-			    return
+				return
 			}
-			
-			common.Debug("===============keygen ed,check p2p msg===============","sig",sig,"sender",msgmap["ENode"],"msg type",msgmap["Type"])
-			if !checkP2pSig(keytype,sig,mm,msgmap["ENode"]) {
-			    common.Error("===============keygen ed,check p2p msg fail===============","sig",sig,"sender",msgmap["ENode"],"msg type",msgmap["Type"])
 
-			    if len(ch) == 0 {
-				res := RPCSmpcRes{Ret: "", Err: fmt.Errorf("check msg sig fail")}
-				ch <- res
-			    }
+			common.Debug("===============keygen ed,check p2p msg===============", "sig", sig, "sender", msgmap["ENode"], "msg type", msgmap["Type"])
+			if !checkP2pSig(keytype, sig, mm, msgmap["ENode"]) {
+				common.Error("===============keygen ed,check p2p msg fail===============", "sig", sig, "sender", msgmap["ENode"], "msg type", msgmap["Type"])
 
-			    return
+				if len(ch) == 0 {
+					res := RPCSmpcRes{Ret: "", Err: fmt.Errorf("check msg sig fail")}
+					ch <- res
+				}
+
+				return
 			}
-			
+
 			// check fromID
-			_,UID := GetNodeUID(msgmap["ENode"], keytype,w.groupid)
+			_, UID := GetNodeUID(msgmap["ENode"], keytype, w.groupid)
 			id := fmt.Sprintf("%v", UID)
 			uid := hex.EncodeToString([]byte(id))
-			if !strings.EqualFold(uid,mm.GetFromID()) {
-			    common.Error("===============keygen ed,check p2p msg fail===============","sig",sig,"sender",msgmap["ENode"],"msg type",msgmap["Type"],"err","check from ID fail")
+			if !strings.EqualFold(uid, mm.GetFromID()) {
+				common.Error("===============keygen ed,check p2p msg fail===============", "sig", sig, "sender", msgmap["ENode"], "msg type", msgmap["Type"], "err", "check from ID fail")
 
-			    if len(ch) == 0 {
-				res := RPCSmpcRes{Ret: "", Err: fmt.Errorf("check from ID fail")}
-				ch <- res
-			    }
+				if len(ch) == 0 {
+					res := RPCSmpcRes{Ret: "", Err: fmt.Errorf("check from ID fail")}
+					ch <- res
+				}
 
-			    return
+				return
 			}
-			
+
 			// check whether 'from' is in the group
 			succ := false
 			_, nodes := GetGroup(w.groupid)
 			others := strings.Split(nodes, common.Sep2)
 			for _, v := range others {
-			    node2 := ParseNode(v) //bug??
-			    if strings.EqualFold(node2,msgmap["ENode"]) {
-				succ = true
-				break
-			    }
+				node2 := ParseNode(v) //bug??
+				if strings.EqualFold(node2, msgmap["ENode"]) {
+					succ = true
+					break
+				}
 			}
 
 			if !succ {
-				common.Error("===============keygen ed,check p2p msg fail===============","sig",sig,"sender",msgmap["ENode"],"msg type",msgmap["Type"])
+				common.Error("===============keygen ed,check p2p msg fail===============", "sig", sig, "sender", msgmap["ENode"], "msg type", msgmap["Type"])
 
 				if len(ch) == 0 {
-				    res := RPCSmpcRes{Ret: "", Err: fmt.Errorf("check msg sig fail")}
-				    ch <- res
+					res := RPCSmpcRes{Ret: "", Err: fmt.Errorf("check msg sig fail")}
+					ch <- res
 				}
 
 				return
@@ -173,8 +173,8 @@ func ProcessInboundMessagesEDDSA(msgprex string, keytype string,finishChan chan 
 				common.Error("====================ProcessInboundMessagesEDDSA,dnode update fail=======================", "receiv msg", m, "err", err)
 
 				if len(ch) == 0 {
-				    res := RPCSmpcRes{Ret: "", Err: err}
-				    ch <- res
+					res := RPCSmpcRes{Ret: "", Err: err}
+					ch <- res
 				}
 
 				return
@@ -185,13 +185,13 @@ func ProcessInboundMessagesEDDSA(msgprex string, keytype string,finishChan chan 
 
 // GetRealMessageEDDSA get the message data struct by map. (p2p msg ---> map)
 func GetRealMessageEDDSA(msg map[string]string) smpclib.Message {
-    	if msg == nil {
-	    return nil
+	if msg == nil {
+		return nil
 	}
 
 	from := msg["FromID"]
 	if from == "" {
-	    return nil
+		return nil
 	}
 
 	var to []string
@@ -207,13 +207,13 @@ func GetRealMessageEDDSA(msg map[string]string) smpclib.Message {
 
 	//1 message
 	if msg["Type"] == "KGRound1Message" {
-	    if msg["CPk"] == "" {
-		return nil
-	    }
+		if msg["CPk"] == "" {
+			return nil
+		}
 
 		cpks, err := hex.DecodeString(msg["CPk"])
 		if cpks == nil || err != nil {
-		    return nil
+			return nil
 		}
 
 		var temCpk [32]byte
@@ -230,13 +230,13 @@ func GetRealMessageEDDSA(msg map[string]string) smpclib.Message {
 
 	//2 message
 	if msg["Type"] == "KGRound2Message" {
-	    if msg["ZkPk"] == "" {
-		return nil
-	    }
+		if msg["ZkPk"] == "" {
+			return nil
+		}
 
 		zkpks, err := hex.DecodeString(msg["ZkPk"])
 		if zkpks == nil || err != nil {
-		    return nil
+			return nil
 		}
 
 		var temzkpk [64]byte
@@ -253,13 +253,13 @@ func GetRealMessageEDDSA(msg map[string]string) smpclib.Message {
 
 	//3 message
 	if msg["Type"] == "KGRound3Message" {
-	    if msg["DPk"] == "" {
-		return nil
-	    }
+		if msg["DPk"] == "" {
+			return nil
+		}
 
 		dpks, err := hex.DecodeString(msg["DPk"])
 		if dpks == nil || err != nil {
-		    return nil
+			return nil
 		}
 
 		var temdpk [64]byte
@@ -276,13 +276,13 @@ func GetRealMessageEDDSA(msg map[string]string) smpclib.Message {
 
 	//4 message
 	if msg["Type"] == "KGRound4Message" {
-	    if msg["Share"] == "" {
-		return nil
-	    }
+		if msg["Share"] == "" {
+			return nil
+		}
 
 		shares, err := hex.DecodeString(msg["Share"])
 		if shares == nil || err != nil {
-		    return nil
+			return nil
 		}
 
 		var temsh [32]byte
@@ -299,16 +299,16 @@ func GetRealMessageEDDSA(msg map[string]string) smpclib.Message {
 
 	//5 message
 	if msg["Type"] == "KGRound5Message" {
-	    if msg["CfsBBytes"] == "" {
-		return nil
-	    }
+		if msg["CfsBBytes"] == "" {
+			return nil
+		}
 
 		tmp := strings.Split(msg["CfsBBytes"], ":")
 		tmp2 := make([][32]byte, len(tmp))
 		for k, v := range tmp {
 			vv, err := hex.DecodeString(v)
 			if vv == nil || err != nil {
-			    return nil
+				return nil
 			}
 
 			var tem [32]byte
@@ -336,10 +336,10 @@ func GetRealMessageEDDSA(msg map[string]string) smpclib.Message {
 	return kg
 }
 
-// processKeyGenEDDSA  Obtain the data to be sent in each round and send it to other nodes until the end of the request command 
-func processKeyGenEDDSA(msgprex string, errChan chan struct{}, outCh <-chan smpclib.Message, endCh <-chan edkeygen.LocalDNodeSaveData,keytype string) error {
-    	if msgprex == "" {
-	    return errors.New("param error")
+// processKeyGenEDDSA  Obtain the data to be sent in each round and send it to other nodes until the end of the request command
+func processKeyGenEDDSA(msgprex string, errChan chan struct{}, outCh <-chan smpclib.Message, endCh <-chan edkeygen.LocalDNodeSaveData, keytype string) error {
+	if msgprex == "" {
+		return errors.New("param error")
 	}
 
 	for {
@@ -352,7 +352,7 @@ func processKeyGenEDDSA(msgprex string, errChan chan struct{}, outCh <-chan smpc
 			fmt.Printf("====================== processKeyGenEDDSA,ed keygen timeout, key = %v ====================\n", msgprex)
 			return errors.New("keygen timeout")
 		case msg := <-outCh:
-			err := ProcessOutCh(msgprex, msg,keytype)
+			err := ProcessOutCh(msgprex, msg, keytype)
 			if err != nil {
 				fmt.Printf("================= processKeyGenEDDSA,process outch err = %v,key = %v ==========\n", err, msgprex)
 				return err
@@ -380,7 +380,7 @@ type KGLocalDBSaveDataED struct {
 	MsgToEnode map[string]string
 }
 
-// OutMap  Convert KGLocalDBSaveDataED data struct to map 
+// OutMap  Convert KGLocalDBSaveDataED data struct to map
 func (kgsave *KGLocalDBSaveDataED) OutMap() map[string]string {
 	out := kgsave.Save.OutMap()
 	for key, value := range kgsave.MsgToEnode {
@@ -395,9 +395,9 @@ func GetKGLocalDBSaveDataED(data map[string]string) *KGLocalDBSaveDataED {
 	save := edkeygen.GetLocalDNodeSaveData(data)
 	msgtoenode := make(map[string]string)
 	for _, v := range save.IDs {
-	    tmp := fmt.Sprintf("%v",v)
-	    id := strings.ToLower(hex.EncodeToString([]byte(tmp)))
-	    msgtoenode[id] = data[id]
+		tmp := fmt.Sprintf("%v", v)
+		id := strings.ToLower(hex.EncodeToString([]byte(tmp)))
+		msgtoenode[id] = data[id]
 	}
 
 	kgsave := &KGLocalDBSaveDataED{Save: save, MsgToEnode: msgtoenode}

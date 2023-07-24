@@ -14,35 +14,35 @@
  *
  */
 
-// Package signing MPC implementation of signing 
+// Package signing MPC implementation of signing
 package signing
 
 import (
-	"fmt"
-	"time"
-	"github.com/anyswap/FastMulThreshold-DSA/smpc-lib/crypto/ec2"
-	"github.com/anyswap/FastMulThreshold-DSA/smpc-lib/smpc"
-	"github.com/anyswap/FastMulThreshold-DSA/smpc-lib/ecdsa/keygen"
-	"math/big"
 	"encoding/hex"
-	"github.com/anyswap/FastMulThreshold-DSA/log"
+	"fmt"
+	"github.com/deltaswapio/gsmpc/log"
+	"github.com/deltaswapio/gsmpc/smpc-lib/crypto/ec2"
+	"github.com/deltaswapio/gsmpc/smpc-lib/ecdsa/keygen"
+	"github.com/deltaswapio/gsmpc/smpc-lib/smpc"
+	"math/big"
+	"time"
 )
 
 // LocalDNode current local node
 type LocalDNode struct {
 	*smpc.BaseDNode
-	temp         localTempData
-	save         *keygen.LocalDNodeSaveData
-	idsign       smpc.SortableIDSSlice
-	out          chan<- smpc.Message
-	end          chan<- PrePubData
-	finalize     bool
-	predata      *PrePubData
-	txhash       *big.Int
+	temp        localTempData
+	save        *keygen.LocalDNodeSaveData
+	idsign      smpc.SortableIDSSlice
+	out         chan<- smpc.Message
+	end         chan<- PrePubData
+	finalize    bool
+	predata     *PrePubData
+	txhash      *big.Int
 	finalizeend chan<- *big.Int
 }
 
-// localTempData  Store some data of MPC calculation process 
+// localTempData  Store some data of MPC calculation process
 type localTempData struct {
 	signRound1Messages,
 	signRound2Messages,
@@ -62,7 +62,7 @@ type localTempData struct {
 	u1K            *big.Int
 	u1Gamma        *big.Int
 	commitU1GammaG *ec2.Commitment
-	commitwiG *ec2.Commitment
+	commitwiG      *ec2.Commitment
 
 	//round 2
 	ukc  *big.Int
@@ -84,7 +84,7 @@ type localTempData struct {
 
 	t1X *big.Int
 	t1Y *big.Int
-	l1 *big.Int
+	l1  *big.Int
 
 	//round 6
 	deltaSum *big.Int
@@ -118,14 +118,14 @@ func NewLocalDNode(
 ) smpc.DNode {
 
 	p := &LocalDNode{
-		BaseDNode:    new(smpc.BaseDNode),
-		save:         save,
-		idsign:       idsign,
-		temp:         localTempData{},
-		out:          out,
-		end:          end,
-		predata:      predata,
-		txhash:       txhash,
+		BaseDNode:   new(smpc.BaseDNode),
+		save:        save,
+		idsign:      idsign,
+		temp:        localTempData{},
+		out:         out,
+		end:         end,
+		predata:     predata,
+		txhash:      txhash,
 		finalizeend: finalizeend,
 	}
 
@@ -152,20 +152,20 @@ func NewLocalDNode(
 
 // FinalizeRound get finalize round
 func (p *LocalDNode) FinalizeRound() smpc.Round {
-	return newRound10(&p.temp, p.save, p.idsign, p.out, p.end, p.ID, p.ThresHold, p.PaillierKeyLength, p.predata, p.txhash, p.finalizeend,p.KeyType)
+	return newRound10(&p.temp, p.save, p.idsign, p.out, p.end, p.ID, p.ThresHold, p.PaillierKeyLength, p.predata, p.txhash, p.finalizeend, p.KeyType)
 }
 
 // FirstRound first round
 func (p *LocalDNode) FirstRound() smpc.Round {
-	return newRound1(&p.temp, p.save, p.idsign, p.out, p.end, p.ID, p.ThresHold, p.PaillierKeyLength,p.KeyType)
+	return newRound1(&p.temp, p.save, p.idsign, p.out, p.end, p.ID, p.ThresHold, p.PaillierKeyLength, p.KeyType)
 }
 
-// Start signing start 
+// Start signing start
 func (p *LocalDNode) Start() error {
 	return smpc.BaseStart(p)
 }
 
-// Update Collect data from other nodes and enter the next round 
+// Update Collect data from other nodes and enter the next round
 func (p *LocalDNode) Update(msg smpc.Message) (ok bool, err error) {
 	return smpc.BaseUpdate(p, msg)
 }
@@ -188,7 +188,7 @@ func (p *LocalDNode) Finalize() bool {
 	return p.finalize
 }
 
-// CheckFull  Check for empty messages 
+// CheckFull  Check for empty messages
 func CheckFull(msg []smpc.Message) bool {
 	if len(msg) == 0 {
 		return false
@@ -203,70 +203,70 @@ func CheckFull(msg []smpc.Message) bool {
 	return true
 }
 
-func find(l []smpc.Message,msg smpc.Message) bool {
-    if msg == nil || l == nil {
-	return true
-    }
-
-    for _,v := range l {
-	    if v == nil {
-		    continue
-	    }
-
-	if v.GetMsgType() == msg.GetMsgType() && v.GetFromID() == msg.GetFromID() {
-	    return true
+func find(l []smpc.Message, msg smpc.Message) bool {
+	if msg == nil || l == nil {
+		return true
 	}
-    }
 
-    return false
+	for _, v := range l {
+		if v == nil {
+			continue
+		}
+
+		if v.GetMsgType() == msg.GetMsgType() && v.GetFromID() == msg.GetFromID() {
+			return true
+		}
+	}
+
+	return false
 }
 
 // DulMessage check whether the msg already exists in the list.
 func (p *LocalDNode) DulMessage(msg smpc.Message) bool {
 	switch msg.(type) {
 	case *SignRound1Message:
-	    if find(p.temp.signRound1Messages,msg) {
-		return true
-	    }
+		if find(p.temp.signRound1Messages, msg) {
+			return true
+		}
 	case *SignRound2Message:
-	    if find(p.temp.signRound2Messages,msg) {
-		return true
-	    }
+		if find(p.temp.signRound2Messages, msg) {
+			return true
+		}
 	case *SignRound3Message:
-	    if find(p.temp.signRound3Messages,msg) {
-		return true
-	    }
+		if find(p.temp.signRound3Messages, msg) {
+			return true
+		}
 	case *SignRound4Message:
-	    if find(p.temp.signRound4Messages,msg) {
-		return true
-	    }
+		if find(p.temp.signRound4Messages, msg) {
+			return true
+		}
 	case *SignRound4Message1:
-	    if find(p.temp.signRound4Messages1,msg) {
-		return true
-	    }
+		if find(p.temp.signRound4Messages1, msg) {
+			return true
+		}
 	case *SignRound5Message:
-	    if find(p.temp.signRound5Messages,msg) {
-		return true
-	    }
+		if find(p.temp.signRound5Messages, msg) {
+			return true
+		}
 	case *SignRound6Message:
-	    if find(p.temp.signRound6Messages,msg) {
-		return true
-	    }
+		if find(p.temp.signRound6Messages, msg) {
+			return true
+		}
 	case *SignRound7Message:
-	    if find(p.temp.signRound7Messages,msg) {
-		return true
-	    }
+		if find(p.temp.signRound7Messages, msg) {
+			return true
+		}
 	case *SignRound8Message:
-	    if find(p.temp.signRound8Messages,msg) {
-		return true
-	    }
+		if find(p.temp.signRound8Messages, msg) {
+			return true
+		}
 	case *SignRound9Message:
-	    if find(p.temp.signRound9Messages,msg) {
-		return true
-	    }
+		if find(p.temp.signRound9Messages, msg) {
+			return true
+		}
 	default: // unrecognised message, just ignore!
 		fmt.Printf("storemessage,unrecognised message ignored: %v\n", msg)
-		return true 
+		return true
 	}
 
 	return false
@@ -276,8 +276,8 @@ func (p *LocalDNode) DulMessage(msg smpc.Message) bool {
 func (p *LocalDNode) StoreMessage(msg smpc.Message) (bool, error) {
 	switch msg.(type) {
 	case *SignRound1Message:
-	    	if find(p.temp.signRound1Messages,msg) {
-			return false,nil
+		if find(p.temp.signRound1Messages, msg) {
+			return false, nil
 		}
 
 		index := msg.GetFromIndex()
@@ -288,8 +288,8 @@ func (p *LocalDNode) StoreMessage(msg smpc.Message) (bool, error) {
 			return true, nil
 		}
 	case *SignRound2Message:
-	    	if find(p.temp.signRound2Messages,msg) {
-			return false,nil
+		if find(p.temp.signRound2Messages, msg) {
+			return false, nil
 		}
 
 		index := msg.GetFromIndex()
@@ -300,8 +300,8 @@ func (p *LocalDNode) StoreMessage(msg smpc.Message) (bool, error) {
 			return true, nil
 		}
 	case *SignRound3Message:
-	    	if find(p.temp.signRound3Messages,msg) {
-			return false,nil
+		if find(p.temp.signRound3Messages, msg) {
+			return false, nil
 		}
 
 		index := msg.GetFromIndex()
@@ -312,8 +312,8 @@ func (p *LocalDNode) StoreMessage(msg smpc.Message) (bool, error) {
 			return true, nil
 		}
 	case *SignRound4Message:
-	    	if find(p.temp.signRound4Messages,msg) {
-			return false,nil
+		if find(p.temp.signRound4Messages, msg) {
+			return false, nil
 		}
 
 		index := msg.GetFromIndex()
@@ -324,8 +324,8 @@ func (p *LocalDNode) StoreMessage(msg smpc.Message) (bool, error) {
 			return true, nil
 		}
 	case *SignRound4Message1:
-	    	if find(p.temp.signRound4Messages1,msg) {
-			return false,nil
+		if find(p.temp.signRound4Messages1, msg) {
+			return false, nil
 		}
 
 		index := msg.GetFromIndex()
@@ -336,22 +336,22 @@ func (p *LocalDNode) StoreMessage(msg smpc.Message) (bool, error) {
 			return true, nil
 		}
 	case *SignRound5Message:
-	    	if find(p.temp.signRound5Messages,msg) {
-			return false,nil
+		if find(p.temp.signRound5Messages, msg) {
+			return false, nil
 		}
 
 		index := msg.GetFromIndex()
 		m := msg.(*SignRound5Message)
 
 		// check tproof
-		hx,hy,err := ec2.CalcHPoint(p.KeyType)
+		hx, hy, err := ec2.CalcHPoint(p.KeyType)
 		if err != nil {
-		    fmt.Printf("calc h point fail, err = %v",err)
-		    return false,err 
+			fmt.Printf("calc h point fail, err = %v", err)
+			return false, err
 		}
 
-		if !ec2.TVerify(p.KeyType,m.T1X,m.T1Y,hx,hy,m.Tpf) {
-		    return false,fmt.Errorf("verify tproof fail")
+		if !ec2.TVerify(p.KeyType, m.T1X, m.T1Y, hx, hy, m.Tpf) {
+			return false, fmt.Errorf("verify tproof fail")
 		}
 		//
 
@@ -362,8 +362,8 @@ func (p *LocalDNode) StoreMessage(msg smpc.Message) (bool, error) {
 			return true, nil
 		}
 	case *SignRound6Message:
-	    	if find(p.temp.signRound6Messages,msg) {
-			return false,nil
+		if find(p.temp.signRound6Messages, msg) {
+			return false, nil
 		}
 
 		index := msg.GetFromIndex()
@@ -374,8 +374,8 @@ func (p *LocalDNode) StoreMessage(msg smpc.Message) (bool, error) {
 			return true, nil
 		}
 	case *SignRound7Message:
-	    	if find(p.temp.signRound7Messages,msg) {
-			return false,nil
+		if find(p.temp.signRound7Messages, msg) {
+			return false, nil
 		}
 
 		index := msg.GetFromIndex()
@@ -386,28 +386,28 @@ func (p *LocalDNode) StoreMessage(msg smpc.Message) (bool, error) {
 			return true, nil
 		}
 	case *SignRound8Message:
-	    	if find(p.temp.signRound8Messages,msg) {
-			return false,nil
+		if find(p.temp.signRound8Messages, msg) {
+			return false, nil
 		}
 
 		index := msg.GetFromIndex()
 		p.temp.signRound8Messages[index] = msg
 		if len(p.temp.signRound8Messages) == p.ThresHold && CheckFull(p.temp.signRound8Messages) {
-		    log.Debug("================ StoreMessage,get all ec sign 8 messages ==============")
-		    time.Sleep(time.Duration(1000000)) //tmp code
-		    return true,nil
+			log.Debug("================ StoreMessage,get all ec sign 8 messages ==============")
+			time.Sleep(time.Duration(1000000)) //tmp code
+			return true, nil
 		}
 	case *SignRound9Message:
-	    	if find(p.temp.signRound9Messages,msg) {
-			return false,nil
+		if find(p.temp.signRound9Messages, msg) {
+			return false, nil
 		}
 
 		index := msg.GetFromIndex()
 		p.temp.signRound9Messages[index] = msg
 		if len(p.temp.signRound9Messages) == p.ThresHold && CheckFull(p.temp.signRound9Messages) {
-		    log.Debug("================ StoreMessage,get all ec sign 9 messages ==============")
-		    time.Sleep(time.Duration(1000000)) //tmp code
-		    return true,nil
+			log.Debug("================ StoreMessage,get all ec sign 9 messages ==============")
+			time.Sleep(time.Duration(1000000)) //tmp code
+			return true, nil
 		}
 	default: // unrecognised message, just ignore!
 		fmt.Printf("storemessage,unrecognised message ignored: %v\n", msg)
@@ -416,4 +416,3 @@ func (p *LocalDNode) StoreMessage(msg smpc.Message) (bool, error) {
 
 	return false, nil
 }
-

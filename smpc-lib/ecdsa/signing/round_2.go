@@ -21,8 +21,8 @@ import (
 	"fmt"
 	//"math/big"
 	"encoding/hex"
-	"github.com/anyswap/FastMulThreshold-DSA/smpc-lib/crypto/ec2"
-	"github.com/anyswap/FastMulThreshold-DSA/smpc-lib/smpc"
+	"github.com/deltaswapio/gsmpc/smpc-lib/crypto/ec2"
+	"github.com/deltaswapio/gsmpc/smpc-lib/smpc"
 )
 
 // Start paillier Encrypt and get MtAZK1Proof
@@ -71,7 +71,7 @@ func (round *round2) Start() error {
 		}
 
 		u1nt := round.save.U1NtildeH1H2[index]
-		u1u1MtAZK1Proof := ec2.MtARangeProofProve(round.keytype,round.temp.ukc,round.temp.u1K, round.temp.ukc2, u1PaillierPk, u1nt)
+		u1u1MtAZK1Proof := ec2.MtARangeProofProve(round.keytype, round.temp.ukc, round.temp.u1K, round.temp.ukc2, u1PaillierPk, u1nt)
 
 		srm := &SignRound2Message{
 			SignRoundMessage: new(SignRoundMessage),
@@ -83,7 +83,7 @@ func (round *round2) Start() error {
 		if curIndex == k {
 			round.temp.signRound2Messages[curIndex] = srm
 		} else {
-			tmp := fmt.Sprintf("%v",v)
+			tmp := fmt.Sprintf("%v", v)
 			idtmp := hex.EncodeToString([]byte(tmp))
 			srm.AppendToID(idtmp) //id-->dnodeid
 			round.out <- srm
@@ -94,7 +94,7 @@ func (round *round2) Start() error {
 	return nil
 }
 
-// CanAccept is it legal to receive this message 
+// CanAccept is it legal to receive this message
 func (round *round2) CanAccept(msg smpc.Message) bool {
 	if _, ok := msg.(*SignRound2Message); ok {
 		return !msg.IsBroadcast()
@@ -102,7 +102,7 @@ func (round *round2) CanAccept(msg smpc.Message) bool {
 	return false
 }
 
-// Update  is the message received and ready for the next round? 
+// Update  is the message received and ready for the next round?
 func (round *round2) Update() (bool, error) {
 	for j, msg := range round.temp.signRound2Messages {
 		if round.ok[j] {

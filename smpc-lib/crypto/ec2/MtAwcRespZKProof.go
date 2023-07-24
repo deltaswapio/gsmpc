@@ -18,12 +18,12 @@ package ec2
 
 import (
 	"encoding/json"
-	"fmt"
 	"errors"
+	"fmt"
 	"math/big"
 
-	s256 "github.com/anyswap/FastMulThreshold-DSA/crypto/secp256k1"
-	"github.com/anyswap/FastMulThreshold-DSA/internal/common/math/random"
+	s256 "github.com/deltaswapio/gsmpc/crypto/secp256k1"
+	"github.com/deltaswapio/gsmpc/internal/common/math/random"
 )
 
 // MtAwcRespZKProof GG18 A.2 Respondent ZK Proof for MtAwc
@@ -42,12 +42,12 @@ type MtAwcRespZKProof struct {
 	T2   *big.Int
 }
 
-// MtAwcRespZKProofProve GG18 A.2 Respondent ZK Proof for MtAwc 
+// MtAwcRespZKProofProve GG18 A.2 Respondent ZK Proof for MtAwc
 // This proof is run by Bob (the responder) in the MtAwc protocol.
 // The input for this proof is a Paillier public key (N,G) and two values c1, c2 ∈ ZN2, together with a value X in curve the DSA group.
 // The Prover knows x ∈ Zq , y ∈ ZN and r ∈ Z* such that c2 = c1^x*G^y*r^N mod N^2, and X = g^x on the curve, where q is the order of the DSA group.
 // At the end of the protocol the Verifier is convinced of the above and that x ∈ [−q^3 , q^3].
-func MtAwcRespZKProofProve(keytype string,x *big.Int, y *big.Int, r *big.Int, c1 *big.Int, c2 *big.Int,publicKey *PublicKey, ntildeH1H2 *NtildeH1H2) *MtAwcRespZKProof {
+func MtAwcRespZKProofProve(keytype string, x *big.Int, y *big.Int, r *big.Int, c1 *big.Int, c2 *big.Int, publicKey *PublicKey, ntildeH1H2 *NtildeH1H2) *MtAwcRespZKProof {
 	q3Ntilde := new(big.Int).Mul(s256.S256(keytype).N3(), ntildeH1H2.Ntilde)
 	qNtilde := new(big.Int).Mul(s256.S256(keytype).N1(), ntildeH1H2.Ntilde)
 
@@ -59,11 +59,11 @@ func MtAwcRespZKProofProve(keytype string,x *big.Int, y *big.Int, r *big.Int, c1
 	gamma := random.GetRandomIntFromZnStar(publicKey.N)
 	delta := random.GetRandomIntFromZn(qNtilde)
 
-	tmp := new(big.Int).Mod(alpha,s256.S256(keytype).N1())
+	tmp := new(big.Int).Mod(alpha, s256.S256(keytype).N1())
 	ux, uy := s256.S256(keytype).ScalarBaseMult(tmp.Bytes())
-	xtmp := new(big.Int).Mod(x,s256.S256(keytype).N1())
+	xtmp := new(big.Int).Mod(x, s256.S256(keytype).N1())
 	if xtmp.Cmp(big.NewInt(0)) < 0 {
-	    xtmp = new(big.Int).Add(s256.S256(keytype).N1(),xtmp)
+		xtmp = new(big.Int).Add(s256.S256(keytype).N1(), xtmp)
 	}
 	Xx, Xy := s256.S256(keytype).ScalarBaseMult(xtmp.Bytes())
 
@@ -89,7 +89,7 @@ func MtAwcRespZKProofProve(keytype string,x *big.Int, y *big.Int, r *big.Int, c1
 	w = new(big.Int).Mul(w, new(big.Int).Exp(ntildeH1H2.H2, delta, ntildeH1H2.Ntilde))
 	w = new(big.Int).Mod(w, ntildeH1H2.Ntilde)
 
-	e := Sha512_256(ux,uy,Xx,Xy,z,zBar,t,v,w,c1,c2,publicKey.N)
+	e := Sha512_256(ux, uy, Xx, Xy, z, zBar, t, v, w, c1, c2, publicKey.N)
 	e = new(big.Int).Mod(e, s256.S256(keytype).N1())
 
 	s := new(big.Int).Exp(r, e, publicKey.N)
@@ -113,104 +113,104 @@ func MtAwcRespZKProofProve(keytype string,x *big.Int, y *big.Int, r *big.Int, c1
 	return mtAZK3Proof
 }
 
-// MtAwcRespZKProofVefify GG18 A.2 Respondent ZK Proof for MtAwc 
+// MtAwcRespZKProofVefify GG18 A.2 Respondent ZK Proof for MtAwc
 // This proof is run by Bob (the responder) in the MtAwc protocol.
 // The input for this proof is a Paillier public key (N,G) and two values c1, c2 ∈ ZN2, together with a value X in curve the DSA group.
 // The Prover knows x ∈ Zq , y ∈ ZN and r ∈ Z* such that c2 = c1^x*G^y*r^N mod N^2, and X = g^x on the curve, where q is the order of the DSA group.
 // At the end of the protocol the Verifier is convinced of the above and that x ∈ [−q^3 , q^3].
 // The Verifier checks that s1 ≤ q^3, g^s1 = X^e*u on the curve, h1^s1*h2^s2 = z^e*zBar mode Ntilde, h1^t1*h2^t2 = t^e*w mod Ntilde, and c1^s1*s^N*G^t1 = c2^e*v mod N^2.
-func (mtAZK3Proof *MtAwcRespZKProof) MtAwcRespZKProofVefify(keytype string,xG []*big.Int,c1 *big.Int, c2 *big.Int, publicKey *PublicKey, ntildeH1H2 *NtildeH1H2) bool {
-    	if xG == nil || len(xG) == 0 || c1 == nil || c2 == nil || publicKey == nil || ntildeH1H2 == nil || mtAZK3Proof == nil || mtAZK3Proof.S1 == nil || mtAZK3Proof.Z == nil || mtAZK3Proof.ZBar == nil || mtAZK3Proof.T == nil || mtAZK3Proof.W == nil || mtAZK3Proof.V == nil || mtAZK3Proof.S == nil {
-	    return false
+func (mtAZK3Proof *MtAwcRespZKProof) MtAwcRespZKProofVefify(keytype string, xG []*big.Int, c1 *big.Int, c2 *big.Int, publicKey *PublicKey, ntildeH1H2 *NtildeH1H2) bool {
+	if xG == nil || len(xG) == 0 || c1 == nil || c2 == nil || publicKey == nil || ntildeH1H2 == nil || mtAZK3Proof == nil || mtAZK3Proof.S1 == nil || mtAZK3Proof.Z == nil || mtAZK3Proof.ZBar == nil || mtAZK3Proof.T == nil || mtAZK3Proof.W == nil || mtAZK3Proof.V == nil || mtAZK3Proof.S == nil {
+		return false
 	}
 
-	if publicKey.N2.Cmp(new(big.Int).Mul(publicKey.N,publicKey.N)) != 0 {
-	    return false
+	if publicKey.N2.Cmp(new(big.Int).Mul(publicKey.N, publicKey.N)) != 0 {
+		return false
 	}
 
-	if publicKey.G.Cmp(new(big.Int).Add(publicKey.N,big.NewInt(1))) != 0 {
-	    return false
+	if publicKey.G.Cmp(new(big.Int).Add(publicKey.N, big.NewInt(1))) != 0 {
+		return false
 	}
-	
+
 	if mtAZK3Proof.S1.Cmp(s256.S256(keytype).N3()) > 0 {
 		return false
 	}
 
 	if mtAZK3Proof.Z.Cmp(ntildeH1H2.Ntilde) >= 0 {
-	    return false
+		return false
 	}
 
 	if mtAZK3Proof.ZBar.Cmp(ntildeH1H2.Ntilde) >= 0 {
-	    return false
+		return false
 	}
 
 	if mtAZK3Proof.T.Cmp(ntildeH1H2.Ntilde) >= 0 {
-	    return false
+		return false
 	}
 
 	if mtAZK3Proof.W.Cmp(ntildeH1H2.Ntilde) >= 0 {
-	    return false
+		return false
 	}
 
 	if mtAZK3Proof.V.Cmp(publicKey.N2) >= 0 {
-	    return false
+		return false
 	}
 
 	if c1.Cmp(publicKey.N2) >= 0 {
-	    return false
+		return false
 	}
 
 	if c2.Cmp(publicKey.N2) >= 0 {
-	    return false
+		return false
 	}
 
 	if mtAZK3Proof.S.Cmp(publicKey.N) >= 0 {
-	    return false
+		return false
 	}
 
-	c1m := new(big.Int).Mod(c1,publicKey.N2)
-	c2m := new(big.Int).Mod(c2,publicKey.N2)
-	zm := new(big.Int).Mod(mtAZK3Proof.Z,ntildeH1H2.Ntilde)
-	zbarm := new(big.Int).Mod(mtAZK3Proof.ZBar,ntildeH1H2.Ntilde)
-	tm := new(big.Int).Mod(mtAZK3Proof.T,ntildeH1H2.Ntilde)
-	vm := new(big.Int).Mod(mtAZK3Proof.V,publicKey.N2)
-	wm := new(big.Int).Mod(mtAZK3Proof.W,ntildeH1H2.Ntilde)
-	sm := new(big.Int).Mod(mtAZK3Proof.S,publicKey.N)
+	c1m := new(big.Int).Mod(c1, publicKey.N2)
+	c2m := new(big.Int).Mod(c2, publicKey.N2)
+	zm := new(big.Int).Mod(mtAZK3Proof.Z, ntildeH1H2.Ntilde)
+	zbarm := new(big.Int).Mod(mtAZK3Proof.ZBar, ntildeH1H2.Ntilde)
+	tm := new(big.Int).Mod(mtAZK3Proof.T, ntildeH1H2.Ntilde)
+	vm := new(big.Int).Mod(mtAZK3Proof.V, publicKey.N2)
+	wm := new(big.Int).Mod(mtAZK3Proof.W, ntildeH1H2.Ntilde)
+	sm := new(big.Int).Mod(mtAZK3Proof.S, publicKey.N)
 	if c1m.Cmp(zero) == 0 || c1m.Cmp(one) == 0 || c2m.Cmp(zero) == 0 || c2m.Cmp(one) == 0 || zm.Cmp(zero) == 0 || zm.Cmp(one) == 0 || zbarm.Cmp(zero) == 0 || zbarm.Cmp(one) == 0 || tm.Cmp(zero) == 0 || tm.Cmp(one) == 0 || vm.Cmp(zero) == 0 || vm.Cmp(one) == 0 || wm.Cmp(zero) == 0 || wm.Cmp(one) == 0 || sm.Cmp(zero) == 0 || sm.Cmp(one) == 0 {
-	    return false
+		return false
 	}
 
 	if mtAZK3Proof.S1.Cmp(zero) == 0 || mtAZK3Proof.S1.Cmp(one) == 0 || mtAZK3Proof.S2.Cmp(zero) == 0 || mtAZK3Proof.S2.Cmp(one) == 0 || mtAZK3Proof.T1.Cmp(zero) == 0 || mtAZK3Proof.T1.Cmp(one) == 0 || mtAZK3Proof.T2.Cmp(zero) == 0 || mtAZK3Proof.T2.Cmp(one) == 0 {
-	    return false
+		return false
 	}
 
 	//check g^x
 	if len(xG) != 2 || xG[0] == nil || xG[1] == nil {
-	    return false
+		return false
 	}
-	if !checkPointOnCurve(keytype,xG) {
-	    return false
+	if !checkPointOnCurve(keytype, xG) {
+		return false
 	}
 
 	//paillier pubkey.G
-	G := new(big.Int).Add(publicKey.N,big.NewInt(1))
+	G := new(big.Int).Add(publicKey.N, big.NewInt(1))
 	//paillier pubkey.N2
-	N2 := new(big.Int).Mul(publicKey.N,publicKey.N)
+	N2 := new(big.Int).Mul(publicKey.N, publicKey.N)
 
-	e := Sha512_256(mtAZK3Proof.Ux,mtAZK3Proof.Uy,xG[0],xG[1],mtAZK3Proof.Z,mtAZK3Proof.ZBar,mtAZK3Proof.T,mtAZK3Proof.V,mtAZK3Proof.W,c1,c2,publicKey.N)
+	e := Sha512_256(mtAZK3Proof.Ux, mtAZK3Proof.Uy, xG[0], xG[1], mtAZK3Proof.Z, mtAZK3Proof.ZBar, mtAZK3Proof.T, mtAZK3Proof.V, mtAZK3Proof.W, c1, c2, publicKey.N)
 	e = new(big.Int).Mod(e, s256.S256(keytype).N1())
 
 	// check g^s1 == (X^e)u and on curve
-	tmp := new(big.Int).Mod(mtAZK3Proof.S1,s256.S256(keytype).N1())
+	tmp := new(big.Int).Mod(mtAZK3Proof.S1, s256.S256(keytype).N1())
 	if tmp.Cmp(big.NewInt(0)) < 0 {
-	    tmp = new(big.Int).Add(s256.S256(keytype).N1(),tmp)
+		tmp = new(big.Int).Add(s256.S256(keytype).N1(), tmp)
 	}
 	s1Gx, s1Gy := s256.S256(keytype).ScalarBaseMult(tmp.Bytes())
 
-	exGx, exGy := s256.S256(keytype).ScalarMult(xG[0],xG[1],e.Bytes())
-	uexGx, uexGy := s256.S256(keytype).Add(exGx,exGy,mtAZK3Proof.Ux,mtAZK3Proof.Uy)
-	if !s256.S256(keytype).IsOnCurve(s1Gx,s1Gy) || !s256.S256(keytype).IsOnCurve(uexGx,uexGy) || s1Gx.Cmp(uexGx) != 0 || s1Gy.Cmp(uexGy) != 0 {
-	    return false
+	exGx, exGy := s256.S256(keytype).ScalarMult(xG[0], xG[1], e.Bytes())
+	uexGx, uexGy := s256.S256(keytype).Add(exGx, exGy, mtAZK3Proof.Ux, mtAZK3Proof.Uy)
+	if !s256.S256(keytype).IsOnCurve(s1Gx, s1Gy) || !s256.S256(keytype).IsOnCurve(uexGx, uexGy) || s1Gx.Cmp(uexGx) != 0 || s1Gy.Cmp(uexGy) != 0 {
+		return false
 	}
 
 	s12 := new(big.Int).Exp(ntildeH1H2.H1, mtAZK3Proof.S1, ntildeH1H2.Ntilde)
@@ -317,11 +317,10 @@ func (mtAZK3Proof *MtAwcRespZKProof) UnmarshalJSON(raw []byte) error {
 	mtAZK3Proof.S2, _ = new(big.Int).SetString(proof.S2, 10)
 	mtAZK3Proof.T1, _ = new(big.Int).SetString(proof.T1, 10)
 	mtAZK3Proof.T2, _ = new(big.Int).SetString(proof.T2, 10)
-	
+
 	if mtAZK3Proof.Ux == nil || mtAZK3Proof.Uy == nil || mtAZK3Proof.Z == nil || mtAZK3Proof.ZBar == nil || mtAZK3Proof.T == nil || mtAZK3Proof.V == nil || mtAZK3Proof.W == nil || mtAZK3Proof.S == nil || mtAZK3Proof.S1 == nil || mtAZK3Proof.S2 == nil || mtAZK3Proof.T1 == nil || mtAZK3Proof.T2 == nil {
-	    return errors.New("unmarshal json error")
+		return errors.New("unmarshal json error")
 	}
 
 	return nil
 }
-

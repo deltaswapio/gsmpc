@@ -5,10 +5,9 @@ Usage: go run build/ci.go <command> <command flags/arguments>
 
 Available commands are:
 
-   install    [ -arch architecture ] [ -cc compiler ] [ packages... ]                          -- builds packages and executables
+	install    [ -arch architecture ] [ -cc compiler ] [ packages... ]                          -- builds packages and executables
 
 For all commands, -n prevents execution of external programs (dry run mode).
-
 */
 package main
 
@@ -21,13 +20,13 @@ import (
 	"log"
 	"os"
 	"os/exec"
+	"path"
 	"path/filepath"
 	"runtime"
-	"path"
 	"strings"
 
-	"github.com/anyswap/FastMulThreshold-DSA/internal/build"
-	"github.com/anyswap/FastMulThreshold-DSA/internal/params"
+	"github.com/deltaswapio/gsmpc/internal/build"
+	"github.com/deltaswapio/gsmpc/internal/params"
 )
 
 var (
@@ -150,10 +149,10 @@ func doInstall(cmdline []string) {
 		arch = flag.String("arch", "", "Architecture to cross build for")
 		cc   = flag.String("cc", "", "C compiler to cross build with")
 	)
-	
+
 	err := flag.CommandLine.Parse(cmdline)
 	if err != nil {
-	    return
+		return
 	}
 
 	env := build.Env()
@@ -188,15 +187,15 @@ func doInstall(cmdline []string) {
 		//goinstall.Args = append(goinstall.Args, packages...)
 		//build.MustRun(goinstall)
 		// Do the build!
-               for _, pkg := range packages {
-                     args := make([]string, len(goinstall.Args))
-                     copy(args, goinstall.Args)
-                     cmd := path.Base(pkg)
-                     args = append(args, "-o", executablePath(cmd))
-                     args = append(args, pkg)
-                     build.MustRun(&exec.Cmd{Path: goinstall.Path, Args: args, Env: goinstall.Env})
-                }
-               //
+		for _, pkg := range packages {
+			args := make([]string, len(goinstall.Args))
+			copy(args, goinstall.Args)
+			cmd := path.Base(pkg)
+			args = append(args, "-o", executablePath(cmd))
+			args = append(args, pkg)
+			build.MustRun(&exec.Cmd{Path: goinstall.Path, Args: args, Env: goinstall.Env})
+		}
+		//
 		return
 	}
 
@@ -208,14 +207,14 @@ func doInstall(cmdline []string) {
 	//goinstall.Args = append(goinstall.Args, packages...)
 	//build.MustRun(goinstall)
 	// Do the build!
-       for _, pkg := range packages {
-             args := make([]string, len(goinstall.Args))
-             copy(args, goinstall.Args)
-             args = append(args, "-o", executablePath(path.Base(pkg)))
-             args = append(args, pkg)
-             build.MustRun(&exec.Cmd{Path: goinstall.Path, Args: args, Env: goinstall.Env})
-        }
-       //
+	for _, pkg := range packages {
+		args := make([]string, len(goinstall.Args))
+		copy(args, goinstall.Args)
+		args = append(args, "-o", executablePath(path.Base(pkg)))
+		args = append(args, pkg)
+		build.MustRun(&exec.Cmd{Path: goinstall.Path, Args: args, Env: goinstall.Env})
+	}
+	//
 
 	if cmds, err := ioutil.ReadDir("cmd"); err == nil {
 		for _, cmd := range cmds {

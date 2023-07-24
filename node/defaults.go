@@ -17,15 +17,10 @@
 package node
 
 import (
-	"os"
-	"os/user"
-	"path/filepath"
-	"runtime"
-
-	"github.com/anyswap/FastMulThreshold-DSA/internal/common"
-	"github.com/anyswap/FastMulThreshold-DSA/p2p"
-	"github.com/anyswap/FastMulThreshold-DSA/p2p/nat"
-	"github.com/anyswap/FastMulThreshold-DSA/rpc"
+	"github.com/deltaswapio/gsmpc/internal/common"
+	"github.com/deltaswapio/gsmpc/p2p"
+	"github.com/deltaswapio/gsmpc/p2p/nat"
+	"github.com/deltaswapio/gsmpc/rpc"
 )
 
 const (

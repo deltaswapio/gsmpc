@@ -18,10 +18,10 @@ package keygen
 
 import (
 	"errors"
-	"math/big"
-	"github.com/anyswap/FastMulThreshold-DSA/smpc-lib/crypto/ec2"
-	"github.com/anyswap/FastMulThreshold-DSA/smpc-lib/smpc"
 	"fmt"
+	"github.com/deltaswapio/gsmpc/smpc-lib/crypto/ec2"
+	"github.com/deltaswapio/gsmpc/smpc-lib/smpc"
+	"math/big"
 )
 
 const (
@@ -43,8 +43,8 @@ func (round *round5) Start() error {
 	}
 
 	//check Ntilde bitlen
-	for _,msg := range round.temp.kgRound4Messages {
-		m,ok := msg.(*KGRound4Message)
+	for _, msg := range round.temp.kgRound4Messages {
+		m, ok := msg.(*KGRound4Message)
 		if !ok {
 			return errors.New("error kg round4 message")
 		}
@@ -65,21 +65,21 @@ func (round *round5) Start() error {
 	ntilde := round.temp.kgRound4Messages[curIndex].(*KGRound4Message).U1NtildeH1H2.Ntilde
 	num := ec2.MustGetRandomInt(ntilde.BitLen())
 	if num == nil {
-	    return errors.New("get random int fail")
+		return errors.New("get random int fail")
 	}
 
 	pMinus1 := new(big.Int).Sub(round.temp.p1, big.NewInt(1))
 	qMinus1 := new(big.Int).Sub(round.temp.p2, big.NewInt(1))
 	l := new(big.Int).Mul(pMinus1, qMinus1)
-	sfProof := ec2.SquareFreeProve(ntilde,num,l)
+	sfProof := ec2.SquareFreeProve(ntilde, num, l)
 	if sfProof == nil {
-	    return errors.New("get square free proof fail")
+		return errors.New("get square free proof fail")
 	}
 
-	srm := &KGRound5Message2{    // same as KGRound2Message2
+	srm := &KGRound5Message2{ // same as KGRound2Message2
 		KGRoundMessage: new(KGRoundMessage),
-		Num:		num,
-		SfPf:		sfProof,
+		Num:            num,
+		SfPf:           sfProof,
 	}
 	srm.SetFromID(round.dnodeid)
 	srm.SetFromIndex(curIndex)
@@ -92,20 +92,20 @@ func (round *round5) Start() error {
 	// see Paper : Efficient Noninteractive Certification of RSA Moduli and Beyond   Sharon Goldberg*, Leonid Reyzin*, Omar Sagga*, and Foteini Baldimtsi      Boston University, Boston, MA, USA  George Mason University, Fairfax, VA, USA foteini@gmu.edu   October 3, 2019     section 3.4  HVZK Proof for a Product of Two Primes
 	num = ec2.MustGetRandomInt(ntilde.BitLen())
 	if num == nil {
-	    return errors.New("get random int fail")
+		return errors.New("get random int fail")
 	}
 
 	//fmt.Printf("===========================keygen round 5, get num = %v for ntilde = %v==========================\n",num,ntilde)
-	hvProof := ec2.HvProve(ntilde,num,round.temp.p1,round.temp.p2)
+	hvProof := ec2.HvProve(ntilde, num, round.temp.p1, round.temp.p2)
 	if hvProof == nil {
 		fmt.Printf("===========================keygen round 5, get hvzk proof fail==========================\n")
-	    return errors.New("get hvzk proof fail")
+		return errors.New("get hvzk proof fail")
 	}
 
 	srm2 := &KGRound5Message1{
 		KGRoundMessage: new(KGRoundMessage),
-		Num:		num,
-		HvPf:		hvProof,
+		Num:            num,
+		HvPf:           hvProof,
 	}
 	srm2.SetFromID(round.dnodeid)
 	srm2.SetFromIndex(curIndex)
@@ -115,9 +115,9 @@ func (round *round5) Start() error {
 
 	kg := &KGRound5Message{
 		KGRoundMessage: new(KGRoundMessage),
-		ComXiGD:	round.temp.commitXiG.D,
+		ComXiGD:        round.temp.commitXiG.D,
 	}
-	
+
 	kg.SetFromID(round.dnodeid)
 	kg.SetFromIndex(curIndex)
 
@@ -128,24 +128,24 @@ func (round *round5) Start() error {
 	return nil
 }
 
-// CanAccept is it legal to receive this message 
+// CanAccept is it legal to receive this message
 func (round *round5) CanAccept(msg smpc.Message) bool {
 	if _, ok := msg.(*KGRound5Message); ok {
 		return msg.IsBroadcast()
 	}
-	
+
 	if _, ok := msg.(*KGRound5Message1); ok {
 		return msg.IsBroadcast()
 	}
-	
+
 	if _, ok := msg.(*KGRound5Message2); ok {
 		return msg.IsBroadcast()
 	}
-	
+
 	return false
 }
 
-// Update  is the message received and ready for the next round? 
+// Update  is the message received and ready for the next round?
 func (round *round5) Update() (bool, error) {
 	for j, msg := range round.temp.kgRound5Messages1 {
 		if round.ok[j] {
@@ -154,19 +154,19 @@ func (round *round5) Update() (bool, error) {
 		if msg == nil || !round.CanAccept(msg) {
 			return false, nil
 		}
-		
+
 		msg5 := round.temp.kgRound5Messages[j]
 		if msg5 == nil || !round.CanAccept(msg5) {
 			return false, nil
 		}
-		
+
 		msg52 := round.temp.kgRound5Messages2[j]
 		if msg52 == nil || !round.CanAccept(msg52) {
 			return false, nil
 		}
 		round.ok[j] = true
 	}
-	
+
 	return true, nil
 }
 

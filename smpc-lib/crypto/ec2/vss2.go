@@ -17,11 +17,11 @@
 package ec2
 
 import (
-	"math/big"
 	"errors"
+	"math/big"
 
-	s256 "github.com/anyswap/FastMulThreshold-DSA/crypto/secp256k1"
-	"github.com/anyswap/FastMulThreshold-DSA/internal/common/math/random"
+	s256 "github.com/deltaswapio/gsmpc/crypto/secp256k1"
+	"github.com/deltaswapio/gsmpc/internal/common/math/random"
 )
 
 // PolyGStruct2 (x,y)
@@ -49,10 +49,10 @@ func GetSharesID(ss *ShareStruct2) *big.Int {
 	return nil
 }
 
-// Vss2Init  Initialize Lagrange polynomial coefficients 
-func Vss2Init(keytype string,secret *big.Int, t int) (*PolyStruct2, *PolyGStruct2, error) {
-    	if secret == nil || t <= 1 {
-	    return nil,nil,errors.New("param error")
+// Vss2Init  Initialize Lagrange polynomial coefficients
+func Vss2Init(keytype string, secret *big.Int, t int) (*PolyStruct2, *PolyGStruct2, error) {
+	if secret == nil || t <= 1 {
+		return nil, nil, errors.New("param error")
 	}
 
 	poly := make([]*big.Int, 0)
@@ -75,23 +75,23 @@ func Vss2Init(keytype string,secret *big.Int, t int) (*PolyStruct2, *PolyGStruct
 	return polyStruct, polyGStruct, nil
 }
 
-// Vss2  Calculate Lagrange polynomial value 
-func (polyStruct *PolyStruct2) Vss2(keytype string,ids []*big.Int) ([]*ShareStruct2, error) {
+// Vss2  Calculate Lagrange polynomial value
+func (polyStruct *PolyStruct2) Vss2(keytype string, ids []*big.Int) ([]*ShareStruct2, error) {
 	if ids == nil || len(ids) == 0 {
-	    return nil,errors.New("param error")
+		return nil, errors.New("param error")
 	}
-    	
-	dul,err := ContainsDuplicate(ids)
+
+	dul, err := ContainsDuplicate(ids)
 	if err != nil || dul {
-	    return nil,errors.New("param error")
+		return nil, errors.New("param error")
 	}
 
 	shares := make([]*ShareStruct2, 0)
 
 	for i := 0; i < len(ids); i++ {
-		shareVal,err := calculatePolynomial2(keytype,polyStruct.Poly, ids[i])
+		shareVal, err := calculatePolynomial2(keytype, polyStruct.Poly, ids[i])
 		if err != nil {
-		    return nil,err
+			return nil, err
 		}
 
 		shareStruct := &ShareStruct2{ID: ids[i], Share: shareVal}
@@ -102,7 +102,7 @@ func (polyStruct *PolyStruct2) Vss2(keytype string,ids []*big.Int) ([]*ShareStru
 }
 
 // Verify2 Verify Lagrange polynomial value
-func (share *ShareStruct2) Verify2(keytype string,polyG *PolyGStruct2) bool {
+func (share *ShareStruct2) Verify2(keytype string, polyG *PolyGStruct2) bool {
 
 	idVal := share.ID
 
@@ -121,14 +121,14 @@ func (share *ShareStruct2) Verify2(keytype string,polyG *PolyGStruct2) bool {
 	if computePointX.Cmp(originalPointX) == 0 && computePointY.Cmp(originalPointY) == 0 {
 		return true
 	}
-	
+
 	return false
 }
 
-// Combine2 Calculating Lagrange interpolation formula 
-func Combine2(keytype string,shares []*ShareStruct2) (*big.Int, error) {
-    	if shares == nil || len(shares) == 0 {
-	    return nil,errors.New("param error")
+// Combine2 Calculating Lagrange interpolation formula
+func Combine2(keytype string, shares []*ShareStruct2) (*big.Int, error) {
+	if shares == nil || len(shares) == 0 {
+		return nil, errors.New("param error")
 	}
 
 	// build x coordinate set
@@ -149,7 +149,7 @@ func Combine2(keytype string,shares []*ShareStruct2) (*big.Int, error) {
 				sub := new(big.Int).Sub(xSet[j], share.ID)
 				subInverse := new(big.Int).ModInverse(sub, s256.S256(keytype).N1())
 				if subInverse == nil {
-				    return nil,errors.New("calc times fail")
+					return nil, errors.New("calc times fail")
 				}
 				div := new(big.Int).Mul(xSet[j], subInverse)
 				times = new(big.Int).Mul(times, div)
@@ -166,15 +166,15 @@ func Combine2(keytype string,shares []*ShareStruct2) (*big.Int, error) {
 	return secret, nil
 }
 
-func calculatePolynomial2(keytype string,poly []*big.Int, id *big.Int) (*big.Int,error) {
-    if poly == nil || id == nil {
-	return nil,errors.New("param error")
-    }
+func calculatePolynomial2(keytype string, poly []*big.Int, id *big.Int) (*big.Int, error) {
+	if poly == nil || id == nil {
+		return nil, errors.New("param error")
+	}
 
-    idnum := new(big.Int).Mod(id,s256.S256(keytype).N1())
-    if idnum.Cmp(zero) == 0 || id.Cmp(zero) == 0 {
-	return nil,errors.New("id can not be equal to 0 or 0 modulo the order of the curve")
-    }
+	idnum := new(big.Int).Mod(id, s256.S256(keytype).N1())
+	if idnum.Cmp(zero) == 0 || id.Cmp(zero) == 0 {
+		return nil, errors.New("id can not be equal to 0 or 0 modulo the order of the curve")
+	}
 
 	lastIndex := len(poly) - 1
 	result := poly[lastIndex]
@@ -185,6 +185,5 @@ func calculatePolynomial2(keytype string,poly []*big.Int, id *big.Int) (*big.Int
 		result = new(big.Int).Mod(result, s256.S256(keytype).N1())
 	}
 
-	return result,nil
+	return result, nil
 }
-

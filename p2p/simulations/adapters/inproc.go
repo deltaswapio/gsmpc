@@ -23,12 +23,12 @@ import (
 	"net"
 	"sync"
 
-	"github.com/anyswap/FastMulThreshold-DSA/node"
-	"github.com/anyswap/FastMulThreshold-DSA/p2p"
-	"github.com/anyswap/FastMulThreshold-DSA/p2p/discover"
-	"github.com/anyswap/FastMulThreshold-DSA/p2p/event"
-	"github.com/anyswap/FastMulThreshold-DSA/p2p/simulations/pipes"
-	"github.com/anyswap/FastMulThreshold-DSA/rpc"
+	"github.com/deltaswapio/gsmpc/node"
+	"github.com/deltaswapio/gsmpc/p2p"
+	"github.com/deltaswapio/gsmpc/p2p/discover"
+	"github.com/deltaswapio/gsmpc/p2p/event"
+	"github.com/deltaswapio/gsmpc/p2p/simulations/pipes"
+	"github.com/deltaswapio/gsmpc/rpc"
 )
 
 // SimAdapter is a NodeAdapter which creates in-memory simulation nodes and

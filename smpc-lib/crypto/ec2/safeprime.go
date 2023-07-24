@@ -18,26 +18,26 @@ package ec2
 
 import (
 	"fmt"
-	"github.com/anyswap/FastMulThreshold-DSA/internal/common/math/random"
+	"github.com/deltaswapio/gsmpc/internal/common/math/random"
 	"math/big"
 	"time"
 )
 
 const (
-        // PrimeTestTimes the times to try to juede weather is prime
+	// PrimeTestTimes the times to try to juede weather is prime
 	PrimeTestTimes = 30
 )
 
 var (
-        // SafePrimeCh the channel to save safeprime
+	// SafePrimeCh the channel to save safeprime
 	SafePrimeCh = make(chan SafePrime, 4)
 
-	zero        = big.NewInt(0)
-	one         = big.NewInt(1)
-	two         = big.NewInt(2)
+	zero = big.NewInt(0)
+	one  = big.NewInt(1)
+	two  = big.NewInt(2)
 )
 
-// SafePrime prime 
+// SafePrime prime
 type SafePrime struct {
 	q *big.Int
 	p *big.Int // p = 2q+1
@@ -97,7 +97,7 @@ func probablyPrime(prime *big.Int) bool {
 
 //------------------------------------------------------
 
-// GenRandomSafePrime  Generate 4 random large host primes 
+// GenRandomSafePrime  Generate 4 random large host primes
 func GenRandomSafePrime() {
 	for {
 		if len(SafePrimeCh) < 4 {

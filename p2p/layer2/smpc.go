@@ -26,11 +26,11 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/anyswap/FastMulThreshold-DSA/crypto"
-	"github.com/anyswap/FastMulThreshold-DSA/internal/common"
-	"github.com/anyswap/FastMulThreshold-DSA/p2p"
-	"github.com/anyswap/FastMulThreshold-DSA/p2p/discover"
-	"github.com/anyswap/FastMulThreshold-DSA/rpc"
+	"github.com/deltaswapio/gsmpc/crypto"
+	"github.com/deltaswapio/gsmpc/internal/common"
+	"github.com/deltaswapio/gsmpc/p2p"
+	"github.com/deltaswapio/gsmpc/p2p/discover"
+	"github.com/deltaswapio/gsmpc/rpc"
 )
 
 // txs start
@@ -41,18 +41,18 @@ func SmpcProtocol_sendToGroupOneNode(msg string) (string, error) {
 // broadcast
 // to group's nodes
 func SmpcProtocol_broadcastInGroupAll(msg string) { // within self
-    _,err := BroadcastToGroup(discover.NodeID{}, msg, SmpcProtocol_type, true)
-    if err != nil {
-	fmt.Printf("broadcast msg to group, err = %v\n",err)
-	return
-    }
+	_, err := BroadcastToGroup(discover.NodeID{}, msg, SmpcProtocol_type, true)
+	if err != nil {
+		fmt.Printf("broadcast msg to group, err = %v\n", err)
+		return
+	}
 }
 
 func SmpcProtocol_broadcastInGroupOthers(msg string) { // without self
-	_,err := BroadcastToGroup(discover.NodeID{}, msg, SmpcProtocol_type, false)
+	_, err := BroadcastToGroup(discover.NodeID{}, msg, SmpcProtocol_type, false)
 	if err != nil {
-	    fmt.Printf("broadcast msg to group, err = %v\n",err)
-	    return
+		fmt.Printf("broadcast msg to group, err = %v\n", err)
+		return
 	}
 }
 
@@ -179,7 +179,7 @@ func SmpcProtocol_getEnodes() (int, string) {
 	return getGroup(discover.NodeID{}, SmpcProtocol_type)
 }
 
-//=============================== SMPC =================================
+// =============================== SMPC =================================
 func SendMsg(msg string) {
 	//BroadcastToGroup(discover.NodeID{}, msg, SmpcProtocol_type)
 	SmpcProtocol_broadcastInGroupOthers(msg)
@@ -227,7 +227,7 @@ func HexID(gID string) (discover.NodeID, error) {
 	return discover.HexID(gID)
 }
 
-//================   API   SDK    =====================
+// ================   API   SDK    =====================
 func SdkProtocol_sendToGroupOneNode(gID, msg string) (string, error) {
 	gid, _ := discover.HexID(gID)
 	if checkExistGroup(gid) == false {
@@ -302,7 +302,8 @@ func checkExistGroup(gid discover.NodeID) bool {
 	return false
 }
 
-//  ---------------------   API  callback   ----------------------
+//	---------------------   API  callback   ----------------------
+//
 // recv from broadcastInGroup...
 func SdkProtocol_registerBroadcastInGroupCallback(recvSdkFunc func(interface{}, string)) {
 	Sdk_callback = recvSdkFunc
@@ -343,14 +344,14 @@ func CreateSDKGroup(threshold string, enodes []string, subGroup bool) (string, i
 				continue
 			}
 		}
-		
+
 		tmpEnodes = append(tmpEnodes, e)
 	}
 
 	gid, err := getGIDFromEnodes(tmpEnodes)
 	common.Debug("CreateSDKGroup", "gid <- id", gid, "err", err)
 	if err != nil {
-		return "",0,err.Error()
+		return "", 0, err.Error()
 	}
 	discover.GroupSDK.Lock()
 	exist := false
@@ -415,7 +416,7 @@ func CheckAddPeer(threshold string, enodes []string, subGroup bool) (bool, error
 
 	// check  1 < threshold <= n ??
 	if nodeNum0 <= 1 || nodeNum0 > nodeNum1 {
-	    return false,errors.New("threshold must > 1 and <= n")
+		return false, errors.New("threshold must > 1 and <= n")
 	}
 	//
 

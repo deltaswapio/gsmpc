@@ -25,9 +25,9 @@ import (
 	"sort"
 	"time"
 
-	"github.com/anyswap/FastMulThreshold-DSA/crypto"
-	"github.com/anyswap/FastMulThreshold-DSA/internal/common"
-	"github.com/anyswap/FastMulThreshold-DSA/internal/common/mclock"
+	"github.com/deltaswapio/gsmpc/crypto"
+	"github.com/deltaswapio/gsmpc/internal/common"
+	"github.com/deltaswapio/gsmpc/internal/common/mclock"
 )
 
 const (
@@ -115,8 +115,8 @@ func ticketToPong(t *ticket, pong *pong) {
 	pong.TopicHash = rlpHash(t.topics)
 	var tmp common.Hash
 	if pong.TopicHash == tmp {
-	    fmt.Printf("================ticketToPong,rlp hash fail, t.topics = %v=============\n",t.topics)
-	    return
+		fmt.Printf("================ticketToPong,rlp hash fail, t.topics = %v=============\n", t.topics)
+		return
 	}
 
 	pong.TicketSerial = t.serial

@@ -18,7 +18,7 @@ package signing
 
 import (
 	"fmt"
-	"github.com/anyswap/FastMulThreshold-DSA/smpc-lib/crypto/ec2"
+	"github.com/deltaswapio/gsmpc/smpc-lib/crypto/ec2"
 	"math/big"
 	"strconv"
 	"strings"
@@ -48,11 +48,11 @@ func (srm *SignRoundMessage) AppendToID(toid string) {
 
 //-----------------------------------------------------------------------
 
-// SignRound1Message  Round 1 sending message 
+// SignRound1Message  Round 1 sending message
 type SignRound1Message struct {
 	*SignRoundMessage
 
-	C11 *big.Int
+	C11    *big.Int
 	ComWiC *big.Int
 }
 
@@ -61,7 +61,7 @@ func (srm *SignRound1Message) GetFromID() string {
 	return srm.FromID
 }
 
-// GetFromIndex get the Serial number of sending nodes in the group 
+// GetFromIndex get the Serial number of sending nodes in the group
 func (srm *SignRound1Message) GetFromIndex() int {
 	return srm.FromIndex
 }
@@ -94,7 +94,7 @@ func (srm *SignRound1Message) GetMsgType() string {
 	return "SignRound1Message"
 }
 
-// SignRound2Message  Round 2 sending message 
+// SignRound2Message  Round 2 sending message
 type SignRound2Message struct {
 	*SignRoundMessage
 
@@ -106,7 +106,7 @@ func (srm *SignRound2Message) GetFromID() string {
 	return srm.FromID
 }
 
-// GetFromIndex get the Serial number of sending nodes in the group 
+// GetFromIndex get the Serial number of sending nodes in the group
 func (srm *SignRound2Message) GetFromIndex() int {
 	return srm.FromIndex
 }
@@ -131,7 +131,7 @@ func (srm *SignRound2Message) OutMap() map[string]string {
 
 	proof, err := srm.U1u1MtAZK1Proof.MarshalJSON()
 	if err != nil {
-	    return nil
+		return nil
 	}
 
 	m["U1u1MtAZK1Proof"] = string(proof)
@@ -144,11 +144,11 @@ func (srm *SignRound2Message) GetMsgType() string {
 	return "SignRound2Message"
 }
 
-// SignRound3Message  Round 3 sending message 
+// SignRound3Message  Round 3 sending message
 type SignRound3Message struct {
 	*SignRoundMessage
-	Kc *big.Int
-	ComWiD   []*big.Int
+	Kc     *big.Int
+	ComWiD []*big.Int
 }
 
 // GetFromID get the ID of sending nodes in the group
@@ -156,7 +156,7 @@ func (srm *SignRound3Message) GetFromID() string {
 	return srm.FromID
 }
 
-// GetFromIndex get the Serial number of sending nodes in the group 
+// GetFromIndex get the Serial number of sending nodes in the group
 func (srm *SignRound3Message) GetFromIndex() int {
 	return srm.FromIndex
 }
@@ -195,7 +195,7 @@ func (srm *SignRound3Message) GetMsgType() string {
 	return "SignRound3Message"
 }
 
-// SignRound4Message  Round 4 sending message 
+// SignRound4Message  Round 4 sending message
 type SignRound4Message struct {
 	*SignRoundMessage
 	U1KGamma1Cipher *big.Int
@@ -207,7 +207,7 @@ func (srm *SignRound4Message) GetFromID() string {
 	return srm.FromID
 }
 
-// GetFromIndex get the Serial number of sending nodes in the group 
+// GetFromIndex get the Serial number of sending nodes in the group
 func (srm *SignRound4Message) GetFromIndex() int {
 	return srm.FromIndex
 }
@@ -232,7 +232,7 @@ func (srm *SignRound4Message) OutMap() map[string]string {
 
 	proof, err := srm.U1u1MtAZK2Proof.MarshalJSON()
 	if err != nil {
-	    return nil
+		return nil
 	}
 
 	m["U1u1MtAZK2Proof"] = string(proof)
@@ -246,7 +246,7 @@ func (srm *SignRound4Message) GetMsgType() string {
 	return "SignRound4Message"
 }
 
-// SignRound4Message1  Round 5 sending message 
+// SignRound4Message1  Round 5 sending message
 type SignRound4Message1 struct {
 	*SignRoundMessage
 	U1Kw1Cipher     *big.Int
@@ -258,7 +258,7 @@ func (srm *SignRound4Message1) GetFromID() string {
 	return srm.FromID
 }
 
-// GetFromIndex get the Serial number of sending nodes in the group 
+// GetFromIndex get the Serial number of sending nodes in the group
 func (srm *SignRound4Message1) GetFromIndex() int {
 	return srm.FromIndex
 }
@@ -283,7 +283,7 @@ func (srm *SignRound4Message1) OutMap() map[string]string {
 
 	proof, err := srm.U1u1MtAZK3Proof.MarshalJSON()
 	if err != nil {
-	    return nil
+		return nil
 	}
 
 	m["U1u1MtAZK3Proof"] = string(proof)
@@ -297,13 +297,13 @@ func (srm *SignRound4Message1) GetMsgType() string {
 	return "SignRound4Message1"
 }
 
-// SignRound5Message  Round 5 sending message 
+// SignRound5Message  Round 5 sending message
 type SignRound5Message struct {
 	*SignRoundMessage
 	Delta1 *big.Int
-	T1X *big.Int
-	T1Y *big.Int
-	Tpf *ec2.TProof
+	T1X    *big.Int
+	T1Y    *big.Int
+	Tpf    *ec2.TProof
 }
 
 // GetFromID get the ID of sending nodes in the group
@@ -311,7 +311,7 @@ func (srm *SignRound5Message) GetFromID() string {
 	return srm.FromID
 }
 
-// GetFromIndex get the Serial number of sending nodes in the group 
+// GetFromIndex get the Serial number of sending nodes in the group
 func (srm *SignRound5Message) GetFromIndex() int {
 	return srm.FromIndex
 }
@@ -340,10 +340,10 @@ func (srm *SignRound5Message) OutMap() map[string]string {
 
 	proof, err := srm.Tpf.MarshalJSON()
 	if err != nil {
-	    return nil
+		return nil
 	}
 
-	m["Tpf"] = string(proof) 
+	m["Tpf"] = string(proof)
 	return m
 }
 
@@ -352,7 +352,7 @@ func (srm *SignRound5Message) GetMsgType() string {
 	return "SignRound5Message"
 }
 
-// SignRound6Message  Round 6 sending message 
+// SignRound6Message  Round 6 sending message
 type SignRound6Message struct {
 	*SignRoundMessage
 	CommU1D        []*big.Int
@@ -364,7 +364,7 @@ func (srm *SignRound6Message) GetFromID() string {
 	return srm.FromID
 }
 
-// GetFromIndex get the Serial number of sending nodes in the group 
+// GetFromIndex get the Serial number of sending nodes in the group
 func (srm *SignRound6Message) GetFromIndex() int {
 	return srm.FromIndex
 }
@@ -389,7 +389,7 @@ func (srm *SignRound6Message) OutMap() map[string]string {
 
 	proof, err := srm.U1GammaZKProof.MarshalJSON()
 	if err != nil {
-	    return nil
+		return nil
 	}
 	m["U1GammaZKProof"] = string(proof)
 
@@ -408,11 +408,11 @@ func (srm *SignRound6Message) GetMsgType() string {
 	return "SignRound6Message"
 }
 
-// SignRound7Message  Round 7 sending message 
+// SignRound7Message  Round 7 sending message
 type SignRound7Message struct {
 	*SignRoundMessage
-	K1RX *big.Int
-	K1RY *big.Int
+	K1RX        *big.Int
+	K1RY        *big.Int
 	PdlwSlackPf *ec2.PDLwSlackProof
 }
 
@@ -421,7 +421,7 @@ func (srm *SignRound7Message) GetFromID() string {
 	return srm.FromID
 }
 
-// GetFromIndex get the Serial number of sending nodes in the group 
+// GetFromIndex get the Serial number of sending nodes in the group
 func (srm *SignRound7Message) GetFromIndex() int {
 	return srm.FromIndex
 }
@@ -449,7 +449,7 @@ func (srm *SignRound7Message) OutMap() map[string]string {
 
 	proof, err := srm.PdlwSlackPf.MarshalJSON()
 	if err != nil {
-	    return nil
+		return nil
 	}
 	m["PdlwSlackPf"] = string(proof)
 
@@ -461,11 +461,11 @@ func (srm *SignRound7Message) GetMsgType() string {
 	return "SignRound7Message"
 }
 
-// SignRound8Message  Round 8 sending message 
+// SignRound8Message  Round 8 sending message
 type SignRound8Message struct {
 	*SignRoundMessage
-	S1X *big.Int
-	S1Y *big.Int
+	S1X  *big.Int
+	S1Y  *big.Int
 	STpf *ec2.STProof
 }
 
@@ -474,7 +474,7 @@ func (srm *SignRound8Message) GetFromID() string {
 	return srm.FromID
 }
 
-// GetFromIndex get the Serial number of sending nodes in the group 
+// GetFromIndex get the Serial number of sending nodes in the group
 func (srm *SignRound8Message) GetFromIndex() int {
 	return srm.FromIndex
 }
@@ -502,7 +502,7 @@ func (srm *SignRound8Message) OutMap() map[string]string {
 
 	proof, err := srm.STpf.MarshalJSON()
 	if err != nil {
-	    return nil
+		return nil
 	}
 	m["STpf"] = string(proof)
 
@@ -514,7 +514,7 @@ func (srm *SignRound8Message) GetMsgType() string {
 	return "SignRound8Message"
 }
 
-// SignRound9Message  Round 9 sending message 
+// SignRound9Message  Round 9 sending message
 type SignRound9Message struct {
 	*SignRoundMessage
 	Us1 *big.Int
@@ -525,7 +525,7 @@ func (srm *SignRound9Message) GetFromID() string {
 	return srm.FromID
 }
 
-// GetFromIndex get the Serial number of sending nodes in the group 
+// GetFromIndex get the Serial number of sending nodes in the group
 func (srm *SignRound9Message) GetFromIndex() int {
 	return srm.FromIndex
 }
@@ -556,4 +556,3 @@ func (srm *SignRound9Message) OutMap() map[string]string {
 func (srm *SignRound9Message) GetMsgType() string {
 	return "SignRound9Message"
 }
-

@@ -17,12 +17,12 @@
 package signing
 
 import (
-	"errors"
-	"github.com/anyswap/FastMulThreshold-DSA/smpc-lib/ecdsa/keygen"
-	"github.com/anyswap/FastMulThreshold-DSA/smpc-lib/smpc"
-	"math/big"
-	"fmt"
 	"encoding/hex"
+	"errors"
+	"fmt"
+	"github.com/deltaswapio/gsmpc/smpc-lib/ecdsa/keygen"
+	"github.com/deltaswapio/gsmpc/smpc-lib/smpc"
+	"math/big"
 )
 
 type (
@@ -40,8 +40,8 @@ type (
 		paillierkeylength int
 		predata           *PrePubData
 		txhash            *big.Int
-		finalizeend      chan<- *big.Int
-		keytype string
+		finalizeend       chan<- *big.Int
+		keytype           string
 	}
 	round1 struct {
 		*base
@@ -113,10 +113,10 @@ func (round *base) GetDNodeIDIndex(id string) (int, error) {
 
 	uidtmp, err := hex.DecodeString(id)
 	if err != nil {
-	    return -1,err
+		return -1, err
 	}
-	idtmp,_ := new(big.Int).SetString(string(uidtmp[:]),10)
-	
+	idtmp, _ := new(big.Int).SetString(string(uidtmp[:]), 10)
+
 	for k, v := range round.idsign {
 		if v.Cmp(idtmp) == 0 {
 			return k, nil
@@ -131,4 +131,3 @@ func (round *base) ResetOK() {
 		round.ok[j] = false
 	}
 }
-

@@ -19,11 +19,11 @@ package signing
 import (
 	"errors"
 	"fmt"
-	"github.com/anyswap/FastMulThreshold-DSA/crypto/secp256k1"
-	"github.com/anyswap/FastMulThreshold-DSA/smpc-lib/smpc"
-	"github.com/anyswap/FastMulThreshold-DSA/smpc-lib/crypto/ec2"
+	"github.com/deltaswapio/gsmpc/crypto/secp256k1"
+	"github.com/deltaswapio/gsmpc/log"
+	"github.com/deltaswapio/gsmpc/smpc-lib/crypto/ec2"
+	"github.com/deltaswapio/gsmpc/smpc-lib/smpc"
 	"math/big"
-	"github.com/anyswap/FastMulThreshold-DSA/log"
 )
 
 // Start broacast current node s to other nodes
@@ -45,77 +45,77 @@ func (round *round8) Start() error {
 	var K1Ry *big.Int
 
 	for k, v := range round.idsign {
-	    index := -1
-	    for kk, vv := range round.save.IDs {
-		    if v.Cmp(vv) == 0 {
-			    index = kk
-			    break
-		    }
-	    }
+		index := -1
+		for kk, vv := range round.save.IDs {
+			if v.Cmp(vv) == 0 {
+				index = kk
+				break
+			}
+		}
 
-	    if index == -1 {
-		return errors.New("get node uid error")
-	    }
-	    
-	    paiPk := round.save.U1PaillierPk[index]
-	    if paiPk == nil {
-		return errors.New("get paillier public key fail")
-	    }
-	    nt := round.save.U1NtildeH1H2[index]
-	    if nt == nil {
-		return errors.New("get ntilde fail")
-	    }
-	    
-	    msg7, _ := round.temp.signRound7Messages[k].(*SignRound7Message)
-	    msg3, _ := round.temp.signRound3Messages[k].(*SignRound3Message)
-	    pdlWSlackStatement := &ec2.PDLwSlackStatement{
-		    PK:         paiPk,
-		    CipherText: msg3.Kc,
-		    K1RX:	msg7.K1RX,
-		    K1RY:   msg7.K1RY,
-		    Rx:     round.temp.deltaGammaGx,
-		    Ry:     round.temp.deltaGammaGy,
-		    H1:         nt.H1,
-		    H2:         nt.H2,
-		    NTilde:     nt.Ntilde,
-	    }
+		if index == -1 {
+			return errors.New("get node uid error")
+		}
 
-	    if !ec2.PDLwSlackVerify(round.keytype,pdlWSlackStatement,msg7.PdlwSlackPf) {
-		log.Error("=======================signing round 8,failed to verify ZK proof of consistency between R_i and E_i(k_i) for Uid=========================","Uid",v)
-		return fmt.Errorf("failed to verify ZK proof of consistency between R_i and E_i(k_i) for Uid %v,k = %v", v,k)
-	    }
+		paiPk := round.save.U1PaillierPk[index]
+		if paiPk == nil {
+			return errors.New("get paillier public key fail")
+		}
+		nt := round.save.U1NtildeH1H2[index]
+		if nt == nil {
+			return errors.New("get ntilde fail")
+		}
 
-	    if k == 0 {
-		K1Rx = msg7.K1RX
-		K1Ry = msg7.K1RY
-		continue
-	    }
+		msg7, _ := round.temp.signRound7Messages[k].(*SignRound7Message)
+		msg3, _ := round.temp.signRound3Messages[k].(*SignRound3Message)
+		pdlWSlackStatement := &ec2.PDLwSlackStatement{
+			PK:         paiPk,
+			CipherText: msg3.Kc,
+			K1RX:       msg7.K1RX,
+			K1RY:       msg7.K1RY,
+			Rx:         round.temp.deltaGammaGx,
+			Ry:         round.temp.deltaGammaGy,
+			H1:         nt.H1,
+			H2:         nt.H2,
+			NTilde:     nt.Ntilde,
+		}
 
-	    K1Rx,K1Ry = secp256k1.S256(round.keytype).Add(K1Rx,K1Ry,msg7.K1RX,msg7.K1RY)
+		if !ec2.PDLwSlackVerify(round.keytype, pdlWSlackStatement, msg7.PdlwSlackPf) {
+			log.Error("=======================signing round 8,failed to verify ZK proof of consistency between R_i and E_i(k_i) for Uid=========================", "Uid", v)
+			return fmt.Errorf("failed to verify ZK proof of consistency between R_i and E_i(k_i) for Uid %v,k = %v", v, k)
+		}
+
+		if k == 0 {
+			K1Rx = msg7.K1RX
+			K1Ry = msg7.K1RY
+			continue
+		}
+
+		K1Rx, K1Ry = secp256k1.S256(round.keytype).Add(K1Rx, K1Ry, msg7.K1RX, msg7.K1RY)
 	}
 
 	if K1Rx.Cmp(secp256k1.S256(round.keytype).GX()) != 0 || K1Ry.Cmp(secp256k1.S256(round.keytype).GY()) != 0 {
-	    log.Error("==============================signing round 8,consistency check failed: g != R products==================================")
-	    return fmt.Errorf("consistency check failed: g != R products")
+		log.Error("==============================signing round 8,consistency check failed: g != R products==================================")
+		return fmt.Errorf("consistency check failed: g != R products")
 	}
 
-	S1X,S1Y := secp256k1.S256(round.keytype).ScalarMult(round.temp.deltaGammaGx,round.temp.deltaGammaGy,round.temp.sigma1.Bytes())
-	hx,hy,err := ec2.CalcHPoint(round.keytype)
+	S1X, S1Y := secp256k1.S256(round.keytype).ScalarMult(round.temp.deltaGammaGx, round.temp.deltaGammaGy, round.temp.sigma1.Bytes())
+	hx, hy, err := ec2.CalcHPoint(round.keytype)
 	if err != nil {
-	    log.Error("=====================calc h point fail===================","err",err)
-	    return err 
+		log.Error("=====================calc h point fail===================", "err", err)
+		return err
 	}
 
-	stProof := ec2.NewSTProof(round.keytype,round.temp.t1X,round.temp.t1Y,S1X,S1Y,round.temp.deltaGammaGx,round.temp.deltaGammaGy,hx,hy,round.temp.sigma1,round.temp.l1)
+	stProof := ec2.NewSTProof(round.keytype, round.temp.t1X, round.temp.t1Y, S1X, S1Y, round.temp.deltaGammaGx, round.temp.deltaGammaGy, hx, hy, round.temp.sigma1, round.temp.l1)
 	if stProof == nil {
-	    return fmt.Errorf("new stproof fail")
+		return fmt.Errorf("new stproof fail")
 	}
 
 	srm := &SignRound8Message{
 		SignRoundMessage: new(SignRoundMessage),
-		S1X:   S1X,
-		S1Y:   S1Y,
-		STpf: stProof,
+		S1X:              S1X,
+		S1Y:              S1Y,
+		STpf:             stProof,
 	}
 	srm.SetFromID(round.kgid)
 	srm.SetFromIndex(curIndex)
@@ -124,12 +124,12 @@ func (round *round8) Start() error {
 	round.out <- srm
 
 	//round.end <- PrePubData{K1: round.temp.u1K, R: round.temp.deltaGammaGx, Ry: round.temp.deltaGammaGy, Sigma1: round.temp.sigma1}
-	
+
 	//fmt.Printf("============= round8.start success, current node id = %v =======\n", round.kgid)
 	return nil
 }
 
-// CanAccept is it legal to receive this message 
+// CanAccept is it legal to receive this message
 func (round *round8) CanAccept(msg smpc.Message) bool {
 	if _, ok := msg.(*SignRound8Message); ok {
 		return msg.IsBroadcast()
@@ -137,7 +137,7 @@ func (round *round8) CanAccept(msg smpc.Message) bool {
 	return false
 }
 
-// Update  is the message received and ready for the next round? 
+// Update  is the message received and ready for the next round?
 func (round *round8) Update() (bool, error) {
 	for j, msg := range round.temp.signRound8Messages {
 		if round.ok[j] {

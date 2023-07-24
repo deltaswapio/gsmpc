@@ -25,11 +25,11 @@ import (
 	"net"
 	"time"
 
-	"github.com/anyswap/FastMulThreshold-DSA/crypto"
-	"github.com/anyswap/FastMulThreshold-DSA/p2p/nat"
-	"github.com/anyswap/FastMulThreshold-DSA/p2p/netutil"
-	"github.com/anyswap/FastMulThreshold-DSA/p2p/rlp"
-	"github.com/anyswap/FastMulThreshold-DSA/internal/common"
+	"github.com/deltaswapio/gsmpc/crypto"
+	"github.com/deltaswapio/gsmpc/internal/common"
+	"github.com/deltaswapio/gsmpc/p2p/nat"
+	"github.com/deltaswapio/gsmpc/p2p/netutil"
+	"github.com/deltaswapio/gsmpc/p2p/rlp"
 )
 
 // Errors
@@ -46,9 +46,9 @@ var (
 
 // Timeouts
 const (
-	respTimeout = 500 * time.Millisecond
-	expiration  = 600 * time.Second
-	expirationBroadcast  = 10 * time.Second
+	respTimeout         = 500 * time.Millisecond
+	expiration          = 600 * time.Second
+	expirationBroadcast = 10 * time.Second
 
 	ntpFailureThreshold = 32               // Continuous timeouts after which to check NTP
 	ntpWarningCooldown  = 10 * time.Minute // Minimum amount of time to pass before repeating NTP warning
@@ -312,9 +312,9 @@ func (t *udp) sendPing(toid NodeID, toaddr *net.UDPAddr, callback func()) <-chan
 	})
 	err2 := t.write(toaddr, req.name(), packet)
 	if err2 != nil {
-	    errc := make(chan error, 1)
-	    errc <- err2
-	    return errc
+		errc := make(chan error, 1)
+		errc <- err2
+		return errc
 	}
 
 	return errc
@@ -330,14 +330,14 @@ func (t *udp) findnode(toid NodeID, toaddr *net.UDPAddr, target NodeID) ([]*Node
 	// If we haven't seen a ping from the destination node for a while, it won't remember
 	// our endpoint proof and reject findnode. Solicit a ping first.
 	if time.Since(t.db.lastPingReceived(toid)) > nodeDBNodeExpiration {
-	    err := t.ping(toid, toaddr)
-	    if err != nil {
-		return nil,err
-	    }	
-	    err = t.waitping(toid)
-	    if err != nil {
-		return nil,err
-	    }
+		err := t.ping(toid, toaddr)
+		if err != nil {
+			return nil, err
+		}
+		err = t.waitping(toid)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	nodes := make([]*Node, 0, bucketSize)
@@ -355,12 +355,12 @@ func (t *udp) findnode(toid NodeID, toaddr *net.UDPAddr, target NodeID) ([]*Node
 		return nreceived >= bucketSize
 	})
 
-	_,err := t.send(toaddr, findnodePacket, &findnode{
+	_, err := t.send(toaddr, findnodePacket, &findnode{
 		Target:     target,
 		Expiration: uint64(time.Now().Add(expiration).Unix()),
 	})
 	if err != nil {
-	    return nil,err
+		return nil, err
 	}
 
 	return nodes, <-errc
@@ -518,14 +518,14 @@ func init() {
 
 func (t *udp) send(toaddr *net.UDPAddr, ptype byte, req packet) ([]byte, error) {
 	packet, hash, err := encodePacket(t.priv, ptype, req)
-	_,_,err2 := encodePacket(t.priv, ptype, packet)
+	_, _, err2 := encodePacket(t.priv, ptype, packet)
 	if err2 != nil {
-	    common.Error("====================udp.send,encode packet error=====================","err",err2)
-	    return nil,err2
+		common.Error("====================udp.send,encode packet error=====================", "err", err2)
+		return nil, err2
 	}
 
 	if err != nil {
-		common.Error("====================udp.send,encode packet error=====================","err",err)
+		common.Error("====================udp.send,encode packet error=====================", "err", err)
 		return hash, err
 	}
 
@@ -589,10 +589,10 @@ func (t *udp) readLoop(unhandled chan<- ReadPacket) {
 func (t *udp) handlePacket(from *net.UDPAddr, buf []byte) error {
 	packet, fromID, hash, err := decodePacket(buf)
 	if err != nil {
-	    common.Error("========================udp.handlePacket========================","from",fromID,"msg",string(buf),"err",err)
+		common.Error("========================udp.handlePacket========================", "from", fromID, "msg", string(buf), "err", err)
 		return err
 	}
-	
+
 	err = packet.handle(t, from, fromID, hash)
 	return err
 }
@@ -669,13 +669,13 @@ func (req *ping) handle(t *udp, from *net.UDPAddr, fromID NodeID, mac []byte) er
 	if expired(req.Expiration) {
 		return errExpired
 	}
-	_,err := t.send(from, pongPacket, &pong{
+	_, err := t.send(from, pongPacket, &pong{
 		To:         makeEndpoint(from, req.From.TCP),
 		ReplyTok:   mac,
 		Expiration: uint64(time.Now().Add(expiration).Unix()),
 	})
 	if err != nil {
-	    return err
+		return err
 	}
 
 	t.handleReply(fromID, pingPacket, req)
@@ -690,7 +690,7 @@ func (req *ping) handle(t *udp, from *net.UDPAddr, fromID NodeID, mac []byte) er
 	}
 	err = t.db.updateLastPingReceived(fromID, time.Now())
 	if err != nil {
-	    return err
+		return err
 	}
 
 	return nil
@@ -708,7 +708,7 @@ func (req *pong) handle(t *udp, from *net.UDPAddr, fromID NodeID, mac []byte) er
 	}
 	err := t.db.updateLastPongReceived(fromID, time.Now())
 	if err != nil {
-	    return err
+		return err
 	}
 	return nil
 }
@@ -742,9 +742,9 @@ func (req *findnode) handle(t *udp, from *net.UDPAddr, fromID NodeID, mac []byte
 			p.Nodes = append(p.Nodes, nodeToRPC(n))
 		}
 		if len(p.Nodes) == maxNeighbors {
-			_,err := t.send(from, neighborsPacket, &p)
+			_, err := t.send(from, neighborsPacket, &p)
 			if err != nil {
-			    return err
+				return err
 			}
 
 			p.Nodes = p.Nodes[:0]
@@ -752,10 +752,10 @@ func (req *findnode) handle(t *udp, from *net.UDPAddr, fromID NodeID, mac []byte
 		}
 	}
 	if len(p.Nodes) > 0 || !sent {
-	    _,err := t.send(from, neighborsPacket, &p)
-	    if err != nil {
-		return err
-	    }
+		_, err := t.send(from, neighborsPacket, &p)
+		if err != nil {
+			return err
+		}
 	}
 	return nil
 }

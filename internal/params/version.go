@@ -18,13 +18,13 @@ package params
 
 import (
 	"fmt"
-	"github.com/anyswap/FastMulThreshold-DSA/log"
+	"github.com/deltaswapio/gsmpc/log"
 )
 
 const (
-	VersionMajor = 7        // Major version component of the current release
-	VersionMinor = 2        // Minor version component of the current release
-	VersionPatch = 9        // Patch version component of the current release
+	VersionMajor = 7      // Major version component of the current release
+	VersionMinor = 2      // Minor version component of the current release
+	VersionPatch = 9      // Patch version component of the current release
 	VersionMeta  = "beta" // Version metadata to append to the version string
 )
 
@@ -44,7 +44,8 @@ var VersionWithMeta = func() string {
 
 // ArchiveVersion holds the textual version string used for Geth archives.
 // e.g. "1.8.11-dea1ce05" for stable releases, or
-//      "1.8.13-unstable-21c059b6" for unstable releases
+//
+//	"1.8.13-unstable-21c059b6" for unstable releases
 func ArchiveVersion(gitCommit string) string {
 	vsn := Version
 	if VersionMeta != "stable" {
@@ -74,9 +75,9 @@ var (
 )
 
 func SetVersion(version, commit, date string) {
-	log.Info("","gitVersion",version)
-	log.Info("","gitCommit",commit)
-	log.Info("","gitDate",date)
+	log.Info("", "gitVersion", version)
+	log.Info("", "gitCommit", commit)
+	log.Info("", "gitDate", date)
 	gitVersion = version
 	gitCommit = commit
 	gitDate = date

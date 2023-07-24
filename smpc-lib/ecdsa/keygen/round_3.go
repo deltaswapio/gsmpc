@@ -19,12 +19,12 @@ package keygen
 import (
 	"errors"
 	//"fmt"
-	"github.com/anyswap/FastMulThreshold-DSA/smpc-lib/smpc"
-	"github.com/anyswap/FastMulThreshold-DSA/smpc-lib/crypto/ec2"
-	"github.com/anyswap/FastMulThreshold-DSA/log"
+	"github.com/deltaswapio/gsmpc/log"
+	"github.com/deltaswapio/gsmpc/smpc-lib/crypto/ec2"
+	"github.com/deltaswapio/gsmpc/smpc-lib/smpc"
 )
 
-// Start broacast commitment D 
+// Start broacast commitment D
 func (round *round3) Start() error {
 	if round.started {
 		return errors.New("round already started")
@@ -42,29 +42,29 @@ func (round *round3) Start() error {
 	if err != nil {
 		return err
 	}
-	
+
 	// add for GG20: keygen phase 3. Each player Pi proves in ZK that Ni is square-free using the proof of Gennaro, Micciancio, and Rabin [30]
 	// An Efficient Non-Interactive Statistical Zero-Knowledge Proof System for Quasi-Safe Prime Products, section 3.1
 	for k := range ids {
-	    msg1, ok := round.temp.kgRound1Messages[k].(*KGRound1Message)
-	    if !ok {
-		return errors.New("round.Start get round1 msg fail")
-	    }
+		msg1, ok := round.temp.kgRound1Messages[k].(*KGRound1Message)
+		if !ok {
+			return errors.New("round.Start get round1 msg fail")
+		}
 
-	    paiPk := msg1.U1PaillierPk
-	    if paiPk == nil {
-		    return errors.New("error kg round1 message")
-	    }
+		paiPk := msg1.U1PaillierPk
+		if paiPk == nil {
+			return errors.New("error kg round1 message")
+		}
 
-	    msg22, ok := round.temp.kgRound2Messages2[k].(*KGRound2Message2)
-	    if !ok {
-		return errors.New("round.Start get round2 msg 2 fail")
-	    }
+		msg22, ok := round.temp.kgRound2Messages2[k].(*KGRound2Message2)
+		if !ok {
+			return errors.New("round.Start get round2 msg 2 fail")
+		}
 
-	    if !ec2.SquareFreeVerify(paiPk.N,msg22.Num,msg22.SfPf) {
-		log.Error("keygen round3,check that a zero-knowledge proof that paillier.N is a square-free integer fail","k",ids[k])
-		return errors.New("check that a zero-knowledge proof that paillier.N is a square-free integer fail")
-	    }
+		if !ec2.SquareFreeVerify(paiPk.N, msg22.Num, msg22.SfPf) {
+			log.Error("keygen round3,check that a zero-knowledge proof that paillier.N is a square-free integer fail", "k", ids[k])
+			return errors.New("check that a zero-knowledge proof that paillier.N is a square-free integer fail")
+		}
 	}
 
 	kg := &KGRound3Message{
@@ -82,7 +82,7 @@ func (round *round3) Start() error {
 	return nil
 }
 
-// CanAccept is it legal to receive this message 
+// CanAccept is it legal to receive this message
 func (round *round3) CanAccept(msg smpc.Message) bool {
 	if _, ok := msg.(*KGRound3Message); ok {
 		return msg.IsBroadcast()
@@ -93,7 +93,7 @@ func (round *round3) CanAccept(msg smpc.Message) bool {
 	return false
 }
 
-// Update  is the message received and ready for the next round? 
+// Update  is the message received and ready for the next round?
 func (round *round3) Update() (bool, error) {
 	for j, msg := range round.temp.kgRound3Messages {
 		if round.ok[j] {

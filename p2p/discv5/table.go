@@ -29,7 +29,7 @@ import (
 	"net"
 	"sort"
 
-	"github.com/anyswap/FastMulThreshold-DSA/internal/common"
+	"github.com/deltaswapio/gsmpc/internal/common"
 )
 
 const (
@@ -110,10 +110,10 @@ func (tab *Table) chooseBucketRefreshTarget() common.Hash {
 
 	var target common.Hash
 	binary.BigEndian.PutUint64(target[0:8], targetPrefix)
-	_,err := rand.Read(target[8:])
+	_, err := rand.Read(target[8:])
 	if err != nil {
-	    var tmp common.Hash
-	    return tmp
+		var tmp common.Hash
+		return tmp
 	}
 
 	return target
@@ -160,9 +160,9 @@ func randUint(max uint32) uint32 {
 		return 0
 	}
 	var b [4]byte
-	_,err := rand.Read(b[:])
+	_, err := rand.Read(b[:])
 	if err != nil {
-	    return 0
+		return 0
 	}
 
 	return binary.BigEndian.Uint32(b[:]) % max
@@ -173,9 +173,9 @@ func randUint64n(max uint64) uint64 {
 		return 0
 	}
 	var b [8]byte
-	_,err := rand.Read(b[:])
+	_, err := rand.Read(b[:])
 	if err != nil {
-	    return 0
+		return 0
 	}
 
 	return binary.BigEndian.Uint64(b[:]) % max

@@ -22,10 +22,10 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
-	"github.com/anyswap/FastMulThreshold-DSA/smpc-lib/crypto/ed"
-	"github.com/anyswap/FastMulThreshold-DSA/smpc-lib/crypto/ed_ristretto"
+	"github.com/deltaswapio/gsmpc/smpc-lib/crypto/ed"
+	"github.com/deltaswapio/gsmpc/smpc-lib/crypto/ed_ristretto"
+	"github.com/deltaswapio/gsmpc/smpc-lib/smpc"
 	r255 "github.com/gtank/ristretto255"
-	"github.com/anyswap/FastMulThreshold-DSA/smpc-lib/smpc"
 	//"encoding/hex"
 )
 
@@ -68,7 +68,7 @@ func (round *round6) Start() error {
 		var shareUFlag = false
 		if round.temp.sigtype == smpc.SR25519 {
 			shareUFlag = ed_ristretto.VerifyVss(msg4.Share, round.temp.uids[curIndex], msg5.CfsBBytes)
-		}else {
+		} else {
 			shareUFlag = ed.VerifyVss(msg4.Share, round.temp.uids[curIndex], msg5.CfsBBytes)
 		}
 
@@ -122,7 +122,7 @@ func (round *round6) Start() error {
 			A.Decode(temPk[:])
 			askB := new(r255.Element).ScalarMult(a2Scalar, A)
 			askB.Encode(askBBytes[:0])
-		}else {
+		} else {
 			ed.ScReduce(&a2, &aDigest2)
 
 			var askB, A ed.ExtendedGroupElement
@@ -151,7 +151,7 @@ func (round *round6) Start() error {
 		t3 := msg4.Share
 		if round.temp.sigtype == smpc.SR25519 {
 			ed_ristretto.ScAdd(&tSk, &tSk, &t3)
-		}else {
+		} else {
 			ed.ScAdd(&tSk, &tSk, &t3)
 		}
 	}
@@ -199,7 +199,7 @@ func (round *round6) Start() error {
 			i++
 		}
 		finalPk.Encode(finalPkBytes[:0])
-	}else {
+	} else {
 		var finalPk ed.ExtendedGroupElement
 		i := 0
 		for k := range ids {

@@ -22,17 +22,17 @@ import (
 	"errors"
 	"fmt"
 	"math/big"
+	"strconv"
 	"strings"
 	"sync"
-	"strconv"
 	"time"
 
 	"crypto/hmac"
 	"crypto/sha512"
-	"github.com/anyswap/FastMulThreshold-DSA/crypto/secp256k1"
-	"github.com/anyswap/FastMulThreshold-DSA/internal/common"
+	"github.com/deltaswapio/gsmpc/crypto/secp256k1"
+	"github.com/deltaswapio/gsmpc/internal/common"
+	"github.com/deltaswapio/gsmpc/p2p/discover"
 	"github.com/fsn-dev/cryptoCoins/coins"
-	"github.com/anyswap/FastMulThreshold-DSA/p2p/discover"
 )
 
 // AccountsBalanceRes the balance of all smpc addr by pubkey
@@ -41,7 +41,7 @@ type AccountsBalanceRes struct {
 	Balances []SubAddressBalance
 }
 
-// SubAddressBalance the balance of smpc addr 
+// SubAddressBalance the balance of smpc addr
 type SubAddressBalance struct {
 	Cointype string
 	SmpcAddr string
@@ -66,7 +66,7 @@ type PubkeyRes struct {
 //--------------------------------------------------------------------------
 
 // GetPubKeyData2 get pubkey data by key/accout/contype
-// pubkey data,such as : account,pubkey,smpc address,cointype 
+// pubkey data,such as : account,pubkey,smpc address,cointype
 func GetPubKeyData2(key string, account string, cointype string) (string, string, error) {
 	if key == "" || cointype == "" {
 		return "", "smpc back-end internal error:parameter error", fmt.Errorf("get pubkey data param error")
@@ -93,7 +93,7 @@ func GetPubKeyData2(key string, account string, cointype string) (string, string
 
 		ctaddr, err := h.PublicKeyToAddress(pubkey)
 		if err != nil {
-			return "", "smpc back-end internal error:get smpc addr fail from pubkey:" + pubkey,err 
+			return "", "smpc back-end internal error:get smpc addr fail from pubkey:" + pubkey, err
 		}
 
 		m = &AddrRes{Account: account, PubKey: pubkey, SmpcAddr: ctaddr, Cointype: cointype}
@@ -126,10 +126,10 @@ func GetPubKeyData2(key string, account string, cointype string) (string, string
 
 //-------------------------------------------------------------------------------------------
 
-// GetAccountsBalance Obtain SMPC addresses in different currencies in pubkey, and then obtain its balance 
+// GetAccountsBalance Obtain SMPC addresses in different currencies in pubkey, and then obtain its balance
 func GetAccountsBalance(pubkey string, geteracc string) (interface{}, string, error) {
-    	if pubkey == "" || geteracc == "" {
-	    return nil,"",errors.New("param error")
+	if pubkey == "" || geteracc == "" {
+		return nil, "", errors.New("param error")
 	}
 
 	keytmp, err2 := hex.DecodeString(pubkey)
@@ -178,8 +178,8 @@ func GetAccountsBalance(pubkey string, geteracc string) (interface{}, string, er
 
 // GetBalance get the balance by smpc address
 func GetBalance(account string, cointype string, smpcaddr string) (string, string, error) {
-    	if account == "" || cointype == "" || smpcaddr == "" {
-	    return "","",errors.New("param error")
+	if account == "" || cointype == "" || smpcaddr == "" {
+		return "", "", errors.New("param error")
 	}
 
 	if strings.EqualFold(cointype, "EVT1") || strings.EqualFold(cointype, "EVT") { ///tmp code
@@ -237,7 +237,7 @@ func GetAddr(pubkey string, cointype string) (string, string, error) {
 
 	ctaddr, err := h.PublicKeyToAddress(pubkey)
 	if err != nil {
-		return "", "smpc back-end internal error:get smpc addr fail from pubkey:" + pubkey,err 
+		return "", "smpc back-end internal error:get smpc addr fail from pubkey:" + pubkey, err
 	}
 
 	return ctaddr, "", nil
@@ -298,7 +298,7 @@ func GetAccounts(geteracc, mode string) (interface{}, string, error) {
 
 			smpcpks, err := hex.DecodeString(pubkey)
 			if err != nil {
-			    return
+				return
 			}
 
 			exsit, data2 := GetPubKeyData(smpcpks[:])
@@ -355,9 +355,9 @@ func GetAccounts(geteracc, mode string) (interface{}, string, error) {
 //-----------------------------------------------------------------------------------------
 
 // GetBip32ChildKey rootpubkey is the total public key of the root node
-// the inputcode format is "m / X1 / x2 /... / xn", where x1,..., xn is the index number of the child node of each level, which is in decimal format, for example: "m / 1234567890123456789012345678901234567890123456789012323455678901234" 
-// the return value is the sub public key of the X1 / x2 /... / xn sub node of the total public key of the root node.  
-func GetBip32ChildKey(rootpubkey string, inputcode string,keytype string,mode string) (string, string, error) {
+// the inputcode format is "m / X1 / x2 /... / xn", where x1,..., xn is the index number of the child node of each level, which is in decimal format, for example: "m / 1234567890123456789012345678901234567890123456789012323455678901234"
+// the return value is the sub public key of the X1 / x2 /... / xn sub node of the total public key of the root node.
+func GetBip32ChildKey(rootpubkey string, inputcode string, keytype string, mode string) (string, string, error) {
 	if rootpubkey == "" || inputcode == "" {
 		return "", "param error", fmt.Errorf("param error")
 	}
@@ -369,7 +369,7 @@ func GetBip32ChildKey(rootpubkey string, inputcode string,keytype string,mode st
 
 	smpcpks, err := hex.DecodeString(rootpubkey)
 	if err != nil {
-	    return "", "", err 
+		return "", "", err
 	}
 
 	exsit, da := GetPubKeyData(smpcpks[:])
@@ -412,17 +412,17 @@ func GetBip32ChildKey(rootpubkey string, inputcode string,keytype string,mode st
 	childSKU1 := sku1
 	for idxi := 1; idxi < len(indexs); idxi++ {
 		h := hmac.New(sha512.New, TRb)
-		_,err := h.Write(childPKx.Bytes())
+		_, err := h.Write(childPKx.Bytes())
 		if err != nil {
-		    return "","",err
+			return "", "", err
 		}
-		_,err = h.Write(childPKy.Bytes())
+		_, err = h.Write(childPKy.Bytes())
 		if err != nil {
-		    return "","",err
+			return "", "", err
 		}
-		_,err = h.Write([]byte(indexs[idxi]))
+		_, err = h.Write([]byte(indexs[idxi]))
 		if err != nil {
-		    return "","",err
+			return "", "", err
 		}
 		T := h.Sum(nil)
 		TRb = T[32:]
@@ -450,20 +450,20 @@ func GetBip32ChildKey(rootpubkey string, inputcode string,keytype string,mode st
 			PutPreSigal(pub, true)
 
 			if mode != "2" {
-			    err := SavePrekeyToDb(rootpubkey, inputcode, gg,keytype)
-			    if err != nil {
-				    common.Error("=========================get bip32 child key,save (pubkey,inputcode,gid) to db fail.=======================", "pubkey", rootpubkey, "inputcode", inputcode, "gid", gg, "err", err)
-				    return
-			    }
+				err := SavePrekeyToDb(rootpubkey, inputcode, gg, keytype)
+				if err != nil {
+					common.Error("=========================get bip32 child key,save (pubkey,inputcode,gid) to db fail.=======================", "pubkey", rootpubkey, "inputcode", inputcode, "gid", gg, "err", err)
+					return
+				}
 			}
-			
+
 			common.Info("===================before generate pre-sign data for bip32===============", "current total number of the data ", GetTotalCount(rootpubkey, inputcode, gg), "the number of remaining pre-sign data", (PreBip32DataCount - GetTotalCount(rootpubkey, inputcode, gg)), "pub", pub, "pubkey", rootpubkey, "input code", inputcode, "sub-groupid", gg)
 			for {
 				index, need := NeedPreSignForBip32(rootpubkey, inputcode, gg)
 				if need && index != -1 && GetPreSigal(pub) {
 					tt := fmt.Sprintf("%v", time.Now().UnixNano()/1e6)
 					nonce := Keccak256Hash([]byte(strings.ToLower(pub + tt))).Hex()
-					ps := &PreSign{Pub: rootpubkey, InputCode: inputcode, Gid: gg, Nonce: nonce,KeyType:keytype}
+					ps := &PreSign{Pub: rootpubkey, InputCode: inputcode, Gid: gg, Nonce: nonce, KeyType: keytype}
 
 					m := make(map[string]string)
 					psjson, err := ps.MarshalJSON()
@@ -479,12 +479,12 @@ func GetBip32ChildKey(rootpubkey string, inputcode string,keytype string,mode st
 					SendMsgToSmpcGroup(string(val), gg)
 					//check msg
 					msghash := Keccak256Hash([]byte(strings.ToLower(string(val)))).Hex()
-					_,exist := MsgReceiv.ReadMap(msghash)
+					_, exist := MsgReceiv.ReadMap(msghash)
 					if exist {
-					    continue
+						continue
 					}
 
-					MsgReceiv.WriteMap(msghash,NowMilliStr())
+					MsgReceiv.WriteMap(msghash, NowMilliStr())
 
 					rch := make(chan interface{}, 1)
 					SetUpMsgList3(string(val), curEnode, rch)
@@ -508,7 +508,7 @@ func GetBip32ChildKey(rootpubkey string, inputcode string,keytype string,mode st
 
 	addr, _, err := GetSmpcAddr(pubkeyhex)
 	if err != nil {
-		return "", "get bip32 pubkey error",err 
+		return "", "get bip32 pubkey error", err
 	}
 	fmt.Printf("===================GetBip32ChildKey, get bip32 pubkey success, rootpubkey = %v, inputcode = %v, child pubkey = %v, addr = %v ===================\n", rootpubkey, inputcode, pubkeyhex, addr)
 
@@ -518,83 +518,80 @@ func GetBip32ChildKey(rootpubkey string, inputcode string,keytype string,mode st
 //--------------------------------------------------------------
 
 var (
-    keygen_num = 0
-    sign_num = 0
-    keygen_fail_num = 0
-    sign_fail_num = 0
+	keygen_num      = 0
+	sign_num        = 0
+	keygen_fail_num = 0
+	sign_fail_num   = 0
 )
 
 type MpcNodeInfo struct {
-    GidNum int
-    KeyGenNum int
-    KeyGenFailNum int
-    SignNum int
-    SignFailNum int
+	GidNum        int
+	KeyGenNum     int
+	KeyGenFailNum int
+	SignNum       int
+	SignFailNum   int
 }
 
-func GetMpcNodeInfo() (string,error) {
-    //group num
-    gidnum := 0
-    if discover.SDK_groupList != nil {
-	gidnum = len(discover.SDK_groupList)
-    }
+func GetMpcNodeInfo() (string, error) {
+	//group num
+	gidnum := 0
+	if discover.SDK_groupList != nil {
+		gidnum = len(discover.SDK_groupList)
+	}
 
-    mni := &MpcNodeInfo{GidNum:gidnum,KeyGenNum:keygen_num,KeyGenFailNum:keygen_fail_num,SignNum:sign_num,SignFailNum:sign_fail_num}
+	mni := &MpcNodeInfo{GidNum: gidnum, KeyGenNum: keygen_num, KeyGenFailNum: keygen_fail_num, SignNum: sign_num, SignFailNum: sign_fail_num}
 
-    ret,err := json.Marshal(mni)
-    return string(ret),err
+	ret, err := json.Marshal(mni)
+	return string(ret), err
 }
 
 func InitMpcNodeInfo() {
-    //get mpc node info
-    keytmp := Keccak256Hash([]byte(strings.ToLower(curEnode + ":" + "KeyGenNum"))).Hex()
-    b,da := GetPubKeyData([]byte(keytmp))
-    if b {
-	data,ok := da.([]byte)
-	if ok {
-	    num,err := strconv.Atoi(string(data))
-	    if err == nil {
-		keygen_num = num
-	    }
+	//get mpc node info
+	keytmp := Keccak256Hash([]byte(strings.ToLower(curEnode + ":" + "KeyGenNum"))).Hex()
+	b, da := GetPubKeyData([]byte(keytmp))
+	if b {
+		data, ok := da.([]byte)
+		if ok {
+			num, err := strconv.Atoi(string(data))
+			if err == nil {
+				keygen_num = num
+			}
+		}
 	}
-    }
 
-    keytmp = Keccak256Hash([]byte(strings.ToLower(curEnode + ":" + "KeyGenFailNum"))).Hex()
-    b,da = GetPubKeyData([]byte(keytmp))
-    if b {
-	data,ok := da.([]byte)
-	if ok {
-	    num,err := strconv.Atoi(string(data))
-	    if err == nil {
-		keygen_fail_num = num
-	    }
+	keytmp = Keccak256Hash([]byte(strings.ToLower(curEnode + ":" + "KeyGenFailNum"))).Hex()
+	b, da = GetPubKeyData([]byte(keytmp))
+	if b {
+		data, ok := da.([]byte)
+		if ok {
+			num, err := strconv.Atoi(string(data))
+			if err == nil {
+				keygen_fail_num = num
+			}
+		}
 	}
-    }
 
-    keytmp = Keccak256Hash([]byte(strings.ToLower(curEnode + ":" + "SignNum"))).Hex()
-    b,da = GetPubKeyData([]byte(keytmp))
-    if b {
-	data,ok := da.([]byte)
-	if ok {
-	    num,err := strconv.Atoi(string(data))
-	    if err == nil {
-		sign_num = num
-	    }
+	keytmp = Keccak256Hash([]byte(strings.ToLower(curEnode + ":" + "SignNum"))).Hex()
+	b, da = GetPubKeyData([]byte(keytmp))
+	if b {
+		data, ok := da.([]byte)
+		if ok {
+			num, err := strconv.Atoi(string(data))
+			if err == nil {
+				sign_num = num
+			}
+		}
 	}
-    }
 
-    keytmp = Keccak256Hash([]byte(strings.ToLower(curEnode + ":" + "SignFailNum"))).Hex()
-    b,da = GetPubKeyData([]byte(keytmp))
-    if b {
-	data,ok := da.([]byte)
-	if ok {
-	    num,err := strconv.Atoi(string(data))
-	    if err == nil {
-		sign_fail_num = num
-	    }
+	keytmp = Keccak256Hash([]byte(strings.ToLower(curEnode + ":" + "SignFailNum"))).Hex()
+	b, da = GetPubKeyData([]byte(keytmp))
+	if b {
+		data, ok := da.([]byte)
+		if ok {
+			num, err := strconv.Atoi(string(data))
+			if err == nil {
+				sign_fail_num = num
+			}
+		}
 	}
-    }
 }
-
-
-

@@ -17,13 +17,13 @@
 package reshare
 
 import (
+	"encoding/hex"
 	"errors"
 	"fmt"
-	"github.com/anyswap/FastMulThreshold-DSA/smpc-lib/ecdsa/keygen"
-	"github.com/anyswap/FastMulThreshold-DSA/smpc-lib/smpc"
+	"github.com/deltaswapio/gsmpc/smpc-lib/ecdsa/keygen"
+	"github.com/deltaswapio/gsmpc/smpc-lib/smpc"
 	"math/big"
 	"sort"
-	"encoding/hex"
 )
 
 type (
@@ -40,10 +40,10 @@ type (
 		threshold         int
 		paillierkeylength int
 		oldnode           bool
-		oldindex           int
+		oldindex          int
 		//add for check msg0
 		idreshare smpc.SortableIDSSlice
-		keytype string
+		keytype   string
 	}
 	round0 struct {
 		*base
@@ -94,10 +94,10 @@ func (round *base) GetIDs() (smpc.SortableIDSSlice, error) {
 	for _, v := range round.temp.reshareRound0Messages {
 		uidtmp, err := hex.DecodeString(v.GetFromID())
 		if err != nil {
-		    return nil,err
+			return nil, err
 		}
 
-		uid,_ := new(big.Int).SetString(string(uidtmp[:]),10)
+		uid, _ := new(big.Int).SetString(string(uidtmp[:]), 10)
 		ids = append(ids, uid)
 	}
 
@@ -113,9 +113,9 @@ func (round *base) GetDNodeIDIndex(id string) (int, error) {
 
 	uidtmp, err := hex.DecodeString(id)
 	if err != nil {
-	    return -1,err
+		return -1, err
 	}
-	idtmp,_ := new(big.Int).SetString(string(uidtmp[:]),10)
+	idtmp, _ := new(big.Int).SetString(string(uidtmp[:]), 10)
 
 	for k, v := range round.idreshare {
 		if v.Cmp(idtmp) == 0 {

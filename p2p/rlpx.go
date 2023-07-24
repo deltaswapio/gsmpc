@@ -35,14 +35,14 @@ import (
 	"sync"
 	"time"
 
-	"github.com/anyswap/FastMulThreshold-DSA/crypto"
-	"github.com/anyswap/FastMulThreshold-DSA/crypto/ecies"
-	"github.com/anyswap/FastMulThreshold-DSA/crypto/secp256k1"
-	"github.com/anyswap/FastMulThreshold-DSA/crypto/sha3"
-	"github.com/anyswap/FastMulThreshold-DSA/p2p/discover"
+	"github.com/deltaswapio/gsmpc/crypto"
+	"github.com/deltaswapio/gsmpc/crypto/ecies"
+	"github.com/deltaswapio/gsmpc/crypto/secp256k1"
+	"github.com/deltaswapio/gsmpc/crypto/sha3"
+	"github.com/deltaswapio/gsmpc/log"
+	"github.com/deltaswapio/gsmpc/p2p/discover"
 	"github.com/fsn-dev/cryptoCoins/tools/rlp"
 	"github.com/golang/snappy"
-	"github.com/anyswap/FastMulThreshold-DSA/log"
 )
 
 const (
@@ -85,10 +85,10 @@ type rlpx struct {
 }
 
 func newRLPX(fd net.Conn) transport {
-    err := fd.SetDeadline(time.Now().Add(handshakeTimeout))
-    if err != nil {
-	return nil
-    }
+	err := fd.SetDeadline(time.Now().Add(handshakeTimeout))
+	if err != nil {
+		return nil
+	}
 	return &rlpx{fd: fd}
 }
 
@@ -97,7 +97,7 @@ func (t *rlpx) ReadMsg() (Msg, error) {
 	defer t.rmu.Unlock()
 	err := t.fd.SetReadDeadline(time.Now().Add(frameReadTimeout))
 	if err != nil {
-	    return Msg{},err
+		return Msg{}, err
 	}
 	return t.rw.ReadMsg()
 }
@@ -107,7 +107,7 @@ func (t *rlpx) WriteMsg(msg Msg) error {
 	defer t.wmu.Unlock()
 	err := t.fd.SetWriteDeadline(time.Now().Add(frameWriteTimeout))
 	if err != nil {
-	    return err
+		return err
 	}
 
 	return t.rw.WriteMsg(msg)
@@ -127,8 +127,8 @@ func (t *rlpx) close(err error) {
 			if err := t.fd.SetWriteDeadline(time.Now().Add(discWriteTimeout)); err == nil {
 				err = SendItems(t.rw, discMsg, r)
 				if err != nil {
-				    t.fd.Close()
-				    return
+					t.fd.Close()
+					return
 				}
 			}
 		}
@@ -159,11 +159,11 @@ func (t *rlpx) doProtoHandshake(our *protoHandshake) (their *protoHandshake, err
 func readProtocolHandshake(rw MsgReader, our *protoHandshake) (*protoHandshake, error) {
 	msg, err := rw.ReadMsg()
 	if err != nil {
-		log.Debug("=====================readProtocolHandshake,read msg error=======================","err",err)
+		log.Debug("=====================readProtocolHandshake,read msg error=======================", "err", err)
 		return nil, err
 	}
 	if msg.Size > baseProtocolMaxMsgSize {
-		log.Debug("=====================readProtocolHandshake,message too big=======================","msg size",msg.Size,"max size",baseProtocolMaxMsgSize)
+		log.Debug("=====================readProtocolHandshake,message too big=======================", "msg size", msg.Size, "max size", baseProtocolMaxMsgSize)
 		return nil, fmt.Errorf("message too big")
 	}
 	if msg.Code == discMsg {
@@ -174,11 +174,11 @@ func readProtocolHandshake(rw MsgReader, our *protoHandshake) (*protoHandshake, 
 		var reason [1]DiscReason
 		err := rlp.Decode(msg.Payload, &reason)
 		if err != nil {
-		    log.Debug("=====================readProtocolHandshake,decode msg error=======================","err",err)
-		    return nil,err
+			log.Debug("=====================readProtocolHandshake,decode msg error=======================", "err", err)
+			return nil, err
 		}
 
-		log.Debug("=====================readProtocolHandshake,msg error=======================","err",err)
+		log.Debug("=====================readProtocolHandshake,msg error=======================", "err", err)
 		return nil, reason[0]
 	}
 	if msg.Code != handshakeMsg {
@@ -676,7 +676,7 @@ func (rw *rlpxFrameRW) ReadMsg() (msg Msg, err error) {
 	// read the header
 	headbuf := make([]byte, 32)
 	if _, err := io.ReadFull(rw.conn, headbuf); err != nil {
-		log.Debug("=====================rlpxFrameRW.ReadMsg,read msg error=======================","err",err)
+		log.Debug("=====================rlpxFrameRW.ReadMsg,read msg error=======================", "err", err)
 		return msg, err
 	}
 	// verify header mac
@@ -696,7 +696,7 @@ func (rw *rlpxFrameRW) ReadMsg() (msg Msg, err error) {
 	}
 	framebuf := make([]byte, rsize)
 	if _, err := io.ReadFull(rw.conn, framebuf); err != nil {
-		log.Debug("=====================rlpxFrameRW.ReadMsg,read frame buf error=======================","err",err)
+		log.Debug("=====================rlpxFrameRW.ReadMsg,read frame buf error=======================", "err", err)
 		return msg, err
 	}
 
@@ -704,7 +704,7 @@ func (rw *rlpxFrameRW) ReadMsg() (msg Msg, err error) {
 	rw.ingressMAC.Write(framebuf)
 	fmacseed := rw.ingressMAC.Sum(nil)
 	if _, err := io.ReadFull(rw.conn, headbuf[:16]); err != nil {
-		log.Debug("=====================rlpxFrameRW.ReadMsg,read msg error=======================","err",err)
+		log.Debug("=====================rlpxFrameRW.ReadMsg,read msg error=======================", "err", err)
 		return msg, err
 	}
 	shouldMAC = updateMAC(rw.ingressMAC, rw.macCipher, fmacseed)
@@ -719,7 +719,7 @@ func (rw *rlpxFrameRW) ReadMsg() (msg Msg, err error) {
 	// decode message code
 	content := bytes.NewReader(framebuf[:fsize])
 	if err := rlp.Decode(content, &msg.Code); err != nil {
-		log.Debug("=====================rlpxFrameRW.ReadMsg,decode msg error=======================","err",err)
+		log.Debug("=====================rlpxFrameRW.ReadMsg,decode msg error=======================", "err", err)
 		return msg, err
 	}
 	msg.Size = uint32(content.Len())

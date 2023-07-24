@@ -18,8 +18,8 @@ package reshare
 
 import (
 	"errors"
+	"github.com/deltaswapio/gsmpc/smpc-lib/smpc"
 	"math/big"
-	"github.com/anyswap/FastMulThreshold-DSA/smpc-lib/smpc"
 )
 
 // Start broacast success status to other nodes
@@ -50,7 +50,7 @@ func (round *round5) Start() error {
 
 	re := &ReRound5Message{
 		ReRoundMessage: new(ReRoundMessage),
-		NewSkOk:             "TRUE",
+		NewSkOk:        "TRUE",
 	}
 	re.SetFromID(round.dnodeid)
 	re.SetFromIndex(curIndex)
@@ -62,7 +62,7 @@ func (round *round5) Start() error {
 	return nil
 }
 
-// CanAccept is it legal to receive this message 
+// CanAccept is it legal to receive this message
 func (round *round5) CanAccept(msg smpc.Message) bool {
 	if _, ok := msg.(*ReRound5Message); ok {
 		return msg.IsBroadcast()
@@ -71,7 +71,7 @@ func (round *round5) CanAccept(msg smpc.Message) bool {
 	return false
 }
 
-// Update  is the message received and ready for the next round? 
+// Update  is the message received and ready for the next round?
 func (round *round5) Update() (bool, error) {
 	for j, msg := range round.temp.reshareRound5Messages {
 		if round.ok[j] {

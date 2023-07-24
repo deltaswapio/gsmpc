@@ -14,6 +14,7 @@
 // You should have received a copy of the GNU Lesser General Public License
 // along with the go-ethereum library. If not, see <http://www.gnu.org/licenses/>.
 
+//go:build !nacl && !js && !nocgo
 // +build !nacl,!js,!nocgo
 
 package crypto
@@ -23,8 +24,8 @@ import (
 	"crypto/elliptic"
 	"fmt"
 
-	"github.com/anyswap/FastMulThreshold-DSA/crypto/secp256k1"
-	"github.com/anyswap/FastMulThreshold-DSA/internal/common/math"
+	"github.com/deltaswapio/gsmpc/crypto/secp256k1"
+	"github.com/deltaswapio/gsmpc/internal/common/math"
 )
 
 // Ecrecover returns the uncompressed public key that created the given signature.
@@ -78,7 +79,7 @@ func DecompressPubkey(pubkey []byte) (*ecdsa.PublicKey, error) {
 
 // CompressPubkey encodes a public key to the 33-byte compressed format.
 func CompressPubkey(pubkey *ecdsa.PublicKey) []byte {
-	return secp256k1.CompressPubkey("",pubkey.X, pubkey.Y)
+	return secp256k1.CompressPubkey("", pubkey.X, pubkey.Y)
 }
 
 // S256 returns an instance of the secp256k1 curve.

@@ -20,7 +20,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/anyswap/FastMulThreshold-DSA/internal/params"
+	"github.com/deltaswapio/gsmpc/internal/params"
 	cli "gopkg.in/urfave/cli.v1"
 )
 

@@ -18,7 +18,7 @@ package keygen
 
 import (
 	"errors"
-	"github.com/anyswap/FastMulThreshold-DSA/smpc-lib/smpc"
+	"github.com/deltaswapio/gsmpc/smpc-lib/smpc"
 )
 
 // Start broacast cfsBBytes
@@ -49,7 +49,7 @@ func (round *round5) Start() error {
 	return nil
 }
 
-// CanAccept is it legal to receive this message 
+// CanAccept is it legal to receive this message
 func (round *round5) CanAccept(msg smpc.Message) bool {
 	if _, ok := msg.(*KGRound5Message); ok {
 		return msg.IsBroadcast()
@@ -57,7 +57,7 @@ func (round *round5) CanAccept(msg smpc.Message) bool {
 	return false
 }
 
-// Update  is the message received and ready for the next round? 
+// Update  is the message received and ready for the next round?
 func (round *round5) Update() (bool, error) {
 	for j, msg := range round.temp.kgRound5Messages {
 		if round.ok[j] {

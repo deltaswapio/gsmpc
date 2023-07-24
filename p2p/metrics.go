@@ -21,7 +21,7 @@ package p2p
 import (
 	"net"
 
-	"github.com/anyswap/FastMulThreshold-DSA/p2p/metrics"
+	"github.com/deltaswapio/gsmpc/p2p/metrics"
 )
 
 var (

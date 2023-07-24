@@ -23,7 +23,7 @@ import (
 	"math/big"
 	"strconv"
 
-	"github.com/anyswap/FastMulThreshold-DSA/internal/common/math/random"
+	"github.com/deltaswapio/gsmpc/internal/common/math/random"
 )
 
 // ErrMessageTooLong error info to print
@@ -46,9 +46,9 @@ type PrivateKey struct {
 }
 
 // GenerateKeyPair create paillier pubkey and private key
-func GenerateKeyPair(length int) (*PublicKey, *PrivateKey,*big.Int,*big.Int) {
-    	if length <= 0 {
-	    return nil,nil,nil,nil
+func GenerateKeyPair(length int) (*PublicKey, *PrivateKey, *big.Int, *big.Int) {
+	if length <= 0 {
+		return nil, nil, nil, nil
 	}
 
 	one := big.NewInt(1)
@@ -59,7 +59,7 @@ func GenerateKeyPair(length int) (*PublicKey, *PrivateKey,*big.Int,*big.Int) {
 	q := sp2.p
 
 	if p == nil || q == nil {
-		return nil, nil,nil,nil
+		return nil, nil, nil, nil
 	}
 
 	SafePrimeCh <- sp1
@@ -75,19 +75,19 @@ func GenerateKeyPair(length int) (*PublicKey, *PrivateKey,*big.Int,*big.Int) {
 	l := new(big.Int).Mul(pMinus1, qMinus1)
 	u := new(big.Int).ModInverse(l, n)
 	if u == nil {
-		return nil, nil,nil,nil
+		return nil, nil, nil, nil
 	}
 
 	publicKey := &PublicKey{Length: strconv.Itoa(length), N: n, G: g, N2: n2}
 	privateKey := &PrivateKey{Length: strconv.Itoa(length), PublicKey: *publicKey, L: l, U: u}
 
-	return publicKey, privateKey,p,q
+	return publicKey, privateKey, p, q
 }
 
 // Encrypt paillier encrypt by public key
 func (publicKey *PublicKey) Encrypt(mBigInt *big.Int) (*big.Int, *big.Int, error) {
-    	if mBigInt == nil {
-	    return nil,nil,errors.New("param error")
+	if mBigInt == nil {
+		return nil, nil, errors.New("param error")
 	}
 
 	if mBigInt.Cmp(publicKey.N) > 0 {
@@ -110,8 +110,8 @@ func (publicKey *PublicKey) Encrypt(mBigInt *big.Int) (*big.Int, *big.Int, error
 
 // Decrypt paillier decrypt by private key
 func (privateKey *PrivateKey) Decrypt(cipherBigInt *big.Int) (*big.Int, error) {
-    	if privateKey == nil || cipherBigInt == nil {
-	    return nil,errors.New("param error")
+	if privateKey == nil || cipherBigInt == nil {
+		return nil, errors.New("param error")
 	}
 
 	one := big.NewInt(1)
@@ -134,10 +134,10 @@ func (privateKey *PrivateKey) Decrypt(cipherBigInt *big.Int) (*big.Int, error) {
 	return mBigInt, nil
 }
 
-// HomoAdd  Homomorphic addition 
+// HomoAdd  Homomorphic addition
 func (publicKey *PublicKey) HomoAdd(c1, c2 *big.Int) *big.Int {
-    	if publicKey == nil || c1 == nil || c2 == nil {
-	    return nil
+	if publicKey == nil || c1 == nil || c2 == nil {
+		return nil
 	}
 
 	// c1 * c2
@@ -148,10 +148,10 @@ func (publicKey *PublicKey) HomoAdd(c1, c2 *big.Int) *big.Int {
 	return newCipher
 }
 
-// HomoMul  Homomorphic multiplication 
+// HomoMul  Homomorphic multiplication
 func (publicKey *PublicKey) HomoMul(cipher, k *big.Int) *big.Int {
-    	if publicKey == nil || cipher == nil || k == nil {
-	    return nil
+	if publicKey == nil || cipher == nil || k == nil {
+		return nil
 	}
 
 	// cipher^k mod N2
@@ -194,17 +194,17 @@ func (publicKey *PublicKey) UnmarshalJSON(raw []byte) error {
 	publicKey.G, _ = new(big.Int).SetString(pub.G, 10)
 	publicKey.N2, _ = new(big.Int).SetString(pub.N2, 10)
 
-	l,err := strconv.Atoi(publicKey.Length)
+	l, err := strconv.Atoi(publicKey.Length)
 	if err != nil {
-	    return err
+		return err
 	}
 
 	if l <= 0 {
-	    return errors.New("unmarshal length error")
+		return errors.New("unmarshal length error")
 	}
 
 	if publicKey.N == nil || publicKey.G == nil || publicKey.N2 == nil {
-	    return errors.New("unmarshal json error")
+		return errors.New("unmarshal json error")
 	}
 
 	return nil
@@ -245,13 +245,13 @@ func (privateKey *PrivateKey) UnmarshalJSON(raw []byte) error {
 	}
 
 	privateKey.Length = pri.Length
-	l,err := strconv.Atoi(privateKey.Length)
+	l, err := strconv.Atoi(privateKey.Length)
 	if err != nil {
-	    return err
+		return err
 	}
 
 	if l <= 0 {
-	    return errors.New("unmarshal length error")
+		return errors.New("unmarshal length error")
 	}
 
 	pub := &PublicKey{}
@@ -264,7 +264,7 @@ func (privateKey *PrivateKey) UnmarshalJSON(raw []byte) error {
 	privateKey.L, _ = new(big.Int).SetString(pri.L, 10)
 	privateKey.U, _ = new(big.Int).SetString(pri.U, 10)
 	if privateKey.L == nil || privateKey.U == nil {
-	    return errors.New("unmarshal json error")
+		return errors.New("unmarshal json error")
 	}
 
 	return nil
@@ -274,8 +274,8 @@ func (privateKey *PrivateKey) UnmarshalJSON(raw []byte) error {
 
 // CreatPair create paillier pubkey/private key
 func CreatPair(length int) (*PublicKey, *PrivateKey) {
-    	if length <= 0 {
-	    return nil,nil
+	if length <= 0 {
+		return nil, nil
 	}
 
 	one := big.NewInt(1)
@@ -305,4 +305,3 @@ func CreatPair(length int) (*PublicKey, *PrivateKey) {
 
 	return publicKey, privateKey
 }
-

@@ -28,23 +28,23 @@ import (
 	"compress/zlib"
 	"container/list"
 	"encoding/gob"
-	"github.com/anyswap/FastMulThreshold-DSA/crypto/sha3"
-	"github.com/anyswap/FastMulThreshold-DSA/internal/common"
-	"github.com/anyswap/FastMulThreshold-DSA/internal/common/hexutil"
-	"github.com/anyswap/FastMulThreshold-DSA/smpc-lib/crypto/ed"
-	"github.com/anyswap/FastMulThreshold-DSA/smpc-lib/crypto/ed_ristretto"
-	smpclib "github.com/anyswap/FastMulThreshold-DSA/smpc-lib/smpc"
+	"encoding/hex"
+	"errors"
+	"github.com/deltaswapio/gsmpc/crypto"
+	"github.com/deltaswapio/gsmpc/crypto/secp256k1"
+	"github.com/deltaswapio/gsmpc/crypto/sha3"
+	"github.com/deltaswapio/gsmpc/internal/common"
+	"github.com/deltaswapio/gsmpc/internal/common/hexutil"
+	"github.com/deltaswapio/gsmpc/log"
+	"github.com/deltaswapio/gsmpc/smpc-lib/crypto/ed"
+	"github.com/deltaswapio/gsmpc/smpc-lib/crypto/ed_ristretto"
+	smpclib "github.com/deltaswapio/gsmpc/smpc-lib/smpc"
+	"github.com/fsn-dev/cryptoCoins/coins"
 	"github.com/fsn-dev/cryptoCoins/coins/types"
 	"github.com/fsn-dev/cryptoCoins/tools/rlp"
-	"io"
-	"errors"
-	"sort"
-	"github.com/anyswap/FastMulThreshold-DSA/crypto"
-       "github.com/anyswap/FastMulThreshold-DSA/crypto/secp256k1"
-       "encoding/hex"
-       "github.com/fsn-dev/cryptoCoins/coins"
-	"github.com/anyswap/FastMulThreshold-DSA/log"
 	msgsigsha3 "golang.org/x/crypto/sha3"
+	"io"
+	"sort"
 )
 
 //---------------------------------------------------------------------------
@@ -70,10 +70,10 @@ type RPCSmpcRes struct {
 	Err error
 }
 
-// GetChannelValue get channel value within the specified timeout 
+// GetChannelValue get channel value within the specified timeout
 func GetChannelValue(t int, obj interface{}) (string, string, error) {
-    	if t <= 0 || obj == nil {
-	    return "","",errors.New("param error")
+	if t <= 0 || obj == nil {
+		return "", "", errors.New("param error")
 	}
 
 	timeout := make(chan bool, 1)
@@ -136,8 +136,8 @@ func GetChannelValue(t int, obj interface{}) (string, string, error) {
 
 // Encode2 encode obj to string
 func Encode2(obj interface{}) (string, error) {
-    	if obj == nil {
-	    return "",errors.New("param error")
+	if obj == nil {
+		return "", errors.New("param error")
 	}
 
 	switch ch := obj.(type) {
@@ -153,7 +153,7 @@ func Encode2(obj interface{}) (string, error) {
 	case *AcceptReqAddrData:
 		ret, err := json.Marshal(ch)
 		if err != nil {
-		    log.Error("========================Encode2,marshal AcceptReqAddrData type fail====================","err",err)
+			log.Error("========================Encode2,marshal AcceptReqAddrData type fail====================", "err", err)
 			return "", err
 		}
 		return string(ret), nil
@@ -183,8 +183,8 @@ func Encode2(obj interface{}) (string, error) {
 
 // Decode2 decode string to obj by data type
 func Decode2(s string, datatype string) (interface{}, error) {
-    	if s == "" || datatype == "" {
-	    return nil,errors.New("param error")
+	if s == "" || datatype == "" {
+		return nil, errors.New("param error")
 	}
 
 	if datatype == "PubKeyData" {
@@ -206,11 +206,11 @@ func Decode2(s string, datatype string) (interface{}, error) {
 		var m AcceptReqAddrData
 		err := json.Unmarshal([]byte(s), &m)
 		if err != nil {
-		    log.Error("========================Decode2,unmarshal AcceptReqAddrData type fail====================","err",err)
+			log.Error("========================Decode2,unmarshal AcceptReqAddrData type fail====================", "err", err)
 			return nil, err
 		}
 
-		log.Debug("========================Decode2,unmarshal AcceptReqAddrData type success====================","m.FixedApprover",m.FixedApprover)
+		log.Debug("========================Decode2,unmarshal AcceptReqAddrData type success====================", "m.FixedApprover", m.FixedApprover)
 		return &m, nil
 	}
 
@@ -307,8 +307,8 @@ func (h ByteHash) Hex() string { return hexutil.Encode(h[:]) }
 // Keccak256Hash calculates and returns the Keccak256 hash of the input data,
 // converting it to an internal Hash data structure.
 func Keccak256Hash(data ...[]byte) (h ByteHash) {
-    	if data == nil {
-	    return h
+	if data == nil {
+		return h
 	}
 
 	d := sha3.NewKeccak256()
@@ -327,10 +327,10 @@ func Keccak256Hash(data ...[]byte) (h ByteHash) {
 
 //----------------------------------------------------------------------------------------------
 
-// DoubleHash  The EnodeID is converted into a hash value according to different keytypes 
+// DoubleHash  The EnodeID is converted into a hash value according to different keytypes
 func DoubleHash(id string, keytype string) *big.Int {
-    	if id == "" {
-	    return nil
+	if id == "" {
+		return nil
 	}
 
 	// Generate the random num
@@ -360,11 +360,10 @@ func DoubleHash(id string, keytype string) *big.Int {
 		one[0] = 1
 		if keytype == smpclib.SR25519 {
 			ed_ristretto.ScMulAdd(&digest, &digest, &one, &zero)
-		}else
-		{
+		} else {
 			ed.ScMulAdd(&digest, &digest, &one, &zero)
 		}
-		
+
 		digestBigInt := new(big.Int).SetBytes(digest[:])
 		return digestBigInt
 	}
@@ -375,10 +374,10 @@ func DoubleHash(id string, keytype string) *big.Int {
 	return digestBigInt
 }
 
-// GetIDs Convert each ID into a hash value according to different keytypes and put it into an array for sorting 
+// GetIDs Convert each ID into a hash value according to different keytypes and put it into an array for sorting
 func GetIDs(keytype string, groupid string) smpclib.SortableIDSSlice {
-    	if groupid == "" {
-	    return nil
+	if groupid == "" {
+		return nil
 	}
 
 	var ids smpclib.SortableIDSSlice
@@ -395,71 +394,71 @@ func GetIDs(keytype string, groupid string) smpclib.SortableIDSSlice {
 
 // GetNodeUID get current node uid,gid is the `keygen gid`
 // return (index,UID)
-func GetNodeUID(EnodeID string,keytype string,gid string) (int,*big.Int) {
-    if EnodeID == "" || gid == "" {
-	return -1,nil
-    }
-
-    uid := DoubleHash(EnodeID,keytype)
-    if uid == nil {
-	return -1,nil
-    }
-    
-    _, nodes := GetGroup(gid)
-    others := strings.Split(nodes, common.Sep2)
-    
-    ids := GetIDs(keytype,gid)
-    if len(ids) == 0 {
-	return -1,nil
-    }
-
-    for k,v := range ids {
-	if v.Cmp(uid) == 0 {
-	    if (k+1) <= len(others) {
-		return k,big.NewInt(int64(k+1))
-	    }
+func GetNodeUID(EnodeID string, keytype string, gid string) (int, *big.Int) {
+	if EnodeID == "" || gid == "" {
+		return -1, nil
 	}
-    }
 
-    return -1,nil
+	uid := DoubleHash(EnodeID, keytype)
+	if uid == nil {
+		return -1, nil
+	}
+
+	_, nodes := GetGroup(gid)
+	others := strings.Split(nodes, common.Sep2)
+
+	ids := GetIDs(keytype, gid)
+	if len(ids) == 0 {
+		return -1, nil
+	}
+
+	for k, v := range ids {
+		if v.Cmp(uid) == 0 {
+			if (k + 1) <= len(others) {
+				return k, big.NewInt(int64(k + 1))
+			}
+		}
+	}
+
+	return -1, nil
 }
 
 // GetGroupNodeUIDs get the uids of node in group subgid
 // gid is the `keygen gid`
-func GetGroupNodeUIDs(keytype string,gid string,subgid string) smpclib.SortableIDSSlice {
-    if gid == "" || subgid == "" {
-	return nil
-    }
+func GetGroupNodeUIDs(keytype string, gid string, subgid string) smpclib.SortableIDSSlice {
+	if gid == "" || subgid == "" {
+		return nil
+	}
 
-    allids := GetIDs(keytype,gid)
-    if len(allids) == 0 {
-	return nil
-    }
+	allids := GetIDs(keytype, gid)
+	if len(allids) == 0 {
+		return nil
+	}
 
-    var ids smpclib.SortableIDSSlice
-    _, nodes := GetGroup(subgid)
-    others := strings.Split(nodes, common.Sep2)
-    for _, v := range others {
-	    node2 := ParseNode(v) //bug??
-	    id := DoubleHash(node2, keytype)
-	    if id == nil {
-		continue
-	    }
-
-	    for kk,vv := range allids {
-		if vv == nil {
-		    continue
+	var ids smpclib.SortableIDSSlice
+	_, nodes := GetGroup(subgid)
+	others := strings.Split(nodes, common.Sep2)
+	for _, v := range others {
+		node2 := ParseNode(v) //bug??
+		id := DoubleHash(node2, keytype)
+		if id == nil {
+			continue
 		}
 
-		if vv.Cmp(id) == 0 {
-		    ids = append(ids,big.NewInt(int64(kk+1)))
-		    break
-		}
-	    }
-    }
+		for kk, vv := range allids {
+			if vv == nil {
+				continue
+			}
 
-    sort.Sort(ids)
-    return ids
+			if vv.Cmp(id) == 0 {
+				ids = append(ids, big.NewInt(int64(kk+1)))
+				break
+			}
+		}
+	}
+
+	sort.Sort(ids)
+	return ids
 }
 
 //-----------------------------------------------------------------------------
@@ -587,92 +586,92 @@ func GetKeyTypeFromData(txdata []byte) string {
 	pre := TxDataPreSignData{}
 	err = json.Unmarshal(txdata, &pre)
 	if err == nil && pre.TxType == "PRESIGNDATA" {
-		return pre.KeyType 
+		return pre.KeyType
 	}
 
 	rh := TxDataReShare{}
 	err = json.Unmarshal(txdata, &rh)
 	if err == nil && rh.TxType == "RESHARE" {
-		return rh.Keytype 
+		return rh.Keytype
 	}
 
 	acceptreq := TxDataAcceptReqAddr{}
 	err = json.Unmarshal(txdata, &acceptreq)
 	if err == nil && acceptreq.TxType == "ACCEPTREQADDR" {
-	    exsit, da := GetPubKeyData([]byte(acceptreq.Key))
-	    if !exsit {
-		exsit, da = GetReqAddrInfoData([]byte(acceptreq.Key))
+		exsit, da := GetPubKeyData([]byte(acceptreq.Key))
 		if !exsit {
-		    return ""
+			exsit, da = GetReqAddrInfoData([]byte(acceptreq.Key))
+			if !exsit {
+				return ""
+			}
 		}
-	    }
 
-	    ac, ok := da.(*AcceptReqAddrData)
-	    if !ok {
-		return ""
-	    }
+		ac, ok := da.(*AcceptReqAddrData)
+		if !ok {
+			return ""
+		}
 
-	    return ac.Cointype
+		return ac.Cointype
 	}
 
 	acceptsig := TxDataAcceptSign{}
 	err = json.Unmarshal(txdata, &acceptsig)
 	if err == nil && acceptsig.TxType == "ACCEPTSIGN" {
-	    exsit, da := GetPubKeyData([]byte(acceptsig.Key))
-	    if !exsit {
-		exsit, da = GetSignInfoData([]byte(acceptsig.Key))
+		exsit, da := GetPubKeyData([]byte(acceptsig.Key))
 		if !exsit {
-		    return ""
+			exsit, da = GetSignInfoData([]byte(acceptsig.Key))
+			if !exsit {
+				return ""
+			}
 		}
-	    }
 
-	    ac, ok := da.(*AcceptSignData)
-	    if !ok {
-		return ""
-	    }
+		ac, ok := da.(*AcceptSignData)
+		if !ok {
+			return ""
+		}
 
-	    return ac.Keytype
+		return ac.Keytype
 	}
 
 	acceptrh := TxDataAcceptReShare{}
 	err = json.Unmarshal(txdata, &acceptrh)
 	if err == nil && acceptrh.TxType == "ACCEPTRESHARE" {
-	    exsit, da := GetPubKeyData([]byte(acceptrh.Key))
-	    if !exsit {
-		exsit, da = GetReShareInfoData([]byte(acceptrh.Key))
+		exsit, da := GetPubKeyData([]byte(acceptrh.Key))
 		if !exsit {
-		    return ""
+			exsit, da = GetReShareInfoData([]byte(acceptrh.Key))
+			if !exsit {
+				return ""
+			}
 		}
-	    }
 
-	    ac, ok := da.(*AcceptReShareData)
-	    if !ok {
-		return ""
-	    }
+		ac, ok := da.(*AcceptReShareData)
+		if !ok {
+			return ""
+		}
 
-	    return ac.Keytype
+		return ac.Keytype
 	}
 
 	return ""
 }
 
 type MsgSig struct {
-    Rsv string
-    MsgType string
-    Msg string
+	Rsv     string
+	MsgType string
+	Msg     string
 }
 
 func GetMsgSigHash(message []byte) []byte {
-    msglen := []byte(strconv.Itoa(len(message)))
+	msglen := []byte(strconv.Itoa(len(message)))
 
-    hash := msgsigsha3.NewLegacyKeccak256()
-    hash.Write([]byte{0x19})
-    hash.Write([]byte("Ethereum Signed Message:"))
-    hash.Write([]byte{0x0A})
-    hash.Write(msglen)
-    hash.Write(message)
-    buf := hash.Sum([]byte{})
-    return buf
+	hash := msgsigsha3.NewLegacyKeccak256()
+	hash.Write([]byte{0x19})
+	hash.Write([]byte("Ethereum Signed Message:"))
+	hash.Write([]byte{0x0A})
+	hash.Write(msglen)
+	hash.Write(message)
+	buf := hash.Sum([]byte{})
+	return buf
 }
 
 // CheckRaw check command data or accept data
@@ -691,184 +690,184 @@ func CheckRaw(raw string) (string, string, string, interface{}, error) {
 	var keytype string
 
 	m := MsgSig{}
-       err := json.Unmarshal([]byte(raw), &m)
-       if err == nil {
-	   txtype = m.MsgType
-	   msgsig = true
-	   data = []byte(m.Msg)
-	   rsv = m.Rsv
-	   log.Debug("======================CheckRaw,get msg sig data===================","txtype",txtype,"msgsig",msgsig,"data",string(data),"wallet rsv",rsv,"raw",raw)
-       } else {
-	    tx := new(types.Transaction)
-	    raws := common.FromHex(raw)
-	    if err := rlp.DecodeBytes(raws, tx); err != nil {
-		log.Error("======================CheckRaw,decode raw tx data fail===================","raw",raw,"err",err)
-		    return "", "", "", nil, err
-	    }
- 
-	    signer := types.NewEIP155Signer(big.NewInt(30400)) //
-	    from2, err := types.Sender(signer, tx)
-	    if err != nil {
-		log.Error("======================CheckRaw,check raw tx data fail===================","raw",raw,"err",err)
-		    return "", "", "", nil, err
-	    }
-	   
-	    data = tx.Data()
-	    txtype = GetTxTypeFromData(data)
-	    nonce = tx.Nonce()
-	    from = from2.Hex()
-	    msgsig = false 
-	    key = GetKeyFromData(data)
-	    keytype = GetKeyTypeFromData(data)
-	    log.Debug("======================CheckRaw,get raw tx data===================","from",from,"txtype",txtype,"data",string(data),"nonce",nonce,"msgsig",msgsig,"key",key,"raw",raw,"tx",*tx,"keytype",keytype)
-       }
- 
+	err := json.Unmarshal([]byte(raw), &m)
+	if err == nil {
+		txtype = m.MsgType
+		msgsig = true
+		data = []byte(m.Msg)
+		rsv = m.Rsv
+		log.Debug("======================CheckRaw,get msg sig data===================", "txtype", txtype, "msgsig", msgsig, "data", string(data), "wallet rsv", rsv, "raw", raw)
+	} else {
+		tx := new(types.Transaction)
+		raws := common.FromHex(raw)
+		if err := rlp.DecodeBytes(raws, tx); err != nil {
+			log.Error("======================CheckRaw,decode raw tx data fail===================", "raw", raw, "err", err)
+			return "", "", "", nil, err
+		}
+
+		signer := types.NewEIP155Signer(big.NewInt(30400)) //
+		from2, err := types.Sender(signer, tx)
+		if err != nil {
+			log.Error("======================CheckRaw,check raw tx data fail===================", "raw", raw, "err", err)
+			return "", "", "", nil, err
+		}
+
+		data = tx.Data()
+		txtype = GetTxTypeFromData(data)
+		nonce = tx.Nonce()
+		from = from2.Hex()
+		msgsig = false
+		key = GetKeyFromData(data)
+		keytype = GetKeyTypeFromData(data)
+		log.Debug("======================CheckRaw,get raw tx data===================", "from", from, "txtype", txtype, "data", string(data), "nonce", nonce, "msgsig", msgsig, "key", key, "raw", raw, "tx", *tx, "keytype", keytype)
+	}
+
 	var smpcreq CmdReq
 	switch txtype {
 	case "REQSMPCADDR":
 		smpcreq = &ReqSmpcAddr{}
 		if msgsig {
-		    req := TxDataReqAddr{}
-		   err := json.Unmarshal(data, &req)
-		   if err == nil {
-		       from = req.Account
-		       non,err := strconv.Atoi(req.Nonce)
-		       if err != nil {
-			    log.Error("======================CheckRaw,get keygen tx data with msg sig,get nonce fail,set to 0===================","from",from,"data",string(data),"err",err,"raw",raw,"data.nonce",req.Nonce)
-			   nonce = 0
-		       } else {
-			   nonce = uint64(non)
-		       }
+			req := TxDataReqAddr{}
+			err := json.Unmarshal(data, &req)
+			if err == nil {
+				from = req.Account
+				non, err := strconv.Atoi(req.Nonce)
+				if err != nil {
+					log.Error("======================CheckRaw,get keygen tx data with msg sig,get nonce fail,set to 0===================", "from", from, "data", string(data), "err", err, "raw", raw, "data.nonce", req.Nonce)
+					nonce = 0
+				} else {
+					nonce = uint64(non)
+				}
 
-		       keytype = req.Keytype
-			log.Debug("======================CheckRaw,get keygen tx data with msg sig===================","from",from,"data",string(data),"raw",raw,"nonce",nonce,"keytype",keytype)
-		   } else {
-			log.Error("======================CheckRaw,get keygen tx data with msg sig,unmarshal data error===================","from",from,"data",string(data),"err",err,"raw",raw)
-		   }
+				keytype = req.Keytype
+				log.Debug("======================CheckRaw,get keygen tx data with msg sig===================", "from", from, "data", string(data), "raw", raw, "nonce", nonce, "keytype", keytype)
+			} else {
+				log.Error("======================CheckRaw,get keygen tx data with msg sig,unmarshal data error===================", "from", from, "data", string(data), "err", err, "raw", raw)
+			}
 		}
-               break
+		break
 	case "SIGN":
 		smpcreq = &ReqSmpcSign{}
 		if msgsig {
-		    req := TxDataSign{}
-		      err := json.Unmarshal(data, &req)
-		      if err == nil {
-			   from = req.Account
-			   non,err := strconv.Atoi(req.Nonce)
-			   if err != nil {
-			       nonce = 0
-				log.Error("======================CheckRaw,get sign tx data with msg sig,get nonce fail,set to 0===================","from",from,"data",string(data),"err",err,"raw",raw,"data.nonce",req.Nonce)
-			   } else {
-			       nonce = uint64(non)
-			   }
+			req := TxDataSign{}
+			err := json.Unmarshal(data, &req)
+			if err == nil {
+				from = req.Account
+				non, err := strconv.Atoi(req.Nonce)
+				if err != nil {
+					nonce = 0
+					log.Error("======================CheckRaw,get sign tx data with msg sig,get nonce fail,set to 0===================", "from", from, "data", string(data), "err", err, "raw", raw, "data.nonce", req.Nonce)
+				} else {
+					nonce = uint64(non)
+				}
 
-			   keytype = req.Keytype
-			log.Debug("======================CheckRaw,get sign tx data with msg sig===================","from",from,"data",string(data),"raw",raw,"nonce",nonce,"keytype",keytype)
-		       } else {
-			    log.Error("======================CheckRaw,get sign tx data with msg sig,unmarshal data error===================","from",from,"data",string(data),"err",err,"raw",raw)
-		       }
+				keytype = req.Keytype
+				log.Debug("======================CheckRaw,get sign tx data with msg sig===================", "from", from, "data", string(data), "raw", raw, "nonce", nonce, "keytype", keytype)
+			} else {
+				log.Error("======================CheckRaw,get sign tx data with msg sig,unmarshal data error===================", "from", from, "data", string(data), "err", err, "raw", raw)
+			}
 		}
 		break
 	case "PRESIGNDATA":
 		smpcreq = &ReqSmpcSign{}
 		if msgsig {
-		    req := TxDataPreSignData{}
-		   err := json.Unmarshal(data, &req)
-		   if err == nil {
-		       from = req.Account
-		       non,err := strconv.Atoi(req.Nonce)
-		       if err != nil {
-			   nonce = 0
-		       } else {
-			   nonce = uint64(non)
-		       }
+			req := TxDataPreSignData{}
+			err := json.Unmarshal(data, &req)
+			if err == nil {
+				from = req.Account
+				non, err := strconv.Atoi(req.Nonce)
+				if err != nil {
+					nonce = 0
+				} else {
+					nonce = uint64(non)
+				}
 
-		       keytype = req.KeyType
-			log.Debug("======================CheckRaw,get pre-sign data with msg sig===================","from",from,"data",string(data),"raw",raw,"nonce",nonce,"key",key,"keytype",keytype)
-		   }
+				keytype = req.KeyType
+				log.Debug("======================CheckRaw,get pre-sign data with msg sig===================", "from", from, "data", string(data), "raw", raw, "nonce", nonce, "key", key, "keytype", keytype)
+			}
 		}
 		break
 	case "RESHARE":
 		smpcreq = &ReqSmpcReshare{}
 		if msgsig {
-		    req := TxDataReShare{}
-		   err := json.Unmarshal(data, &req)
-		   if err == nil {
-		       from = req.Account
-		       non,err := strconv.Atoi(req.Nonce)
-		       if err != nil {
-			   nonce = 0
-		       } else {
-			   nonce = uint64(non)
-		       }
+			req := TxDataReShare{}
+			err := json.Unmarshal(data, &req)
+			if err == nil {
+				from = req.Account
+				non, err := strconv.Atoi(req.Nonce)
+				if err != nil {
+					nonce = 0
+				} else {
+					nonce = uint64(non)
+				}
 
-		       keytype = req.Keytype
-		   }
+				keytype = req.Keytype
+			}
 		}
 		break
 	case "ACCEPTREQADDR":
 		smpcreq = &ReqSmpcAddr{}
 		if msgsig {
-		    req := TxDataAcceptReqAddr{}
-		   err := json.Unmarshal(data, &req)
-		   if err == nil {
-		       from = req.Account
-		       non,err := strconv.Atoi(req.Nonce)
-		       if err != nil {
-			   nonce = 0
-			    log.Error("======================CheckRaw,get keygen accept data with msg sig,get nonce fail,set to 0===================","from",from,"data",string(data),"err",err,"raw",raw,"data.nonce",req.Nonce,"key",req.Key)
-		       } else {
-			   nonce = uint64(non)
-		       }
+			req := TxDataAcceptReqAddr{}
+			err := json.Unmarshal(data, &req)
+			if err == nil {
+				from = req.Account
+				non, err := strconv.Atoi(req.Nonce)
+				if err != nil {
+					nonce = 0
+					log.Error("======================CheckRaw,get keygen accept data with msg sig,get nonce fail,set to 0===================", "from", from, "data", string(data), "err", err, "raw", raw, "data.nonce", req.Nonce, "key", req.Key)
+				} else {
+					nonce = uint64(non)
+				}
 
-			key = req.Key
-			keytype = GetKeyTypeFromData(data)
-			log.Debug("======================CheckRaw,get keygen accept data with msg sig===================","from",from,"data",string(data),"raw",raw,"nonce",nonce,"key",key,"keytype",keytype)
-		   } else {
-			log.Debug("======================CheckRaw,get keygen accept data with msg sig,unmarsh data error===================","from",from,"data",string(data),"raw",raw,"nonce",nonce,"key",key,"err",err)
-		   }
+				key = req.Key
+				keytype = GetKeyTypeFromData(data)
+				log.Debug("======================CheckRaw,get keygen accept data with msg sig===================", "from", from, "data", string(data), "raw", raw, "nonce", nonce, "key", key, "keytype", keytype)
+			} else {
+				log.Debug("======================CheckRaw,get keygen accept data with msg sig,unmarsh data error===================", "from", from, "data", string(data), "raw", raw, "nonce", nonce, "key", key, "err", err)
+			}
 		}
 		break
 	case "ACCEPTSIGN":
 		smpcreq = &ReqSmpcSign{}
 		if msgsig {
-		    req := TxDataAcceptSign{}
-		   err := json.Unmarshal(data, &req)
-		   if err == nil {
-		       from = req.Account
-		       non,err := strconv.Atoi(req.Nonce)
-		       if err != nil {
-			   nonce = 0
-			    log.Error("======================CheckRaw,get sign accept data with msg sig,get nonce fail,set to 0===================","from",from,"data",string(data),"err",err,"raw",raw,"data.nonce",req.Nonce,"key",req.Key)
-		       } else {
-			   nonce = uint64(non)
-		       }
+			req := TxDataAcceptSign{}
+			err := json.Unmarshal(data, &req)
+			if err == nil {
+				from = req.Account
+				non, err := strconv.Atoi(req.Nonce)
+				if err != nil {
+					nonce = 0
+					log.Error("======================CheckRaw,get sign accept data with msg sig,get nonce fail,set to 0===================", "from", from, "data", string(data), "err", err, "raw", raw, "data.nonce", req.Nonce, "key", req.Key)
+				} else {
+					nonce = uint64(non)
+				}
 
-			key = req.Key
-			keytype = GetKeyTypeFromData(data)
-			log.Debug("======================CheckRaw,get sign accept data with msg sig===================","from",from,"data",string(data),"raw",raw,"nonce",nonce,"key",key,"keytype",keytype)
-		   } else {
-			log.Debug("======================CheckRaw,get sign accept data with msg sig,unmarsh data error===================","from",from,"data",string(data),"raw",raw,"nonce",nonce,"key",key,"err",err)
-		   }
+				key = req.Key
+				keytype = GetKeyTypeFromData(data)
+				log.Debug("======================CheckRaw,get sign accept data with msg sig===================", "from", from, "data", string(data), "raw", raw, "nonce", nonce, "key", key, "keytype", keytype)
+			} else {
+				log.Debug("======================CheckRaw,get sign accept data with msg sig,unmarsh data error===================", "from", from, "data", string(data), "raw", raw, "nonce", nonce, "key", key, "err", err)
+			}
 		}
 		break
 	case "ACCEPTRESHARE":
 		smpcreq = &ReqSmpcReshare{}
 		if msgsig {
-		    req := TxDataAcceptReShare{}
-		   err := json.Unmarshal(data, &req)
-		   if err == nil {
-		       from = req.Account
-			log.Debug("======================CheckRaw,get accept signing data with msg sig===================","from",from)
-		       non,err := strconv.Atoi(req.Nonce)
-		       if err != nil {
-			   nonce = 0
-		       } else {
-			   nonce = uint64(non)
-		       }
-			
-		       keytype = GetKeyTypeFromData(data)
-		   }
+			req := TxDataAcceptReShare{}
+			err := json.Unmarshal(data, &req)
+			if err == nil {
+				from = req.Account
+				log.Debug("======================CheckRaw,get accept signing data with msg sig===================", "from", from)
+				non, err := strconv.Atoi(req.Nonce)
+				if err != nil {
+					nonce = 0
+				} else {
+					nonce = uint64(non)
+				}
+
+				keytype = GetKeyTypeFromData(data)
+			}
 		}
 		break
 	default:
@@ -877,68 +876,67 @@ func CheckRaw(raw string) (string, string, string, interface{}, error) {
 
 	//check msg sig
 	if msgsig {
-	   sig := common.FromHex(rsv)
-	   if sig == nil {
-		log.Error("======================CheckRaw,get sig fail===================","from",from,"rsv",rsv,"data",string(data),"raw",raw)
-	       return "", "", "", nil, fmt.Errorf("verify sig fail")
-	   }
+		sig := common.FromHex(rsv)
+		if sig == nil {
+			log.Error("======================CheckRaw,get sig fail===================", "from", from, "rsv", rsv, "data", string(data), "raw", raw)
+			return "", "", "", nil, fmt.Errorf("verify sig fail")
+		}
 
-	   //hash := crypto.Keccak256([]byte(header),data)
-	   hash := GetMsgSigHash(data)
-	   hashtmp := hex.EncodeToString(hash) // 04.....
-	   public,err := crypto.SigToPub(hash,sig)
-	   if err != nil {
-		log.Error("======================CheckRaw,recover pubkey fail===================","from",from,"rsv",rsv,"data",string(data),"err",err,"hash",hashtmp,"raw",raw)
-	       return "", "", "", nil,err
-	   }
+		//hash := crypto.Keccak256([]byte(header),data)
+		hash := GetMsgSigHash(data)
+		hashtmp := hex.EncodeToString(hash) // 04.....
+		public, err := crypto.SigToPub(hash, sig)
+		if err != nil {
+			log.Error("======================CheckRaw,recover pubkey fail===================", "from", from, "rsv", rsv, "data", string(data), "err", err, "hash", hashtmp, "raw", raw)
+			return "", "", "", nil, err
+		}
 
-	   pub := secp256k1.S256(keytype).Marshal(public.X,public.Y)
-	   pub2 := hex.EncodeToString(pub) // 04.....
-	   // pub2: 04730c8fc7142d15669e8329138953d9484fd4cce0c690e35e105a9714deb741f10b52be1c5d49eeeb6f00aab8f3d2dec4e3352d0bf    56bdbc2d86cb5f89c8e90d0
-	   h := coins.NewCryptocoinHandler("ETH")
-	   if h == nil {
-		log.Error("======================CheckRaw,get smpc addr fail===================","from",from,"rsv",rsv,"data",string(data),"hash",hashtmp,"pub",pub2,"raw",raw)
-	       return "", "", "", nil,errors.New("get smpc addr fail")
-	   }
-	   ctaddr, err := h.PublicKeyToAddress(pub2)
-	   if err != nil {
-		log.Error("======================CheckRaw,pubkey to addr fail===================","from",from,"rsv",rsv,"data",string(data),"err",err,"hash",hashtmp,"pub",pub2,"raw",raw)
-	       return "", "", "", nil,err
-	   }
-	   if !strings.EqualFold(ctaddr,from) {
-		log.Error("======================CheckRaw,verify sig fail===================","from",from,"rsv",rsv,"data",string(data),"ctaddr",ctaddr,"pub",pub2,"hash",hashtmp,"raw",raw)
-	       return "", "", "", nil, fmt.Errorf("verify sig fail")
-	   }
-	   //
+		pub := secp256k1.S256(keytype).Marshal(public.X, public.Y)
+		pub2 := hex.EncodeToString(pub) // 04.....
+		// pub2: 04730c8fc7142d15669e8329138953d9484fd4cce0c690e35e105a9714deb741f10b52be1c5d49eeeb6f00aab8f3d2dec4e3352d0bf    56bdbc2d86cb5f89c8e90d0
+		h := coins.NewCryptocoinHandler("ETH")
+		if h == nil {
+			log.Error("======================CheckRaw,get smpc addr fail===================", "from", from, "rsv", rsv, "data", string(data), "hash", hashtmp, "pub", pub2, "raw", raw)
+			return "", "", "", nil, errors.New("get smpc addr fail")
+		}
+		ctaddr, err := h.PublicKeyToAddress(pub2)
+		if err != nil {
+			log.Error("======================CheckRaw,pubkey to addr fail===================", "from", from, "rsv", rsv, "data", string(data), "err", err, "hash", hashtmp, "pub", pub2, "raw", raw)
+			return "", "", "", nil, err
+		}
+		if !strings.EqualFold(ctaddr, from) {
+			log.Error("======================CheckRaw,verify sig fail===================", "from", from, "rsv", rsv, "data", string(data), "ctaddr", ctaddr, "pub", pub2, "hash", hashtmp, "raw", raw)
+			return "", "", "", nil, fmt.Errorf("verify sig fail")
+		}
+		//
 	}
 
 	//
 	if key != "" {
-	    w, err := FindWorker(key)
-	    if err != nil || w == nil {
-		    log.Debug("======================CheckRaw,not found worker===================","from",from,"data",string(data),"nonce",nonce,"key",key)
-		    c1data := strings.ToLower(key + "-" + from)
-		    C1Data.WriteMap(c1data, raw)
-	    }
+		w, err := FindWorker(key)
+		if err != nil || w == nil {
+			log.Debug("======================CheckRaw,not found worker===================", "from", from, "data", string(data), "nonce", nonce, "key", key)
+			c1data := strings.ToLower(key + "-" + from)
+			C1Data.WriteMap(c1data, raw)
+		}
 	}
 	//
-       return smpcreq.CheckTxData(raw,data, from, nonce)
+	return smpcreq.CheckTxData(raw, data, from, nonce)
 }
 
 func IsInGroup(gid string) bool {
-    if gid == "" {
-	return false
-    }
-    
-    _, enodes := GetGroup(gid)
-    nodes := strings.Split(enodes, common.Sep2)
-    for _, node := range nodes {
-	node2 := ParseNode(node)
-	if strings.EqualFold(curEnode,node2) {
-	    return true 
+	if gid == "" {
+		return false
 	}
-    }
 
-    return false
+	_, enodes := GetGroup(gid)
+	nodes := strings.Split(enodes, common.Sep2)
+	for _, node := range nodes {
+		node2 := ParseNode(node)
+		if strings.EqualFold(curEnode, node2) {
+			return true
+		}
+	}
+
+	return false
 }
-

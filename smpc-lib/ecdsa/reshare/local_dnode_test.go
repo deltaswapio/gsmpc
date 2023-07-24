@@ -14,33 +14,32 @@
  *
  */
 
-// Package reshare_test test MPC implementation of reshare 
+// Package reshare_test test MPC implementation of reshare
 package reshare_test
 
 import (
+	"github.com/deltaswapio/gsmpc/smpc-lib/ecdsa/reshare"
+	"github.com/deltaswapio/gsmpc/smpc-lib/smpc"
 	"github.com/stretchr/testify/assert"
 	"testing"
-	"github.com/anyswap/FastMulThreshold-DSA/smpc-lib/ecdsa/reshare"
-	"github.com/anyswap/FastMulThreshold-DSA/smpc-lib/smpc"
 )
 
 func TestCheckFull(t *testing.T) {
-    reshareReshareiMessages := make([]smpc.Message, 0)
-    succ := reshare.CheckFull(reshareReshareiMessages)
-    assert.False(t, succ, "fail")
-    
-    threshold := 3
-    for i:=0;i<threshold;i++ {
-	re := &reshare.ReRound0Message{
-		ReRoundMessage: new(reshare.ReRoundMessage),
+	reshareReshareiMessages := make([]smpc.Message, 0)
+	succ := reshare.CheckFull(reshareReshareiMessages)
+	assert.False(t, succ, "fail")
+
+	threshold := 3
+	for i := 0; i < threshold; i++ {
+		re := &reshare.ReRound0Message{
+			ReRoundMessage: new(reshare.ReRoundMessage),
+		}
+		re.SetFromID("62472382178168225119626719865491481459304781844424379027070392269894567214882")
+		re.SetFromIndex(-1)
+
+		reshareReshareiMessages = append(reshareReshareiMessages, re)
 	}
-	re.SetFromID("62472382178168225119626719865491481459304781844424379027070392269894567214882")
-	re.SetFromIndex(-1)
 
-	reshareReshareiMessages = append(reshareReshareiMessages,re)
-    }
-
-    succ = reshare.CheckFull(reshareReshareiMessages)
-    assert.True(t, succ, "success")
+	succ = reshare.CheckFull(reshareReshareiMessages)
+	assert.True(t, succ, "success")
 }
-

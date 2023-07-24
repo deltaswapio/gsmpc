@@ -24,9 +24,9 @@ import (
 	"net"
 	"time"
 
-	"github.com/anyswap/FastMulThreshold-DSA/p2p/discover"
-	"github.com/anyswap/FastMulThreshold-DSA/p2p/netutil"
-	"github.com/anyswap/FastMulThreshold-DSA/internal/common"
+	"github.com/deltaswapio/gsmpc/internal/common"
+	"github.com/deltaswapio/gsmpc/p2p/discover"
+	"github.com/deltaswapio/gsmpc/p2p/netutil"
 )
 
 const (
@@ -156,7 +156,7 @@ func (s *dialstate) addStatic(n *discover.Node) {
 	// entry, giving users the opportunity to force a resolve operation.
 	s.static[n.ID] = &dialTask{flags: staticDialedConn, dest: n}
 	//fmt.Printf("==== (s *dialstate) addStatic() ====, %v:%v\n", n.IP, n.UDP)
-	common.Debug("==== (s *dialstate) addStatic() ====","IP",n.IP,"UDP",n.UDP)
+	common.Debug("==== (s *dialstate) addStatic() ====", "IP", n.IP, "UDP", n.UDP)
 }
 
 func (s *dialstate) removeStatic(n *discover.Node) {
@@ -166,7 +166,7 @@ func (s *dialstate) removeStatic(n *discover.Node) {
 	// can force a server to reconnect with chosen peer immediately.
 	s.hist.remove(n.ID)
 	//fmt.Printf("==== (s *dialstate) removeStatic() ====, %v:%v\n", n.IP, n.UDP)
-	common.Debug("==== (s *dialstate) removeStatic() ====","IP",n.IP,"UDP",n.UDP)
+	common.Debug("==== (s *dialstate) removeStatic() ====", "IP", n.IP, "UDP", n.UDP)
 }
 
 func (s *dialstate) newTasks(nRunning int, peers map[discover.NodeID]*Peer, now time.Time) []task {
@@ -332,20 +332,20 @@ func (t *dialTask) Do(srv *Server) {
 			//common.Debug("===================dialTask.Do, 2st check err=================", "t.dest", t.dest, "t.flags", t.flags, "staticDialedConn", staticDialedConn)
 			if t.resolve(srv) {
 				common.Debug("================dialTask.Do, 2st check resolve================", "t.dest", t.dest, "t.flags", t.flags, "staticDialedConn", staticDialedConn)
-			    err = t.dial(srv, t.dest)
-			    if err != nil {
-				common.Error("=================dialTask.Do,dial 2st failed=================", "t.dest", t.dest, "err", err)
-				return
-			    } else {
-				common.Debug("===============dialTask.Do,dial 2st success===============", "t.dest", t.dest)
-			    }
+				err = t.dial(srv, t.dest)
+				if err != nil {
+					common.Error("=================dialTask.Do,dial 2st failed=================", "t.dest", t.dest, "err", err)
+					return
+				} else {
+					common.Debug("===============dialTask.Do,dial 2st success===============", "t.dest", t.dest)
+				}
 			} else {
 				//common.Debug("===================dialTask.Do,dial 2st check failed resolve==============", "t.dest", t.dest, "t.flags", t.flags, "staticDialedConn", staticDialedConn)
 			}
 		} else {
 			//common.Debug("================dialTask.Do,dial 2st check failed dialError================", "t.dest", t.dest, "t.flags", t.flags, "staticDialedConn", staticDialedConn)
 		}
-	}else {
+	} else {
 		common.Debug("======================dialTask.Do,dial 1st success=====================", "t.dest", t.dest)
 	}
 }
@@ -410,9 +410,9 @@ func (t *discoverTask) Do(srv *Server) {
 	}
 	srv.lastLookup = time.Now()
 	var target discover.NodeID
-	_,err := rand.Read(target[:])
+	_, err := rand.Read(target[:])
 	if err != nil {
-	    return
+		return
 	}
 
 	t.results = srv.ntab.Lookup(target)

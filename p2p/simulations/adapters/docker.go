@@ -27,8 +27,8 @@ import (
 	"runtime"
 	"strings"
 
-	"github.com/anyswap/FastMulThreshold-DSA/node"
-	"github.com/anyswap/FastMulThreshold-DSA/p2p/discover"
+	"github.com/deltaswapio/gsmpc/node"
+	"github.com/deltaswapio/gsmpc/p2p/discover"
 	"github.com/docker/docker/pkg/reexec"
 )
 

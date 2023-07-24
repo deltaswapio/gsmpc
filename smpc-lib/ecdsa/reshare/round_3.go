@@ -19,13 +19,13 @@ package reshare
 import (
 	"errors"
 	"fmt"
-	"github.com/anyswap/FastMulThreshold-DSA/crypto/secp256k1"
-	"github.com/anyswap/FastMulThreshold-DSA/smpc-lib/crypto/ec2"
-	"github.com/anyswap/FastMulThreshold-DSA/smpc-lib/smpc"
+	"github.com/deltaswapio/gsmpc/crypto/secp256k1"
+	"github.com/deltaswapio/gsmpc/smpc-lib/crypto/ec2"
+	"github.com/deltaswapio/gsmpc/smpc-lib/smpc"
 	"math/big"
 )
 
-// Start verify vss and commitment data,calc pubkey and new SKi 
+// Start verify vss and commitment data,calc pubkey and new SKi
 func (round *round3) Start() error {
 	if round.started {
 		return errors.New("round already started")
@@ -48,7 +48,7 @@ func (round *round3) Start() error {
 		}
 
 		ps := &ec2.PolyGStruct2{PolyG: msg21.SkP1PolyG}
-		if !ushare.Verify2(round.keytype,ps) {
+		if !ushare.Verify2(round.keytype, ps) {
 			fmt.Printf("========= round3 verify share fail, k = %v ==========\n", k)
 			return errors.New("verify share data fail")
 		}
@@ -135,10 +135,10 @@ func (round *round3) Start() error {
 	// old node use old paillier.PK/paillier.SK
 	// new node generate new paillier.PK/paillier.SK
 	if round.oldnode && round.oldindex != -1 {
-	    u1PaillierSk = round.Save.U1PaillierSk
-	    u1PaillierPk = round.Save.U1PaillierPk[round.oldindex]
+		u1PaillierSk = round.Save.U1PaillierSk
+		u1PaillierPk = round.Save.U1PaillierPk[round.oldindex]
 	} else {
-	    u1PaillierPk, u1PaillierSk,_,_ = ec2.GenerateKeyPair(round.paillierkeylength)
+		u1PaillierPk, u1PaillierSk, _, _ = ec2.GenerateKeyPair(round.paillierkeylength)
 	}
 
 	//round.Save.U1PaillierSk = u1PaillierSk
@@ -148,7 +148,7 @@ func (round *round3) Start() error {
 
 	re := &ReRound3Message{
 		ReRoundMessage: new(ReRoundMessage),
-		U1PaillierPk:        u1PaillierPk,
+		U1PaillierPk:   u1PaillierPk,
 	}
 	re.SetFromID(round.dnodeid)
 	re.SetFromIndex(curIndex)
@@ -159,7 +159,7 @@ func (round *round3) Start() error {
 	return nil
 }
 
-// CanAccept is it legal to receive this message 
+// CanAccept is it legal to receive this message
 func (round *round3) CanAccept(msg smpc.Message) bool {
 	if _, ok := msg.(*ReRound3Message); ok {
 		return msg.IsBroadcast()
@@ -167,7 +167,7 @@ func (round *round3) CanAccept(msg smpc.Message) bool {
 	return false
 }
 
-// Update  is the message received and ready for the next round? 
+// Update  is the message received and ready for the next round?
 func (round *round3) Update() (bool, error) {
 	for j, msg := range round.temp.reshareRound3Messages {
 		if round.ok[j] {

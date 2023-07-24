@@ -22,8 +22,8 @@ import (
 	"runtime"
 	"strings"
 
-	"github.com/anyswap/FastMulThreshold-DSA/cmd/utils"
-	"github.com/anyswap/FastMulThreshold-DSA/internal/params"
+	"github.com/deltaswapio/gsmpc/cmd/utils"
+	"github.com/deltaswapio/gsmpc/internal/params"
 	"gopkg.in/urfave/cli.v1"
 )
 

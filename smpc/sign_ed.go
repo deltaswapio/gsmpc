@@ -21,32 +21,32 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	edsigning "github.com/anyswap/FastMulThreshold-DSA/smpc-lib/eddsa/signing"
-	smpclib "github.com/anyswap/FastMulThreshold-DSA/smpc-lib/smpc"
+	"github.com/deltaswapio/gsmpc/internal/common"
+	edsigning "github.com/deltaswapio/gsmpc/smpc-lib/eddsa/signing"
+	smpclib "github.com/deltaswapio/gsmpc/smpc-lib/smpc"
 	"strconv"
 	"strings"
 	"sync"
 	"time"
-	"github.com/anyswap/FastMulThreshold-DSA/internal/common"
 )
 
 //--------------------------------------------------------EDDSA start-------------------------------------------------------
 
 // EdSignProcessInboundMessages Analyze the obtained P2P messages and enter next round
-func EdSignProcessInboundMessages(msgprex string, keytype string,finishChan chan struct{}, errChan chan struct{},wg *sync.WaitGroup, ch chan interface{}) {
+func EdSignProcessInboundMessages(msgprex string, keytype string, finishChan chan struct{}, errChan chan struct{}, wg *sync.WaitGroup, ch chan interface{}) {
 	if msgprex == "" {
-	    return
+		return
 	}
 
 	fmt.Printf("start ed sign processing inbound messages\n")
 	w, err := FindWorker(msgprex)
 	if w == nil || err != nil {
-	    if len(ch) == 0 {
-		res := RPCSmpcRes{Ret: "", Err: fmt.Errorf("fail to ed sign process inbound messages")}
-		ch <- res
-	    }
-	    
-	    return
+		if len(ch) == 0 {
+			res := RPCSmpcRes{Ret: "", Err: fmt.Errorf("fail to ed sign process inbound messages")}
+			ch <- res
+		}
+
+		return
 	}
 
 	defer func() {
@@ -66,142 +66,142 @@ func EdSignProcessInboundMessages(msgprex string, keytype string,finishChan chan
 
 			//fmt.Printf("=================== EdSignProcessInboundMessages, msg = %v, err = %v, key = %v ====================\n", m, err, msgprex)
 			if err != nil {
-			    if len(ch) == 0 {
-				res := RPCSmpcRes{Ret: "", Err: err}
-				ch <- res
-			    }
+				if len(ch) == 0 {
+					res := RPCSmpcRes{Ret: "", Err: err}
+					ch <- res
+				}
 
-			    return
+				return
 			}
 
 			mm := EdSignGetRealMessage(msgmap)
 			if mm == nil {
-			    if len(ch) == 0 {
-				res := RPCSmpcRes{Ret: "", Err: fmt.Errorf("fail to ed sign process inbound messages")}
-				ch <- res
-			    }
+				if len(ch) == 0 {
+					res := RPCSmpcRes{Ret: "", Err: fmt.Errorf("fail to ed sign process inbound messages")}
+					ch <- res
+				}
 
-			    return
+				return
 			}
 
 			//check sig
 			if msgmap["Sig"] == "" {
-			    if len(ch) == 0 {
-				res := RPCSmpcRes{Ret: "", Err: fmt.Errorf("verify sig fail")}
-				ch <- res
-			    }
+				if len(ch) == 0 {
+					res := RPCSmpcRes{Ret: "", Err: fmt.Errorf("verify sig fail")}
+					ch <- res
+				}
 
-			    return
+				return
 			}
 
 			if msgmap["ENode"] == "" {
-			    if len(ch) == 0 {
-				res := RPCSmpcRes{Ret: "", Err: fmt.Errorf("verify sig fail")}
-				ch <- res
-			    }
+				if len(ch) == 0 {
+					res := RPCSmpcRes{Ret: "", Err: fmt.Errorf("verify sig fail")}
+					ch <- res
+				}
 
-			    return
+				return
 			}
 
 			sig, err := hex.DecodeString(msgmap["Sig"])
 			if err != nil {
-			    common.Error("[SIGN] decode msg sig data error","err",err,"key",msgprex)
-			    if len(ch) == 0 {
-				res := RPCSmpcRes{Ret: "", Err:err}
-				ch <- res
-			    }
+				common.Error("[SIGN] decode msg sig data error", "err", err, "key", msgprex)
+				if len(ch) == 0 {
+					res := RPCSmpcRes{Ret: "", Err: err}
+					ch <- res
+				}
 
-			    return
+				return
 			}
-			
-			common.Debug("===============sign ed,check p2p msg===============","sig",sig,"sender",msgmap["ENode"],"msg type",msgmap["Type"])
-			if !checkP2pSig(keytype,sig,mm,msgmap["ENode"]) {
-			    common.Error("===============sign ed,check p2p msg fail===============","sig",sig,"sender",msgmap["ENode"],"msg type",msgmap["Type"])
-			    if len(ch) == 0 {
-				res := RPCSmpcRes{Ret: "", Err: fmt.Errorf("check msg sig fail")}
-				ch <- res
-			    }
 
-			    return
+			common.Debug("===============sign ed,check p2p msg===============", "sig", sig, "sender", msgmap["ENode"], "msg type", msgmap["Type"])
+			if !checkP2pSig(keytype, sig, mm, msgmap["ENode"]) {
+				common.Error("===============sign ed,check p2p msg fail===============", "sig", sig, "sender", msgmap["ENode"], "msg type", msgmap["Type"])
+				if len(ch) == 0 {
+					res := RPCSmpcRes{Ret: "", Err: fmt.Errorf("check msg sig fail")}
+					ch <- res
+				}
+
+				return
 			}
-			
+
 			// check fromID
 			// w.SmpcFrom is the MPC PubKey
 			smpcpks, err := hex.DecodeString(w.SmpcFrom)
 			if err != nil {
-			    if len(ch) == 0 {
-				res := RPCSmpcRes{Ret: "", Tip: "", Err: err}
-				ch <- res
-			    }
+				if len(ch) == 0 {
+					res := RPCSmpcRes{Ret: "", Tip: "", Err: err}
+					ch <- res
+				}
 
-			    return
+				return
 			}
 
 			exsit, da := GetPubKeyData(smpcpks[:])
 			if !exsit || da == nil {
-			    if len(ch) == 0 {
-				res := RPCSmpcRes{Ret: "", Tip: "", Err: fmt.Errorf("ed sign get local save data fail")}
-				ch <- res
-			    }
+				if len(ch) == 0 {
+					res := RPCSmpcRes{Ret: "", Tip: "", Err: fmt.Errorf("ed sign get local save data fail")}
+					ch <- res
+				}
 
-			    return
+				return
 			}
-			
+
 			pubs, ok := da.(*PubKeyData)
 			if !ok || pubs.GroupID == "" {
-			    if len(ch) == 0 {
-				res := RPCSmpcRes{Ret: "", Tip: "", Err: fmt.Errorf("ed sign get local save data fail")}
-				ch <- res
-			    }
+				if len(ch) == 0 {
+					res := RPCSmpcRes{Ret: "", Tip: "", Err: fmt.Errorf("ed sign get local save data fail")}
+					ch <- res
+				}
 
-			    return
+				return
 			}
 
-			_,ID := GetNodeUID(msgmap["ENode"], keytype,pubs.GroupID)
-			id := fmt.Sprintf("%v",ID)
+			_, ID := GetNodeUID(msgmap["ENode"], keytype, pubs.GroupID)
+			id := fmt.Sprintf("%v", ID)
 			uid := hex.EncodeToString([]byte(id))
-			if !strings.EqualFold(uid,mm.GetFromID()) {
-			    common.Error("===============sign ed,check p2p msg fail===============","sig",sig,"sender",msgmap["ENode"],"msg type",msgmap["Type"],"err","check from ID fail")
-			    if len(ch) == 0 {
-				res := RPCSmpcRes{Ret: "", Err: fmt.Errorf("check from ID fail")}
-				ch <- res
-			    }
+			if !strings.EqualFold(uid, mm.GetFromID()) {
+				common.Error("===============sign ed,check p2p msg fail===============", "sig", sig, "sender", msgmap["ENode"], "msg type", msgmap["Type"], "err", "check from ID fail")
+				if len(ch) == 0 {
+					res := RPCSmpcRes{Ret: "", Err: fmt.Errorf("check from ID fail")}
+					ch <- res
+				}
 
-			    return
+				return
 			}
-			
+
 			// check whether 'from' is in the group
 			succ := false
 			_, nodes := GetGroup(w.groupid)
 			others := strings.Split(nodes, common.Sep2)
 			for _, v := range others {
-			    node2 := ParseNode(v) //bug??
-			    if strings.EqualFold(node2,msgmap["ENode"]) {
-				succ = true
-				break
-			    }
+				node2 := ParseNode(v) //bug??
+				if strings.EqualFold(node2, msgmap["ENode"]) {
+					succ = true
+					break
+				}
 			}
 
 			if !succ {
-				common.Error("===============sign ed,check p2p msg fail===============","sig",sig,"sender",msgmap["ENode"],"msg type",msgmap["Type"])
-			    if len(ch) == 0 {
-				res := RPCSmpcRes{Ret: "", Err: fmt.Errorf("check msg sig fail")}
-				ch <- res
-			    }
+				common.Error("===============sign ed,check p2p msg fail===============", "sig", sig, "sender", msgmap["ENode"], "msg type", msgmap["Type"])
+				if len(ch) == 0 {
+					res := RPCSmpcRes{Ret: "", Err: fmt.Errorf("check msg sig fail")}
+					ch <- res
+				}
 
-			    return
+				return
 			}
 			////
 
 			_, err = w.DNode.Update(mm)
 			if err != nil {
 				fmt.Printf("========== EdSignProcessInboundMessages, dnode update fail, receiv smpc msg = %v, err = %v, key = %v ============\n", m, err, msgprex)
-			    if len(ch) == 0 {
-				res := RPCSmpcRes{Ret: "", Err: err}
-				ch <- res
-			    }
+				if len(ch) == 0 {
+					res := RPCSmpcRes{Ret: "", Err: err}
+					ch <- res
+				}
 
-			    return
+				return
 			}
 		}
 	}
@@ -209,13 +209,13 @@ func EdSignProcessInboundMessages(msgprex string, keytype string,finishChan chan
 
 // EdSignGetRealMessage get the message data struct by map. (p2p msg ---> map)
 func EdSignGetRealMessage(msg map[string]string) smpclib.Message {
-    	if msg == nil {
-	    return nil
+	if msg == nil {
+		return nil
 	}
 
 	from := msg["FromID"]
 	if from == "" {
-	    return nil
+		return nil
 	}
 
 	var to []string
@@ -231,13 +231,13 @@ func EdSignGetRealMessage(msg map[string]string) smpclib.Message {
 
 	//1 message
 	if msg["Type"] == "SignRound1Message" {
-	    if msg["CR"] == "" {
-		return nil
-	    }
+		if msg["CR"] == "" {
+			return nil
+		}
 
 		cr, err := hex.DecodeString(msg["CR"])
 		if cr == nil || err != nil {
-		    return nil
+			return nil
 		}
 
 		var CR [32]byte
@@ -256,13 +256,13 @@ func EdSignGetRealMessage(msg map[string]string) smpclib.Message {
 
 	//2 message
 	if msg["Type"] == "SignRound2Message" {
-	    if msg["ZkR"] == "" {
-		return nil
-	    }
+		if msg["ZkR"] == "" {
+			return nil
+		}
 
 		zkr, err := hex.DecodeString(msg["ZkR"])
 		if zkr == nil || err != nil {
-		    return nil
+			return nil
 		}
 
 		var ZkR [64]byte
@@ -281,13 +281,13 @@ func EdSignGetRealMessage(msg map[string]string) smpclib.Message {
 
 	//3 message
 	if msg["Type"] == "SignRound3Message" {
-	    if msg["DR"] == "" {
-		return nil
-	    }
+		if msg["DR"] == "" {
+			return nil
+		}
 
 		dr, err := hex.DecodeString(msg["DR"])
 		if dr == nil || err != nil {
-		    return nil
+			return nil
 		}
 
 		var DR [64]byte
@@ -306,13 +306,13 @@ func EdSignGetRealMessage(msg map[string]string) smpclib.Message {
 
 	//4 message
 	if msg["Type"] == "SignRound4Message" {
-	    if msg["CSB"] == "" {
-		return nil
-	    }
+		if msg["CSB"] == "" {
+			return nil
+		}
 
 		csb, err := hex.DecodeString(msg["CSB"])
 		if csb == nil || err != nil {
-		    return nil
+			return nil
 		}
 
 		var CSB [32]byte
@@ -331,13 +331,13 @@ func EdSignGetRealMessage(msg map[string]string) smpclib.Message {
 
 	//5 message
 	if msg["Type"] == "SignRound5Message" {
-	    if msg["DSB"] == "" {
-		return nil
-	    }
+		if msg["DSB"] == "" {
+			return nil
+		}
 
 		dsb, err := hex.DecodeString(msg["DSB"])
 		if dsb == nil || err != nil {
-		    return nil
+			return nil
 		}
 
 		var DSB [64]byte
@@ -356,13 +356,13 @@ func EdSignGetRealMessage(msg map[string]string) smpclib.Message {
 
 	//6 message
 	if msg["Type"] == "SignRound6Message" {
-	    if msg["S"] == "" {
-		return nil
-	    }
+		if msg["S"] == "" {
+			return nil
+		}
 
 		s, err := hex.DecodeString(msg["S"])
 		if s == nil || err != nil {
-		    return nil
+			return nil
 		}
 
 		var S [32]byte
@@ -382,8 +382,8 @@ func EdSignGetRealMessage(msg map[string]string) smpclib.Message {
 	return nil
 }
 
-// processSigned  Obtain the data to be sent in each round and send it to other nodes until the end of the sign command 
-func processSigned(msgprex string, keytype string,msgtoenode map[string]string, errChan chan struct{}, outCh <-chan smpclib.Message, endCh <-chan edsigning.EdSignData) (*edsigning.EdSignData, error) {
+// processSigned  Obtain the data to be sent in each round and send it to other nodes until the end of the sign command
+func processSigned(msgprex string, keytype string, msgtoenode map[string]string, errChan chan struct{}, outCh <-chan smpclib.Message, endCh <-chan edsigning.EdSignData) (*edsigning.EdSignData, error) {
 	for {
 		select {
 		case <-errChan:
@@ -394,7 +394,7 @@ func processSigned(msgprex string, keytype string,msgtoenode map[string]string, 
 			fmt.Printf("========================== processSigned,sign timeout, key = %v ==========================\n", msgprex)
 			return nil, errors.New("signing timeout")
 		case msg := <-outCh:
-			err := SignProcessOutCh(msgprex, keytype,msgtoenode, msg, "")
+			err := SignProcessOutCh(msgprex, keytype, msgtoenode, msg, "")
 			if err != nil {
 				fmt.Printf("======================= processSigned, sign process outch err = %v, key = %v ====================\n", err, msgprex)
 				return nil, err

@@ -28,9 +28,9 @@ import (
 	"math/big"
 	"os"
 
-	"github.com/anyswap/FastMulThreshold-DSA/crypto/sha3"
-	"github.com/anyswap/FastMulThreshold-DSA/internal/common"
-	"github.com/anyswap/FastMulThreshold-DSA/internal/common/math"
+	"github.com/deltaswapio/gsmpc/crypto/sha3"
+	"github.com/deltaswapio/gsmpc/internal/common"
+	"github.com/deltaswapio/gsmpc/internal/common/math"
 	"github.com/fsn-dev/cryptoCoins/tools/rlp"
 )
 

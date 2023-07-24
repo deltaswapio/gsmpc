@@ -33,12 +33,12 @@ The implementation provides a series of RPC interfaces for external applications
 ## Clone The Repository
 To get started, launch your terminal and download the latest version of the SDK.
 ```
-git clone https://github.com/anyswap/FastMulThreshold-DSA.git
+git clone https://github.com/deltaswapio/gsmpc.git
 ```
 ## Build
-Next compile the code. Make sure you are in FastMulThreshold-DSA directory.
+Next compile the code. Make sure you are in gsmpc directory.
 ```
-cd FastMulThreshold-DSA && make all
+cd gsmpc && make all
 ```
 
 ## Run By Default BootNode And Parametes
@@ -49,7 +49,7 @@ nohup ./build/bin/gsmpc &
 The `gsmpc` will provide rpc service, the default RPC port is port 4449.
 
 ## Manually Set Parameter To Run Node And Self-test 
-[keygen-and-sign-workflow](https://github.com/anyswap/FastMulThreshold-DSA/wiki/keygen-and-sign-workflow)
+[keygen-and-sign-workflow](https://github.com/deltaswapio/gsmpc/wiki/keygen-and-sign-workflow)
 
 ## Local Test
 It will take some time more than 15 minutes,please wait patiently!

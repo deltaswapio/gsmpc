@@ -21,15 +21,15 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/anyswap/FastMulThreshold-DSA/smpc-lib/crypto/ed"
-	"github.com/anyswap/FastMulThreshold-DSA/smpc-lib/crypto/ed_ristretto"
-	"github.com/anyswap/FastMulThreshold-DSA/smpc-lib/smpc"
+	"github.com/deltaswapio/gsmpc/smpc-lib/crypto/ed"
+	"github.com/deltaswapio/gsmpc/smpc-lib/crypto/ed_ristretto"
+	"github.com/deltaswapio/gsmpc/smpc-lib/smpc"
 	"github.com/gtank/merlin"
 	r255 "github.com/gtank/ristretto255"
 )
 
 // for ed25519 and sr25519, calculate the challenge k
-func CalKValue(keyType string, message, pkFinal, RFinal []byte) ([32]byte, error){
+func CalKValue(keyType string, message, pkFinal, RFinal []byte) ([32]byte, error) {
 	var k [32]byte
 	if keyType == smpc.SR25519 {
 		transcript := merlin.NewTranscript("SigningContext")
@@ -41,11 +41,11 @@ func CalKValue(keyType string, message, pkFinal, RFinal []byte) ([32]byte, error
 		transcript.AppendMessage([]byte("sign:R"), RFinal)
 
 		outK := transcript.ExtractBytes([]byte("sign:c"), 64)
-		
+
 		var kHelper [64]byte
 		copy(kHelper[:], outK[:])
 		ed_ristretto.ScReduce(&k, &kHelper)
-	}else{
+	} else {
 		// 2.6 calculate k=H(FinalRBytes||pk||M)
 		var kDigest [64]byte
 
@@ -124,7 +124,7 @@ func (round *round4) Start() error {
 			copy(temRBytes[:], msg3.DR[32:])
 			temR2 := new(r255.Element)
 			temR2.Decode(temRBytes[:])
-			
+
 			if k == 0 {
 				FinalR = temR2
 			} else {
@@ -132,7 +132,7 @@ func (round *round4) Start() error {
 			}
 		}
 		FinalR.Encode(FinalRBytes[:0])
-	}else {
+	} else {
 		var FinalR, temR2 ed.ExtendedGroupElement
 		for k := range round.idsign {
 			msg1, ok := round.temp.signRound1Messages[k].(*SignRound1Message)
@@ -208,24 +208,24 @@ func (round *round4) Start() error {
 		if round.temp.keyType == smpc.SR25519 {
 			ed_ristretto.ScSub(&time, &t, &tt)
 			time = ed_ristretto.ScModInverse(time)
-		}else {
+		} else {
 			ed.ScSub(&time, &t, &tt)
 			time = ed.ScModInverse(time, order)
 		}
 		count := 0
-		for index:=0;index<32;index++ {
-		    if time[index] == byte('0') {
-			count++
-		    }
+		for index := 0; index < 32; index++ {
+			if time[index] == byte('0') {
+				count++
+			}
 		}
 		if count == 32 {
-		    return errors.New("calc time mod inverse fail")
+			return errors.New("calc time mod inverse fail")
 		}
 
 		if round.temp.keyType == smpc.SR25519 {
 			ed_ristretto.ScMul(&time, &time, &t)
 			ed_ristretto.ScMul(&lambda, &lambda, &time)
-		}else {
+		} else {
 			ed.ScMul(&time, &time, &t)
 			ed.ScMul(&lambda, &lambda, &time)
 		}
@@ -246,7 +246,7 @@ func (round *round4) Start() error {
 		sScalar.Decode(s[:])
 		sB := new(r255.Element).ScalarBaseMult(sScalar)
 		sB.Encode(sBBytes[:0])
-	}else {
+	} else {
 		ed.ScMul(&s, &lambda, &round.temp.tsk)
 
 		//stmp := hex.EncodeToString(s[:])
@@ -260,9 +260,9 @@ func (round *round4) Start() error {
 	}
 
 	// 2.10 commit(sBBytes)
-	CSB, DSB,err := ed.Commit(sBBytes)
+	CSB, DSB, err := ed.Commit(sBBytes)
 	if err != nil {
-	    return err
+		return err
 	}
 
 	round.temp.DSB = DSB
@@ -282,7 +282,7 @@ func (round *round4) Start() error {
 	return nil
 }
 
-// CanAccept is it legal to receive this message 
+// CanAccept is it legal to receive this message
 func (round *round4) CanAccept(msg smpc.Message) bool {
 	if _, ok := msg.(*SignRound4Message); ok {
 		return msg.IsBroadcast()
@@ -290,7 +290,7 @@ func (round *round4) CanAccept(msg smpc.Message) bool {
 	return false
 }
 
-// Update  is the message received and ready for the next round? 
+// Update  is the message received and ready for the next round?
 func (round *round4) Update() (bool, error) {
 	for j, msg := range round.temp.signRound4Messages {
 		if round.ok[j] {
