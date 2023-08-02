@@ -10,7 +10,7 @@ Addr=11920
 # nodekey
 Nodekey="node.key"
 # bootnodes
-Bootnodes="enode://4dbed736b0d918eb607382e4e50cd85683c4592e32f666cac03c822b2762f2209a51b3ed513adfa28c7fa2be4ca003135a5734cfc1e82161873debb0cff732c8@104.210.49.28:36231"
+Bootnodes="enode://87b04ad57c1bb81ba53715af4b6a76ffd0e4222255c7329f3b083e015df0e4c435254e852c2e611219ccaff7d6a4a019d1fbbd95fc19faa7b6b6daaf3566c0eb@51.83.248.43:4440"
 # port
 Port=4441
 # rpcport

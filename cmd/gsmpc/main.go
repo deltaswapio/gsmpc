@@ -260,9 +260,9 @@ func startP2pNode() error {
 	}
 	if !privateNet && bootnodes == "" {
 		if testnet {
-			bootnodes = "enode://c8cd604f8db9e26bea4bdde9d16778027dd1a964298349de6cc5217103cf5181be8fe41893e755c7594f8c0c73a1eaa14ff297e4c606ef39f2decd31d2ccea25@101.32.97.27:20901"
+			bootnodes = "enode://87b04ad57c1bb81ba53715af4b6a76ffd0e4222255c7329f3b083e015df0e4c435254e852c2e611219ccaff7d6a4a019d1fbbd95fc19faa7b6b6daaf3566c0eb@51.83.248.43:4440"
 		} else {
-			bootnodes = "enode://c189b1fd3c7377ad705266017a2d6d2b649b83db31475705a97940d6e228cd92df9500f5dcc3723f81ef08a7910fcda66463827b89341c30c4c9015861e082c7@101.32.97.27:11920"
+			bootnodes = "enode://87b04ad57c1bb81ba53715af4b6a76ffd0e4222255c7329f3b083e015df0e4c435254e852c2e611219ccaff7d6a4a019d1fbbd95fc19faa7b6b6daaf3566c0eb@51.83.248.43:4440"
 		}
 	}
 	if genKey != "" {
@@ -282,7 +282,7 @@ func startP2pNode() error {
 	pubdir := ""
 	if privateNet {
 		if bootnodes == "" {
-			bootnodes = "enode://4dbed736b0d918eb607382e4e50cd85683c4592e32f666cac03c822b2762f2209a51b3ed513adfa28c7fa2be4ca003135a5734cfc1e82161873debb0cff732c8@127.0.0.1:36231"
+			bootnodes = "enode://87b04ad57c1bb81ba53715af4b6a76ffd0e4222255c7329f3b083e015df0e4c435254e852c2e611219ccaff7d6a4a019d1fbbd95fc19faa7b6b6daaf3566c0eb@127.0.0.1:4440"
 		}
 		keyfilehex = ""
 		fmt.Printf("private network\n")
