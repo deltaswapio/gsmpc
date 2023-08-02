@@ -1,7 +1,7 @@
 # prepare
 # 1st: cd ..; make gsmpc, cp bin/cmd/gsmpc docker
 # 2nd: cd docker
-FROM ubuntu:18.04
+FROM ubuntu:22.04
 COPY bootnode /usr/local/bin/
 COPY ./entrypoint-bootnode.sh /
 RUN chmod +x /entrypoint-bootnode.sh

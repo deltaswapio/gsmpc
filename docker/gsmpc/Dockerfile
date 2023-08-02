@@ -1,7 +1,7 @@
 # prepare
 # 1st: cd smpc6; make gsmpc; cp bin/cmd/gsmpc docker/gsmpc
 # 2nd: cd docker/gsmpc
-FROM ubuntu:18.04
+FROM ubuntu:22.04
 COPY gsmpc gsmpc-client /usr/local/bin/
 COPY ./entrypoint-gsmpc.sh /
 RUN chmod +x /entrypoint-gsmpc.sh
